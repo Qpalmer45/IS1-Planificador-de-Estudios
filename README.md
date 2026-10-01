@@ -80,7 +80,11 @@ Las Historias de Usuario están registradas como Issues dentro del repositorio.
 
 ## 👥 Equipo
 
-Esta sección se completará con los integrantes del equipo.
+- Joaquín Palmer Pifarré
+- Antonio Bucciarelli Imbrondone
+- Yong Sheng Zhou Zhou
+- Pablo Pérez Roldán
+- Andrés Fernández Cordero
 
 ## 🚀 Instalación y ejecución
 
