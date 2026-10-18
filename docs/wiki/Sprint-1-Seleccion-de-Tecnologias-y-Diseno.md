@@ -30,47 +30,18 @@ La aplicación será **web**. Por decisión actual del equipo, se utilizarán **
 | JavaScript | Interacciones de usuario y comunicación con el servidor cuando se implemente |
 | SQLite | Almacenamiento persistente de usuarios, asignaturas, exámenes, tareas y horarios; Python puede acceder mediante el módulo estándar sqlite3 |
 
-### Decisiones y alternativas descartadas o aplazadas
-- **Python en lugar de Java:** decisión actual del equipo para simplificar el conjunto de tecnologías y programar la lógica en Python.
-- **HTML, CSS y JavaScript sin React:** permite empezar con tecnologías web básicas sin un framework adicional.
-- **Flask frente a Django:** se elige Flask por ser ligero y permitir construir una API sencilla; Django aporta más funcionalidades integradas, pero también más estructura inicial. Spring Boot y Spring Web pertenecen al ecosistema Java y no se utilizarán.
-- **SQLite frente a PostgreSQL y MySQL:** SQLite se elige para simplificar el prototipo universitario, sin configurar un servidor de base de datos. PostgreSQL o MySQL pueden ser mejores si aumenta la concurrencia y el despliegue multiusuario; la migración podría valorarse más adelante.
-- **Maven, Spring Security, JUnit y Spring Data JPA:** fuera del conjunto actual de tecnologías.
+
 
 ### Aspectos técnicos pendientes
-La comunicación entre JavaScript y Python se implementará mediante **fetch y peticiones HTTP con JSON**, recibidas por rutas definidas en **Flask**. Falta diseñar e implementar dichas rutas. No afirmar que la comunicación ni la persistencia estén implementadas. Quedan pendientes el diseño del esquema y la ubicación/persistencia del archivo SQLite en el servidor, la autenticación segura, el despliegue y las pruebas. En una aplicación web el archivo SQLite debe estar en el servidor, no en el navegador del usuario.
+La comunicación entre JavaScript y Python se implementará mediante **fetch y peticiones HTTP con JSON**, aun tenemos que averiguar bien como funciona.
 
-## Diseño: registro
-**Objetivo:** permitir crear una cuenta.
-- Pantalla prevista: nombre (si se necesita), correo electrónico, contraseña, confirmación de contraseña y botón de registro.
-- Validaciones previstas: campos obligatorios, correo válido, contraseñas coincidentes, correo no duplicado.
-- Resultado esperado: cuenta creada o mensaje de error comprensible.
-- Seguridad a concretar: hash seguro de contraseñas, protección de datos, manejo de errores.
-**Pendiente:** wireframe aprobado, modelo de datos y decisiones de autenticación.
 
-## Diseño: inicio de sesión
-**Objetivo:** permitir al usuario acceder a su cuenta y planificación.
-- Pantalla prevista: correo, contraseña, botón de acceso y enlace al registro.
-- Flujo: introducir credenciales → validar → acceder a la aplicación o mostrar error.
-- Considerar cierre de sesión, sesiones seguras y mensajes que no revelen información sensible.
-**Pendiente:** wireframe aprobado, mecanismo de autenticación y sesión web y criterios de seguridad.
-
-## Diseño: lista de To-Dos
-**Objetivo:** gestionar una lista sencilla de pendientes, separada de la planificación automática si así lo decide el equipo.
-- Vista prevista: campo para nueva tarea, listado de pendientes y completadas.
-- Acciones: crear, editar, marcar/desmarcar como completada y eliminar.
-- Modelo conceptual mínimo: identificador, texto, estado, usuario propietario (si se asocia a cuenta).
-- Estados: pendiente y completada.
-**Pendiente:** wireframe aprobado y decisión sobre persistencia.
 
 ## Scrum — evidencias del sprint
 ### Sprint Planning
 - Sprint Goal: seleccionar tecnologías y diseñar registro, login y To-Dos.
 - Sprint Backlog: enlazar las Issues y las tareas de investigación/diseño efectivamente asumidas.
-- Capacidad y responsables: pendientes de registrar.
 
-### Seguimiento / Daily Scrum
-Registrar para cada reunión fecha, progreso hacia el Sprint Goal, impedimentos y próximos pasos. No inventar reuniones que no se celebraron.
 
 ### Sprint Review
 Mostrar comparación de tecnologías, decisión aprobada (si existe) y diseños/wireframes de las tres funcionalidades. Recoger feedback y cambios del Product Backlog.
@@ -78,22 +49,6 @@ Mostrar comparación de tecnologías, decisión aprobada (si existe) y diseños/
 ### Sprint Retrospective
 Registrar qué funcionó, qué no funcionó y 1–3 acciones de mejora con responsables. Completar después de celebrarla.
 
-## Definition of Done del sprint (propuesta)
-- Python y HTML + CSS + JavaScript elegidos; rutas Flask, esquema SQLite y autenticación pendientes de definir.
-- Diseños de registro, inicio de sesión y To-Dos accesibles y revisados por el equipo.
-- Historias y criterios de aceptación coherentes y sin duplicados.
-- Sprint Review y Retrospective documentadas.
-- No se afirma que exista implementación si no se ha verificado.
-
-## Documentación complementaria pendiente
-1. Acta de Sprint Planning: fecha, participantes, Sprint Goal, capacidad y Sprint Backlog.
-2. Registro de decisión de arquitectura (ADR): alternativas, criterios, decisión y razones.
-3. Wireframes de registro, inicio de sesión y To-Dos, con enlaces a archivos.
-4. Flujos de usuario y validaciones de los tres diseños.
-5. Modelo de datos inicial y rutas HTTP y modelo de datos preliminares, solo si se han diseñado.
-6. Sprint Review: entregables mostrados, feedback y ajustes.
-7. Retrospectiva: mejoras acordadas y responsables.
-8. Riesgos, dudas abiertas y próximos pasos.
 
 ## Estado y siguiente sprint
 **Documentado:** objetivo, alcance y propuestas de diseño y tecnologías.
