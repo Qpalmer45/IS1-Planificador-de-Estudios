@@ -6,7 +6,7 @@
 Seleccionar la pila tecnológica de la aplicación y diseñar las funcionalidades de registro, inicio de sesión y lista de To-Dos. El objetivo es obtener decisiones técnicas y diseños revisables, sin presuponer que se hayan implementado.
 
 ## Alcance
-- Comparar y elegir tecnologías de frontend, backend y base de datos.
+- Comparar y elegir tecnologías de interfaz, lógica y almacenamiento para escritorio.
 - Diseñar el registro de usuarios.
 - Diseñar el inicio de sesión.
 - Diseñar una lista de To-Dos convencional.
@@ -18,16 +18,40 @@ Seleccionar la pila tecnológica de la aplicación y diseñar las funcionalidade
 - HU28 — Lista de To-Dos (Issue #29).
 Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclarar si es la misma funcionalidad.
 
-## Alternativas tecnológicas
-| Área | Alternativas | Criterios |
-|---|---|---|
-| Frontend | **HTML + CSS + JavaScript (elección definitiva del equipo)**. HTML define la estructura, CSS los estilos y JavaScript la interacción. React + TypeScript se valoró como alternativa. | Facilidad de aprendizaje, componentes, mantenimiento |
-| Backend | **Python + Django (elección definitiva del equipo)**. Alternativas valoradas: Python + FastAPI, Java + Spring Boot, TypeScript + Express, C++ + Drogon | Familiaridad del equipo, tiempo, ecosistema, seguridad |
-| Base de datos | PostgreSQL; MySQL; SQLite; MongoDB | Modelo de datos, facilidad de despliegue, consultas |
-| Control de versiones | Git y GitHub | Historial y colaboración |
-| Gestión Scrum | GitHub Issues y Projects | Trazabilidad y seguimiento |
+## Tecnologías para la aplicación de escritorio (decisión actual)
+El equipo ha elegido **Java** como lenguaje principal y **HTML, CSS y JavaScript** para la interfaz de escritorio. Se recomienda **JavaFX + WebView** para mostrar la interfaz web dentro de una ventana nativa, y **SQLite + JDBC** para almacenamiento local. JavaFX, WebView y SQLite son propuestas técnicas pendientes de una prueba de concepto.
 
-**Decisiones confirmadas por el equipo:** backend en **Python + Django** y frontend en **HTML + CSS + JavaScript** (sin framework frontend). **Propuesta pendiente de aprobación:** PostgreSQL como base de datos.
+| Tecnología | Uso en IS1 | Justificación |
+|---|---|---|
+| Java | Algoritmo de planificación, tareas, usuarios y reglas de negocio | Lenguaje elegido por el equipo; orientación a objetos y ecosistema sólido |
+| HTML | Estructura de pantallas y formularios | Sencillo para organizar la interfaz |
+| CSS | Estilos visuales | Separa diseño y estructura |
+| JavaScript | Eventos y actualización de la interfaz | Permite interacción sin rehacer la ventana |
+| JavaFX | Ventanas y ciclo de vida de la aplicación de escritorio | Integra código Java y componentes gráficos |
+| WebView / WebEngine | Renderizar HTML, CSS y JavaScript en JavaFX | Reutiliza tecnologías web sin servidor web |
+| Puente Java-JavaScript | Conectar acciones de la interfaz con métodos Java | Ejecuta la lógica Java desde controles HTML |
+| SQLite | Base de datos local | No necesita servidor de base de datos |
+| JDBC y driver SQLite | Acceso a datos desde Java | API estándar y sencilla para consultas |
+| Maven | Dependencias y construcción | Reproducibilidad del proyecto |
+| JUnit 5 | Pruebas unitarias | Validar lógica y evitar regresiones |
+| jpackage | Empaquetado para Windows | Preparar una aplicación instalable |
+| Git y GitHub | Versionado y colaboración | Historial compartido |
+| GitHub Issues y Projects | Organización Scrum | Historias y seguimiento |
+
+### Alternativas valoradas
+- Java frente a Python: el equipo prefiere Java; Python habría permitido prototipos rápidos.
+- JavaFX + WebView frente a Electron: integración directa con la lógica Java frente a una plataforma basada en JavaScript/Node.js.
+- HTML/CSS/JavaScript frente a controles JavaFX nativos: interfaz web flexible, a costa de mantener un puente Java-JavaScript.
+- WebView frente a Swing/JEditorPane: soporte más adecuado para HTML y JavaScript, aunque el motor web puede tener limitaciones de compatibilidad.
+- SQLite frente a PostgreSQL/MySQL: más simple para una aplicación local; no ofrece por sí sola sincronización entre ordenadores.
+- JDBC frente a Hibernate: menos capas para un modelo de datos inicial pequeño.
+- Maven frente a Gradle: ambos sirven; Maven se propone por sencillez de configuración.
+- JUnit frente a pruebas solo manuales: automatiza la verificación.
+- jpackage frente a entregar un archivo JAR: facilita distribución a usuarios finales.
+
+**Cambio de arquitectura:** Python + Django dejan de ser la elección del proyecto. Django sirve para aplicaciones web con servidor y no es necesario en esta arquitectura local. HTML/CSS/JavaScript siguen siendo la interfaz, pero dentro de JavaFX WebView.
+
+**Pendiente de validar:** ventana JavaFX que cargue HTML local, comunicación JavaScript-Java, persistencia SQLite, compatibilidad del motor WebView y empaquetado. No consta implementación de estas pruebas.
 
 ## Diseño: registro
 **Objetivo:** permitir crear una cuenta.
@@ -42,7 +66,7 @@ Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclara
 - Pantalla prevista: correo, contraseña, botón de acceso y enlace al registro.
 - Flujo: introducir credenciales → validar → acceder a la aplicación o mostrar error.
 - Considerar cierre de sesión, sesiones seguras y mensajes que no revelen información sensible.
-**Pendiente:** wireframe aprobado, mecanismo de sesión/token y criterios de seguridad.
+**Pendiente:** wireframe aprobado, mecanismo de autenticación local y criterios de seguridad.
 
 ## Diseño: lista de To-Dos
 **Objetivo:** gestionar una lista sencilla de pendientes, separada de la planificación automática si así lo decide el equipo.
@@ -68,7 +92,7 @@ Mostrar comparación de tecnologías, decisión aprobada (si existe) y diseños/
 Registrar qué funcionó, qué no funcionó y 1–3 acciones de mejora con responsables. Completar después de celebrarla.
 
 ## Definition of Done del sprint (propuesta)
-- Python + Django elegidos como backend y HTML + CSS + JavaScript como frontend; base de datos comparada y aprobada antes de marcarla como definitiva.
+- Java y HTML + CSS + JavaScript elegidos; JavaFX/WebView y SQLite sujetos a validación técnica.
 - Diseños de registro, inicio de sesión y To-Dos accesibles y revisados por el equipo.
 - Historias y criterios de aceptación coherentes y sin duplicados.
 - Sprint Review y Retrospective documentadas.
@@ -79,7 +103,7 @@ Registrar qué funcionó, qué no funcionó y 1–3 acciones de mejora con respo
 2. Registro de decisión de arquitectura (ADR): alternativas, criterios, decisión y razones.
 3. Wireframes de registro, inicio de sesión y To-Dos, con enlaces a archivos.
 4. Flujos de usuario y validaciones de los tres diseños.
-5. Modelo de datos inicial y contratos API preliminares, solo si se han diseñado.
+5. Modelo de datos inicial y interfaces Java-JavaScript preliminares, solo si se han diseñado.
 6. Sprint Review: entregables mostrados, feedback y ajustes.
 7. Retrospectiva: mejoras acordadas y responsables.
 8. Riesgos, dudas abiertas y próximos pasos.
