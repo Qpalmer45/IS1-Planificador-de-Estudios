@@ -21,13 +21,13 @@ Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclara
 ## Alternativas tecnológicas
 | Área | Alternativas | Criterios |
 |---|---|---|
-| Frontend | **Propuesta: HTML + CSS + JavaScript** (HTML estructura, CSS estilos, JavaScript interacción); alternativa: React + TypeScript | Facilidad de aprendizaje, componentes, mantenimiento |
+| Frontend | **HTML + CSS + JavaScript (elección definitiva del equipo)**. HTML define la estructura, CSS los estilos y JavaScript la interacción. React + TypeScript se valoró como alternativa. | Facilidad de aprendizaje, componentes, mantenimiento |
 | Backend | **Python (elegido por el equipo)**; frameworks por decidir: Django o FastAPI. Alternativas valoradas: Java + Spring Boot, TypeScript + Express, C++ + Drogon | Familiaridad del equipo, tiempo, ecosistema, seguridad |
 | Base de datos | PostgreSQL; MySQL; SQLite; MongoDB | Modelo de datos, facilidad de despliegue, consultas |
 | Control de versiones | Git y GitHub | Historial y colaboración |
 | Gestión Scrum | GitHub Issues y Projects | Trazabilidad y seguimiento |
 
-**Decisión confirmada por el equipo:** backend en **Python**. **Propuestas pendientes de aprobación:** Django como framework backend; HTML + CSS + JavaScript como frontend; PostgreSQL como base de datos. No presentar las propuestas como decisiones definitivas.
+**Decisiones confirmadas por el equipo:** backend en **Python** y frontend en **HTML + CSS + JavaScript** (sin framework frontend). **Propuestas pendientes de aprobación:** Django como framework backend y PostgreSQL como base de datos. No presentar estas propuestas como decisiones definitivas.
 
 ## Diseño: registro
 **Objetivo:** permitir crear una cuenta.
@@ -68,7 +68,7 @@ Mostrar comparación de tecnologías, decisión aprobada (si existe) y diseños/
 Registrar qué funcionó, qué no funcionó y 1–3 acciones de mejora con responsables. Completar después de celebrarla.
 
 ## Definition of Done del sprint (propuesta)
-- Python elegido como lenguaje backend; framework, frontend y base de datos comparados y aprobados antes de marcarlos como definitivos.
+- Python elegido como lenguaje backend y HTML + CSS + JavaScript como frontend; framework backend y base de datos comparados y aprobados antes de marcarlos como definitivos.
 - Diseños de registro, inicio de sesión y To-Dos accesibles y revisados por el equipo.
 - Historias y criterios de aceptación coherentes y sin duplicados.
 - Sprint Review y Retrospective documentadas.
