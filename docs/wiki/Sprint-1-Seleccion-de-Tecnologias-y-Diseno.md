@@ -19,7 +19,7 @@ Seleccionar la pila tecnológica de la aplicación y diseñar las funcionalidade
 Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclarar si es la misma funcionalidad.
 
 ## Arquitectura actual: aplicación web con Java
-**Decisión del equipo:** aplicación web, Java como lenguaje de backend, HTML + CSS + JavaScript como interfaz. **Recomendaciones técnicas para validar:** Spring Boot, Spring Web, Spring Security, Spring Data JPA, PostgreSQL, Maven y JUnit 5. No se afirma que estén implementadas.
+**Decisión del equipo:** aplicación web, Java como lenguaje de backend, HTML + CSS + JavaScript como interfaz. **Recomendaciones técnicas para validar:** Spring Boot, Spring Web y PostgreSQL. Por ahora se posponen Spring Security, JUnit 5 y la elección explícita de Maven como tecnología del proyecto. Spring Boot requiere una herramienta de construcción para gestionar dependencias (habitualmente Maven o Gradle), que se elegirá al configurar el proyecto. No se afirma que estén implementadas.
 
 | Tecnología | Función | Motivo principal |
 |---|---|---|
@@ -31,9 +31,6 @@ Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclara
 | JavaScript | Interacciones y peticiones fetch | Interfaz dinámica sin framework adicional |
 | PostgreSQL | Persistencia central de usuarios, tareas y horarios | Base de datos relacional robusta y multiusuario |
 | Spring Data JPA | Acceso a datos mediante entidades y repositorios | Menos SQL repetitivo que JDBC manual |
-| Spring Security | Autenticación, sesiones y autorización | Evita implementar mecanismos sensibles desde cero |
-| Maven | Compilación y dependencias | Construcción reproducible |
-| JUnit 5 | Pruebas unitarias | Validar reglas y algoritmo |
 | Git y GitHub | Versionado y colaboración | Trabajo en equipo |
 | GitHub Issues y Projects | Gestión Scrum | Trazabilidad del sprint |
 
@@ -45,11 +42,10 @@ Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclara
 - **PostgreSQL frente a SQLite:** mejor opción propuesta para cuentas y datos centralizados entre usuarios; SQLite sería más sencillo para prototipo local.
 - **PostgreSQL frente a MySQL:** ambos son válidos; PostgreSQL se propone por su ecosistema y soporte de relaciones y consultas.
 - **Spring Data JPA frente a JDBC:** reduce código repetitivo, aunque introduce conceptos ORM.
-- **Spring Security frente a autenticación casera:** proporciona componentes establecidos para contraseñas, sesiones y permisos; requiere configuración correcta.
-- **Maven frente a Gradle:** ambos sirven; Maven es una opción declarativa y habitual en Java.
-- **JUnit 5 frente a solo pruebas manuales:** permite comprobar el algoritmo de forma repetible.
 
 **Arquitectura:** navegador (HTML/CSS/JS) → peticiones HTTP → servidor Java con Spring Boot → lógica de planificación y PostgreSQL. JavaFX y WebView se descartan porque corresponden a la propuesta anterior de escritorio. Django se descarta porque el equipo prefiere Java.
+
+**Nota de alcance:** Spring Security, JUnit 5 y Maven no forman parte por ahora de la lista de tecnologías elegidas. Spring Boot puede utilizar Maven o Gradle para descargar dependencias y construir la aplicación; no es obligatorio elegir Maven. Spring Security es opcional, aunque habrá que definir cómo se implementará la autenticación de forma segura. JUnit es opcional como herramienta concreta de pruebas.
 
 **Pendiente:** prueba de concepto de formulario HTML/JavaScript que envía una petición a Spring Boot y guarda un registro en PostgreSQL; decidir despliegue, configuración de seguridad y modelo de datos. No consta implementación.
 
