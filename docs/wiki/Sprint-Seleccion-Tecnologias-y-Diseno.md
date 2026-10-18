@@ -21,13 +21,13 @@ Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclara
 ## Alternativas tecnológicas
 | Área | Alternativas | Criterios |
 |---|---|---|
-| Frontend | React + TypeScript; Vue + TypeScript; Angular; HTML/CSS/JavaScript | Facilidad de aprendizaje, componentes, mantenimiento |
-| Backend | Java + Spring Boot; Python + Django; TypeScript + Express; C++ + Drogon | Familiaridad del equipo, tiempo, ecosistema, seguridad |
+| Frontend | **Propuesta: HTML + CSS + JavaScript** (HTML estructura, CSS estilos, JavaScript interacción); alternativa: React + TypeScript | Facilidad de aprendizaje, componentes, mantenimiento |
+| Backend | **Python (elegido por el equipo)**; frameworks por decidir: Django o FastAPI. Alternativas valoradas: Java + Spring Boot, TypeScript + Express, C++ + Drogon | Familiaridad del equipo, tiempo, ecosistema, seguridad |
 | Base de datos | PostgreSQL; MySQL; SQLite; MongoDB | Modelo de datos, facilidad de despliegue, consultas |
 | Control de versiones | Git y GitHub | Historial y colaboración |
 | Gestión Scrum | GitHub Issues y Projects | Trazabilidad y seguimiento |
 
-**Propuesta técnica pendiente de aprobación del equipo:** React + TypeScript, Java + Spring Boot y PostgreSQL. No marcarla como decisión tomada hasta acordarlo y justificarlo.
+**Decisión confirmada por el equipo:** backend en **Python**. **Propuestas pendientes de aprobación:** Django como framework backend; HTML + CSS + JavaScript como frontend; PostgreSQL como base de datos. No presentar las propuestas como decisiones definitivas.
 
 ## Diseño: registro
 **Objetivo:** permitir crear una cuenta.
@@ -68,7 +68,7 @@ Mostrar comparación de tecnologías, decisión aprobada (si existe) y diseños/
 Registrar qué funcionó, qué no funcionó y 1–3 acciones de mejora con responsables. Completar después de celebrarla.
 
 ## Definition of Done del sprint (propuesta)
-- Alternativas tecnológicas comparadas y elección argumentada y aprobada.
+- Python elegido como lenguaje backend; framework, frontend y base de datos comparados y aprobados antes de marcarlos como definitivos.
 - Diseños de registro, inicio de sesión y To-Dos accesibles y revisados por el equipo.
 - Historias y criterios de aceptación coherentes y sin duplicados.
 - Sprint Review y Retrospective documentadas.
