@@ -6,7 +6,7 @@
 Seleccionar la pila tecnológica de la aplicación y diseñar las funcionalidades de registro, inicio de sesión y lista de To-Dos. El objetivo es obtener decisiones técnicas y diseños revisables, sin presuponer que se hayan implementado.
 
 ## Alcance
-- Comparar y elegir tecnologías de interfaz, lógica y almacenamiento para escritorio.
+- Comparar y elegir tecnologías de interfaz, backend y almacenamiento para aplicación web.
 - Diseñar el registro de usuarios.
 - Diseñar el inicio de sesión.
 - Diseñar una lista de To-Dos convencional.
@@ -18,40 +18,40 @@ Seleccionar la pila tecnológica de la aplicación y diseñar las funcionalidade
 - HU28 — Lista de To-Dos (Issue #29).
 Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclarar si es la misma funcionalidad.
 
-## Tecnologías para la aplicación de escritorio (decisión actual)
-El equipo ha elegido **Java** como lenguaje principal y **HTML, CSS y JavaScript** para la interfaz de escritorio. Se recomienda **JavaFX + WebView** para mostrar la interfaz web dentro de una ventana nativa, y **SQLite + JDBC** para almacenamiento local. JavaFX, WebView y SQLite son propuestas técnicas pendientes de una prueba de concepto.
+## Arquitectura actual: aplicación web con Java
+**Decisión del equipo:** aplicación web, Java como lenguaje de backend, HTML + CSS + JavaScript como interfaz. **Recomendaciones técnicas para validar:** Spring Boot, Spring Web, Spring Security, Spring Data JPA, PostgreSQL, Maven y JUnit 5. No se afirma que estén implementadas.
 
-| Tecnología | Uso en IS1 | Justificación |
+| Tecnología | Función | Motivo principal |
 |---|---|---|
-| Java | Algoritmo de planificación, tareas, usuarios y reglas de negocio | Lenguaje elegido por el equipo; orientación a objetos y ecosistema sólido |
-| HTML | Estructura de pantallas y formularios | Sencillo para organizar la interfaz |
-| CSS | Estilos visuales | Separa diseño y estructura |
-| JavaScript | Eventos y actualización de la interfaz | Permite interacción sin rehacer la ventana |
-| JavaFX | Ventanas y ciclo de vida de la aplicación de escritorio | Integra código Java y componentes gráficos |
-| WebView / WebEngine | Renderizar HTML, CSS y JavaScript en JavaFX | Reutiliza tecnologías web sin servidor web |
-| Puente Java-JavaScript | Conectar acciones de la interfaz con métodos Java | Ejecuta la lógica Java desde controles HTML |
-| SQLite | Base de datos local | No necesita servidor de base de datos |
-| JDBC y driver SQLite | Acceso a datos desde Java | API estándar y sencilla para consultas |
-| Maven | Dependencias y construcción | Reproducibilidad del proyecto |
-| JUnit 5 | Pruebas unitarias | Validar lógica y evitar regresiones |
-| jpackage | Empaquetado para Windows | Preparar una aplicación instalable |
-| Git y GitHub | Versionado y colaboración | Historial compartido |
-| GitHub Issues y Projects | Organización Scrum | Historias y seguimiento |
+| Java | Algoritmo de planificación y reglas de negocio | Lenguaje elegido por el equipo, orientado a objetos |
+| Spring Boot | Arranque y configuración del servidor web Java | Reduce configuración frente a Spring manual o servlets |
+| Spring Web | Rutas y peticiones HTTP | Conecta navegador y código Java |
+| HTML | Estructura de páginas y formularios | Estándar web sencillo |
+| CSS | Diseño visual | Separa estilos de contenido |
+| JavaScript | Interacciones y peticiones fetch | Interfaz dinámica sin framework adicional |
+| PostgreSQL | Persistencia central de usuarios, tareas y horarios | Base de datos relacional robusta y multiusuario |
+| Spring Data JPA | Acceso a datos mediante entidades y repositorios | Menos SQL repetitivo que JDBC manual |
+| Spring Security | Autenticación, sesiones y autorización | Evita implementar mecanismos sensibles desde cero |
+| Maven | Compilación y dependencias | Construcción reproducible |
+| JUnit 5 | Pruebas unitarias | Validar reglas y algoritmo |
+| Git y GitHub | Versionado y colaboración | Trabajo en equipo |
+| GitHub Issues y Projects | Gestión Scrum | Trazabilidad del sprint |
 
-### Alternativas valoradas
-- Java frente a Python: el equipo prefiere Java; Python habría permitido prototipos rápidos.
-- JavaFX + WebView frente a Electron: integración directa con la lógica Java frente a una plataforma basada en JavaScript/Node.js.
-- HTML/CSS/JavaScript frente a controles JavaFX nativos: interfaz web flexible, a costa de mantener un puente Java-JavaScript.
-- WebView frente a Swing/JEditorPane: soporte más adecuado para HTML y JavaScript, aunque el motor web puede tener limitaciones de compatibilidad.
-- SQLite frente a PostgreSQL/MySQL: más simple para una aplicación local; no ofrece por sí sola sincronización entre ordenadores.
-- JDBC frente a Hibernate: menos capas para un modelo de datos inicial pequeño.
-- Maven frente a Gradle: ambos sirven; Maven se propone por sencillez de configuración.
-- JUnit frente a pruebas solo manuales: automatiza la verificación.
-- jpackage frente a entregar un archivo JAR: facilita distribución a usuarios finales.
+### Por qué estas tecnologías y no otras
+- **Java frente a Python:** Java es una elección válida para el proyecto y la preferida por el equipo; Python + Django también sería adecuado y podría resultar más rápido al principio. No es necesario cambiar a Python.
+- **Spring Boot frente a Django:** Django exige usar Python; Spring Boot permite conservar Java y aporta herramientas para servidor y backend.
+- **Spring Boot frente a servlets Java manuales:** automatiza configuración, servidor embebido y gestión de dependencias.
+- **HTML/CSS/JavaScript sin React:** menor curva de aprendizaje y suficiente para las pantallas iniciales; React puede valorarse si la interfaz crece.
+- **PostgreSQL frente a SQLite:** mejor opción propuesta para cuentas y datos centralizados entre usuarios; SQLite sería más sencillo para prototipo local.
+- **PostgreSQL frente a MySQL:** ambos son válidos; PostgreSQL se propone por su ecosistema y soporte de relaciones y consultas.
+- **Spring Data JPA frente a JDBC:** reduce código repetitivo, aunque introduce conceptos ORM.
+- **Spring Security frente a autenticación casera:** proporciona componentes establecidos para contraseñas, sesiones y permisos; requiere configuración correcta.
+- **Maven frente a Gradle:** ambos sirven; Maven es una opción declarativa y habitual en Java.
+- **JUnit 5 frente a solo pruebas manuales:** permite comprobar el algoritmo de forma repetible.
 
-**Cambio de arquitectura:** Python + Django dejan de ser la elección del proyecto. Django sirve para aplicaciones web con servidor y no es necesario en esta arquitectura local. HTML/CSS/JavaScript siguen siendo la interfaz, pero dentro de JavaFX WebView.
+**Arquitectura:** navegador (HTML/CSS/JS) → peticiones HTTP → servidor Java con Spring Boot → lógica de planificación y PostgreSQL. JavaFX y WebView se descartan porque corresponden a la propuesta anterior de escritorio. Django se descarta porque el equipo prefiere Java.
 
-**Pendiente de validar:** ventana JavaFX que cargue HTML local, comunicación JavaScript-Java, persistencia SQLite, compatibilidad del motor WebView y empaquetado. No consta implementación de estas pruebas.
+**Pendiente:** prueba de concepto de formulario HTML/JavaScript que envía una petición a Spring Boot y guarda un registro en PostgreSQL; decidir despliegue, configuración de seguridad y modelo de datos. No consta implementación.
 
 ## Diseño: registro
 **Objetivo:** permitir crear una cuenta.
@@ -66,7 +66,7 @@ El equipo ha elegido **Java** como lenguaje principal y **HTML, CSS y JavaScript
 - Pantalla prevista: correo, contraseña, botón de acceso y enlace al registro.
 - Flujo: introducir credenciales → validar → acceder a la aplicación o mostrar error.
 - Considerar cierre de sesión, sesiones seguras y mensajes que no revelen información sensible.
-**Pendiente:** wireframe aprobado, mecanismo de autenticación local y criterios de seguridad.
+**Pendiente:** wireframe aprobado, mecanismo de autenticación y sesión web y criterios de seguridad.
 
 ## Diseño: lista de To-Dos
 **Objetivo:** gestionar una lista sencilla de pendientes, separada de la planificación automática si así lo decide el equipo.
@@ -92,7 +92,7 @@ Mostrar comparación de tecnologías, decisión aprobada (si existe) y diseños/
 Registrar qué funcionó, qué no funcionó y 1–3 acciones de mejora con responsables. Completar después de celebrarla.
 
 ## Definition of Done del sprint (propuesta)
-- Java y HTML + CSS + JavaScript elegidos; JavaFX/WebView y SQLite sujetos a validación técnica.
+- Java y HTML + CSS + JavaScript elegidos; Spring Boot y PostgreSQL sujetos a validación técnica.
 - Diseños de registro, inicio de sesión y To-Dos accesibles y revisados por el equipo.
 - Historias y criterios de aceptación coherentes y sin duplicados.
 - Sprint Review y Retrospective documentadas.
@@ -103,7 +103,7 @@ Registrar qué funcionó, qué no funcionó y 1–3 acciones de mejora con respo
 2. Registro de decisión de arquitectura (ADR): alternativas, criterios, decisión y razones.
 3. Wireframes de registro, inicio de sesión y To-Dos, con enlaces a archivos.
 4. Flujos de usuario y validaciones de los tres diseños.
-5. Modelo de datos inicial y interfaces Java-JavaScript preliminares, solo si se han diseñado.
+5. Modelo de datos inicial y rutas HTTP y modelo de datos preliminares, solo si se han diseñado.
 6. Sprint Review: entregables mostrados, feedback y ajustes.
 7. Retrospectiva: mejoras acordadas y responsables.
 8. Riesgos, dudas abiertas y próximos pasos.
