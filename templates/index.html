@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mis To-Dos | IS1</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <span class="eyebrow">IS1 · Planificador de estudios</span>
+      <h1>Mis tareas</h1>
+      <p>Organiza lo que tienes pendiente, paso a paso.</p>
+    </header>
+    <section class="panel" aria-label="Lista de tareas">
+      <form id="todo-form" class="new-todo">
+        <label for="todo-input" class="sr-only">Nueva tarea</label>
+        <input id="todo-input" type="text" maxlength="200" required placeholder="Ej. Repasar el tema 1 de Cálculo" autocomplete="off">
+        <button type="submit" class="primary">+ Añadir</button>
+      </form>
+      <div class="toolbar">
+        <div class="filters" aria-label="Filtrar tareas">
+          <button type="button" class="filter active" data-filter="all" aria-pressed="true">Todas</button>
+          <button type="button" class="filter" data-filter="pending" aria-pressed="false">Pendientes</button>
+          <button type="button" class="filter" data-filter="done" aria-pressed="false">Completadas</button>
+        </div>
+        <span id="counter">Cargando...</span>
+      </div>
+      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+      <ul id="todo-list" class="todo-list"></ul>
+      <p id="empty-state" class="empty" hidden>No hay tareas en esta categoría.</p>
+    </section>
+    <footer>Las tareas se guardan en SQLite en este servidor.</footer>
+  </main>
+</body>
+</html>
