@@ -19,11 +19,12 @@ Seleccionar la pila tecnológica de la aplicación y diseñar las funcionalidade
 Revisar posibles solapamientos con HU27 — Lista de tareas (Issue #28) y aclarar si es la misma funcionalidad.
 
 ## Tecnologías elegidas por el equipo
-La aplicación será **web**. Por decisión actual del equipo, se utilizarán **Python, HTML, CSS y JavaScript**, y **SQLite** como base de datos. No se ha elegido todavía framework de servidor ni otras dependencias.
+La aplicación será **web**. Por decisión actual del equipo, se utilizarán **Python, HTML, CSS y JavaScript**, y **SQLite** como base de datos. Se elige **Flask** como framework ligero de servidor Python. No se han elegido otras dependencias adicionales.
 
 | Tecnología | Función en el planificador |
 |---|---|
 | Python | Lógica de negocio, tareas, asignaturas y algoritmo de planificación |
+| Flask | Servidor web Python: define rutas HTTP y recibe/responde a las peticiones de JavaScript |
 | HTML | Estructura de las pantallas y formularios |
 | CSS | Estilos y presentación visual |
 | JavaScript | Interacciones de usuario y comunicación con el servidor cuando se implemente |
@@ -32,12 +33,12 @@ La aplicación será **web**. Por decisión actual del equipo, se utilizarán **
 ### Decisiones y alternativas descartadas o aplazadas
 - **Python en lugar de Java:** decisión actual del equipo para simplificar el conjunto de tecnologías y programar la lógica en Python.
 - **HTML, CSS y JavaScript sin React:** permite empezar con tecnologías web básicas sin un framework adicional.
-- **Django, Spring Boot y Spring Web:** no se utilizarán por ahora. Los dos últimos corresponden al ecosistema Java; Django es una posible alternativa Python, pero no está elegido.
+- **Flask frente a Django:** se elige Flask por ser ligero y permitir construir una API sencilla; Django aporta más funcionalidades integradas, pero también más estructura inicial. Spring Boot y Spring Web pertenecen al ecosistema Java y no se utilizarán.
 - **SQLite frente a PostgreSQL y MySQL:** SQLite se elige para simplificar el prototipo universitario, sin configurar un servidor de base de datos. PostgreSQL o MySQL pueden ser mejores si aumenta la concurrencia y el despliegue multiusuario; la migración podría valorarse más adelante.
 - **Maven, Spring Security, JUnit y Spring Data JPA:** fuera del conjunto actual de tecnologías.
 
 ### Aspectos técnicos pendientes
-Para que una interfaz en el navegador envíe datos a Python, habrá que preparar un **servidor HTTP** y definir rutas para recibir peticiones y devolver respuestas. Puede desarrollarse con herramientas de la biblioteca estándar de Python o decidirse un framework más adelante. No afirmar que la comunicación ni la persistencia estén implementadas. Quedan pendientes el diseño del esquema y la ubicación/persistencia del archivo SQLite en el servidor, la autenticación segura, el despliegue y las pruebas. En una aplicación web el archivo SQLite debe estar en el servidor, no en el navegador del usuario.
+La comunicación entre JavaScript y Python se implementará mediante **fetch y peticiones HTTP con JSON**, recibidas por rutas definidas en **Flask**. Falta diseñar e implementar dichas rutas. No afirmar que la comunicación ni la persistencia estén implementadas. Quedan pendientes el diseño del esquema y la ubicación/persistencia del archivo SQLite en el servidor, la autenticación segura, el despliegue y las pruebas. En una aplicación web el archivo SQLite debe estar en el servidor, no en el navegador del usuario.
 
 ## Diseño: registro
 **Objetivo:** permitir crear una cuenta.
@@ -78,7 +79,7 @@ Mostrar comparación de tecnologías, decisión aprobada (si existe) y diseños/
 Registrar qué funcionó, qué no funcionó y 1–3 acciones de mejora con responsables. Completar después de celebrarla.
 
 ## Definition of Done del sprint (propuesta)
-- Python y HTML + CSS + JavaScript elegidos; conexión HTTP, esquema SQLite y autenticación pendientes de definir.
+- Python y HTML + CSS + JavaScript elegidos; rutas Flask, esquema SQLite y autenticación pendientes de definir.
 - Diseños de registro, inicio de sesión y To-Dos accesibles y revisados por el equipo.
 - Historias y criterios de aceptación coherentes y sin duplicados.
 - Sprint Review y Retrospective documentadas.
