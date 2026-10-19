@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registro | IS1</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <span class="eyebrow">IS1 · Planificador de estudios</span>
+      <h1>Crear cuenta</h1>
+      <p>Regístrate para guardar tu planificación personal.</p>
+    </header>
+
+    <section class="panel">
+      <form id="registro-form" class="auth-form">
+        <div class="form-group">
+          <label for="email">Correo electrónico</label>
+          <input id="email" type="email" required placeholder="estudiante@ucm.es" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña (mínimo 6 caracteres)</label>
+          <input id="password" type="password" required minlength="6" placeholder="••••••••">
+        </div>
+        <button type="submit" class="primary">Registrarse</button>
+      </form>
+      <p id="feedback" class="feedback" role="status"></p>
+      <p class="auth-switch">¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a>.</p>
+    </section>
+  </main>
+
+  <script>
+    document.querySelector("#registro-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const feedback = document.querySelector("#feedback");
+      feedback.textContent = "";
+
+      const email = document.querySelector("#email").value;
+      const password = document.querySelector("#password").value;
+
+      try {
+        const res = await fetch("/api/registro", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error);
+        
+        // Redirigir a la página principal tras registrarse
+        window.location.href = "/";
+      } catch (err) {
+        feedback.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>
