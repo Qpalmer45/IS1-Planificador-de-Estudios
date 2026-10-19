@@ -3,42 +3,103 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Iniciar Sesión | IS1</title>
+  <title>Iniciar Sesión | Planificador de Estudios</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-  <main class="container">
-    <header class="header">
-      <span class="eyebrow">IS1 · Planificador de estudios</span>
-      <h1>Iniciar sesión</h1>
-      <p>Accede a tu cuenta y a tus tareas guardadas.</p>
-    </header>
+<body class="auth-body">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-icon-large">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+            <path d="M6 6h10"></path>
+            <path d="M6 10h10"></path>
+          </svg>
+        </div>
+        <h1 class="auth-title">Iniciar sesión</h1>
+        <p class="auth-subtitle">Accede a tu cuenta de estudiante en StudyPlan</p>
+      </div>
 
-    <section class="panel">
-      <form id="login-form" class="auth-form">
+      <div id="auth-alert" class="alert-box alert-error" role="alert" style="display: none;">
+        <span class="alert-icon">⚠️</span>
+        <span id="alert-message" class="alert-text"></span>
+      </div>
+
+      <form id="login-form" class="auth-form" novalidate>
         <div class="form-group">
           <label for="email">Correo electrónico</label>
-          <input id="email" type="email" required placeholder="estudiante@ucm.es" autocomplete="email">
+          <div class="input-icon-group">
+            <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <input
+              id="email"
+              type="email"
+              required
+              placeholder="estudiante@universidad.es"
+              autocomplete="email"
+              autofocus
+            >
+          </div>
         </div>
+
         <div class="form-group">
-          <label for="password">Contraseña</label>
-          <input id="password" type="password" required placeholder="••••••••">
+          <div class="form-label-row">
+            <label for="password">Contraseña</label>
+          </div>
+          <div class="input-icon-group">
+            <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <input
+              id="password"
+              type="password"
+              required
+              placeholder="••••••••"
+              autocomplete="current-password"
+            >
+          </div>
         </div>
-        <button type="submit" class="primary">Entrar</button>
+
+        <button type="submit" class="primary-btn btn-block" id="btn-submit">
+          <span>Entrar a mi cuenta</span>
+        </button>
       </form>
-      <p id="feedback" class="feedback" role="status"></p>
-      <p class="auth-switch">¿No tienes cuenta? <a href="/registro">Regístrate aquí</a>.</p>
-    </section>
-  </main>
+
+      <div class="auth-footer">
+        <p>¿Aún no tienes cuenta? <a href="/registro">Regístrate aquí</a></p>
+      </div>
+    </div>
+  </div>
 
   <script>
-    document.querySelector("#login-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const feedback = document.querySelector("#feedback");
-      feedback.textContent = "";
+    const form = document.querySelector("#login-form");
+    const alertBox = document.querySelector("#auth-alert");
+    const alertMsg = document.querySelector("#alert-message");
+    const submitBtn = document.querySelector("#btn-submit");
 
-      const email = document.querySelector("#email").value;
+    function showAlert(message, isError = true) {
+      alertBox.className = "alert-box " + (isError ? "alert-error" : "alert-success");
+      alertMsg.textContent = message;
+      alertBox.style.display = "flex";
+    }
+
+    function hideAlert() {
+      alertBox.style.display = "none";
+      alertMsg.textContent = "";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const email = document.querySelector("#email").value.trim();
       const password = document.querySelector("#password").value;
+
+      if (!email || !password) {
+        showAlert("Por favor, introduce tu correo y contraseña.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = "<span>Iniciando sesión...</span>";
 
       try {
         const res = await fetch("/api/login", {
@@ -46,14 +107,19 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password })
         });
-        const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error);
+        const data = await res.json().catch(() => ({}));
 
-        // Redirigir a la página principal tras iniciar sesión
+        if (!res.ok) {
+          throw new Error(data.error || "No se pudo iniciar sesión.");
+        }
+
+        // Redirigir al inicio / dashboard
         window.location.href = "/";
       } catch (err) {
-        feedback.textContent = err.message;
+        showAlert(err.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "<span>Entrar a mi cuenta</span>";
       }
     });
   </script>
