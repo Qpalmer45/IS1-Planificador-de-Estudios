@@ -36,3 +36,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid #93c5fd; outline-
 footer { text-align: center; font-size: 12px; margin: 24px 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (max-width: 540px) { .container { margin: 30px auto; } .panel { padding: 16px; } .new-todo { flex-direction: column; } .toolbar { align-items: flex-start; } .todo { flex-wrap: wrap; } .actions { margin-left: auto; } }
+
+/* Estilos adicionales para autenticación */
+.auth-form { display: flex; flex-direction: column; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.form-group label { font-size: 14px; font-weight: 600; color: #475569; }
+.auth-switch { margin-top: 18px; font-size: 14px; text-align: center; color: #64748b; }
+.auth-switch a { color: #285fc5; text-decoration: none; font-weight: 600; }
+.auth-switch a:hover { text-decoration: underline; }
