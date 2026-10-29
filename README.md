@@ -29,29 +29,13 @@ El objetivo del proyecto es crear un planificador de estudios capaz de generar a
 
 ## Tecnologías
 
-Tecnologías inicialmente propuestas:
+Pila tecnológica aprobada y utilizada para la aplicación web:
 
-### Frontend
-- React
-- TypeScript
-- HTML
-- CSS
-
-### Backend
-- Node.js
-- Express
-- TypeScript
-
-### Base de datos
-- PostgreSQL
-
-### Herramientas
-- Git
-- GitHub
-- Visual Studio Code
-- GitHub Projects
-
-> Las tecnologías pueden modificarse durante el desarrollo del proyecto.
+- **Lenguaje:** Python 3
+- **Backend:** Flask
+- **Frontend:** HTML5, CSS3 y JavaScript moderno
+- **Base de datos:** SQLite (módulo estándar `sqlite3` de Python)
+- **Control de versiones:** Git & GitHub
 
 ## Metodología
 
@@ -67,7 +51,7 @@ Flujo de trabajo:
 
 ## Product Backlog
 
-El Product Backlog inicial está compuesto por **20 Historias de Usuario**.
+El Product Backlog está compuesto por las Historias de Usuario documentadas en `docs/Historias-de-usuario.md` y vinculadas a las Issues de GitHub.
 
 Cada Historia de Usuario dispone de:
 
@@ -75,8 +59,6 @@ Cada Historia de Usuario dispone de:
 - Valor.
 - Estimación.
 - Criterios de aceptación.
-
-Las Historias de Usuario están registradas como Issues dentro del repositorio.
 
 ## Equipo
 
@@ -88,17 +70,52 @@ Las Historias de Usuario están registradas como Issues dentro del repositorio.
 
 ## Instalación y ejecución
 
-Esta sección se completará cuando comience la implementación.
+### 1. Requisitos
+- Python 3.10 o superior instalado.
+
+### 2. Instalación de dependencias
+```bash
+pip install -r requirements.txt
+```
+
+### 3. Ejecución del servidor
+```bash
+python app.py
+```
+Acceder a la aplicación web en [http://127.0.0.1:5000](http://127.0.0.1:5000).
+
+### 4. Ejecución de pruebas automatizadas
+```bash
+python -m unittest discover -s tests -p "test_*.py"
+```
 
 ## Estructura del proyecto
 
-Esta sección se actualizará a medida que se desarrolle la aplicación.
+```text
+IS1-Planificador-de-Estudios/
+├── app.py                # Servidor web Flask, rutas, lógica de autenticación y APIs
+├── requirements.txt      # Dependencias del proyecto
+├── todos.db              # Base de datos SQLite (se genera automáticamente)
+├── static/
+│   ├── app.js            # Lógica cliente: pestañas, llamadas fetch y gestión de To-Dos
+│   └── style.css         # Estilos visuales modernos, sistema de diseño responsivo
+├── templates/
+│   ├── index.html        # Pantalla de inicio (Dashboard) y pestañas de la aplicación
+│   ├── login.html        # Pantalla de inicio de sesión (HU21)
+│   └── registro.html     # Pantalla de creación de cuenta (HU20)
+├── tests/
+│   └── test_app.py       # Pruebas unitarias automatizadas (HU20, HU21, HU27)
+└── docs/                 # Documentación del proyecto, backlog e implementaciones
+```
 
 ## Estado del proyecto
 
-**En desarrollo.**
+- **Sprint 1 (Completado):**
+  - **HU20 - Registro:** Creación de cuentas con hash seguro de contraseñas.
+  - **HU21 - Inicio de sesión:** Autenticación con sesiones seguras y control de acceso.
+  - **HU27 - Lista de To-Dos:** Notas rápidas independientes con CRUD completo, filtros y aislamiento por usuario.
+  - **Dashboard:** Pantalla de inicio con barra de navegación, métricas y pestañas hacia futuros módulos.
 
-Actualmente se está trabajando en la definición y planificación inicial del producto.
 
 ## Contexto académico
 

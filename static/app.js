@@ -1,171 +1,395 @@
 "use strict";
 
-// HTMLFormElement | null: referencia al formulario que permite añadir tareas.
-const form = document.querySelector("#todo-form");
-// HTMLInputElement | null: campo donde se escribe el título de una nueva tarea.
-const input = document.querySelector("#todo-input");
-// HTMLUListElement | null: lista donde se dibujan las tareas recibidas del servidor.
-const list = document.querySelector("#todo-list");
-// HTMLSpanElement | null: elemento que muestra cuántas tareas siguen pendientes.
-const counter = document.querySelector("#counter");
-// HTMLParagraphElement | null: mensaje mostrado cuando el filtro no devuelve tareas.
-const empty = document.querySelector("#empty-state");
-// HTMLParagraphElement | null: zona de texto para errores y otros mensajes de estado.
-const feedback = document.querySelector("#feedback");
-// Array de tareas: empieza vacío y se reemplaza con los datos cargados desde la API.
+/**
+ * Lógica de cliente para StudyPlan (Planificador de Estudios).
+ * Manejo de pestañas de navegación, dashboard del estudiante y gestión de To-Dos rápidos (HU27).
+ */
+
+// Estado global de la aplicación
 let todos = [];
-// string: filtro actualmente seleccionado; puede ser "all", "pending" o "done".
 let currentFilter = "all";
 
+// Elementos DOM principales
+const todoForm = document.querySelector("#todo-form");
+const todoInput = document.querySelector("#todo-input");
+const charCounter = document.querySelector("#char-counter");
+const todoList = document.querySelector("#todo-list");
+const counterText = document.querySelector("#counter");
+const emptyState = document.querySelector("#empty-state");
+const emptyTitle = document.querySelector("#empty-title");
+const emptyDesc = document.querySelector("#empty-desc");
+const feedbackEl = document.querySelector("#feedback");
+const btnLogout = document.querySelector("#btn-logout");
+
+// Contadores de métricas
+const countAllEl = document.querySelector("#count-all");
+const countPendingEl = document.querySelector("#count-pending");
+const countDoneEl = document.querySelector("#count-done");
+const navTodosCountEl = document.querySelector("#nav-todos-count");
+const dashPendingCountEl = document.querySelector("#dashboard-pending-count");
+const dashDoneCountEl = document.querySelector("#dashboard-done-count");
+
+// =============================================================================
+// 1. API Helper y Manejo de Errores
+// =============================================================================
+
 async function api(path, options = {}) {
-  // Centraliza las peticiones JSON y convierte las respuestas fallidas en errores legibles.
   const response = await fetch(path, {
     ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
   });
+
+  if (response.status === 401) {
+    // Si la sesión expiró o no está autenticado, redirigir a login
+    window.location.href = "/login";
+    return null;
+  }
+
   if (!response.ok) {
-    // Usa un objeto vacío si la respuesta de error no contiene JSON válido.
     const body = await response.json().catch(() => ({}));
     throw new Error(body.error || "No se pudo completar la operación.");
   }
+
   return response.status === 204 ? null : response.json();
 }
 
-function showError(error) {
-  // Muestra en pantalla el mensaje de error de la última operación.
-  feedback.textContent = error.message || "Ha ocurrido un error.";
+function showFeedback(message) {
+  if (!feedbackEl) return;
+  feedbackEl.textContent = message;
+  feedbackEl.className = "feedback-alert error";
 }
 
-function makeButton(label, className, onClick) {
-  // Crea un botón de interfaz y conecta la acción que debe ejecutar al pulsarlo.
-  const button = document.createElement("button");
-  button.type = "button";
-  button.textContent = label;
-  button.className = className;
-  button.addEventListener("click", onClick);
-  return button;
+function clearFeedback() {
+  if (!feedbackEl) return;
+  feedbackEl.textContent = "";
+  feedbackEl.className = "feedback-alert";
 }
 
-function render() {
-  // Dibuja las tareas visibles, actualiza el contador y conecta sus controles.
-  list.replaceChildren();
-  const pending = todos.filter(todo => !todo.completada).length;
-  counter.textContent = pending + " pendiente" + (pending === 1 ? "" : "s");
-  // Selecciona todas las tareas o solo las pendientes/completadas según el filtro activo.
-  const visible = todos.filter(todo =>
-    currentFilter === "all" ||
-    (currentFilter === "pending" && !todo.completada) ||
-    (currentFilter === "done" && todo.completada)
-  );
-  empty.hidden = visible.length !== 0;
+// =============================================================================
+// 2. Navegación por Pestañas (Tabs)
+// =============================================================================
 
-  for (const todo of visible) {
-    const item = document.createElement("li");
-    item.className = "todo" + (todo.completada ? " done" : "");
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.className = "todo-check";
-    checkbox.checked = todo.completada;
-    checkbox.setAttribute("aria-label", "Completar " + todo.titulo);
-    // Guarda el cambio de estado y restaura el valor anterior si falla la petición.
-    checkbox.addEventListener("change", async () => {
-      try {
-        feedback.textContent = "";
-        await api("/api/todos/" + todo.id, {
-          method: "PATCH", body: JSON.stringify({ completada: checkbox.checked })
-        });
-        await loadTodos();
-      } catch (error) { showError(error); checkbox.checked = todo.completada; }
+function switchTab(tabId) {
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  let found = false;
+  tabContents.forEach(content => {
+    if (content.id === `tab-${tabId}`) {
+      content.classList.add("active");
+      found = true;
+    } else {
+      content.classList.remove("active");
+    }
+  });
+
+  if (!found) return;
+
+  tabButtons.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tabId);
+  });
+
+  // Actualizar hash en la URL sin recargar
+  history.replaceState(null, "", `#${tabId}`);
+}
+
+function setupTabs() {
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  tabButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tabId = btn.dataset.tab;
+      if (tabId) switchTab(tabId);
     });
-    const title = document.createElement("span");
-    title.className = "todo-title";
-    title.textContent = todo.titulo;
-    const actions = document.createElement("div");
-    actions.className = "actions";
-    actions.append(
-      // Abre el modo de edición para esta tarea.
-      makeButton("Editar", "edit", () => editTodo(todo, item)),
-      // Pide confirmación, elimina la tarea y vuelve a cargar la lista.
-      makeButton("Eliminar", "delete", async () => {
-        if (!window.confirm("¿Eliminar esta tarea?")) return;
-        try {
-          feedback.textContent = "";
-          await api("/api/todos/" + todo.id, { method: "DELETE" });
-          await loadTodos();
-        } catch (error) { showError(error); }
-      })
-    );
-    item.append(checkbox, title, actions);
-    list.append(item);
+  });
+
+  // Botones de acción directa en el Dashboard
+  const gotoTodosBtn = document.querySelector("#btn-goto-todos");
+  if (gotoTodosBtn) gotoTodosBtn.addEventListener("click", () => switchTab("todos"));
+
+  const moduleTodosBtn = document.querySelector("#btn-module-todos");
+  if (moduleTodosBtn) moduleTodosBtn.addEventListener("click", () => switchTab("todos"));
+
+  const metricPendingCard = document.querySelector("#card-metric-pending");
+  if (metricPendingCard) metricPendingCard.addEventListener("click", () => switchTab("todos"));
+
+  const metricDoneCard = document.querySelector("#card-metric-done");
+  if (metricDoneCard) metricDoneCard.addEventListener("click", () => switchTab("todos"));
+
+  // Botones de enlace para tabs futuras
+  document.querySelectorAll("[data-open-tab]").forEach(el => {
+    el.addEventListener("click", () => {
+      const target = el.dataset.openTab;
+      if (target) switchTab(target);
+    });
+  });
+
+  // Cargar pestaña inicial basada en el hash de la URL si existe
+  const hash = window.location.hash.replace("#", "");
+  if (hash && document.querySelector(`#tab-${hash}`)) {
+    switchTab(hash);
   }
 }
 
-function editTodo(todo, item) {
-  // Sustituye la tarea por un campo editable con acciones para guardar o cancelar.
-  const editor = document.createElement("input");
-  editor.type = "text";
-  editor.maxLength = 200;
-  editor.value = todo.titulo;
-  editor.className = "edit-input";
-  // Valida y envía el nuevo título al servidor antes de actualizar la lista.
-  const save = async () => {
-    const titulo = editor.value.trim();
-    if (!titulo) { feedback.textContent = "La tarea no puede estar vacía."; return; }
+// =============================================================================
+// 3. Renderizado y Gestión de To-Dos (HU27)
+// =============================================================================
+
+function updateCounters() {
+  const total = todos.length;
+  const pending = todos.filter(t => !t.completada).length;
+  const done = todos.filter(t => t.completada).length;
+
+  // Actualizar filtros
+  if (countAllEl) countAllEl.textContent = total;
+  if (countPendingEl) countPendingEl.textContent = pending;
+  if (countDoneEl) countDoneEl.textContent = done;
+
+  // Contador de estado en toolbar
+  if (counterText) {
+    counterText.textContent = `${pending} pendiente${pending === 1 ? "" : "s"}`;
+  }
+
+  // Contador en la barra de navegación
+  if (navTodosCountEl) {
+    navTodosCountEl.textContent = pending;
+    navTodosCountEl.style.display = pending > 0 ? "inline-block" : "none";
+  }
+
+  // Contadores del Dashboard
+  if (dashPendingCountEl) dashPendingCountEl.textContent = pending;
+  if (dashDoneCountEl) dashDoneCountEl.textContent = done;
+}
+
+function renderTodos() {
+  if (!todoList) return;
+  todoList.replaceChildren();
+
+  updateCounters();
+
+  const visible = todos.filter(t => {
+    if (currentFilter === "pending") return !t.completada;
+    if (currentFilter === "done") return t.completada;
+    return true; // 'all'
+  });
+
+  if (visible.length === 0) {
+    if (emptyState) {
+      emptyState.hidden = false;
+      if (currentFilter === "pending") {
+        emptyTitle.textContent = "¡Todo al día! No tienes notas pendientes";
+        emptyDesc.textContent = "Puedes relajarte o añadir un nuevo pendiente rápido.";
+      } else if (currentFilter === "done") {
+        emptyTitle.textContent = "No hay notas completadas aún";
+        emptyDesc.textContent = "Marca una nota como realizada para verla aquí.";
+      } else {
+        emptyTitle.textContent = "No hay ninguna nota rápida todavía";
+        emptyDesc.textContent = "Escribe arriba tu primera nota o recordatorio.";
+      }
+    }
+    return;
+  }
+
+  if (emptyState) emptyState.hidden = true;
+
+  visible.forEach(todo => {
+    const item = document.createElement("li");
+    item.className = `todo-item${todo.completada ? " done" : ""}`;
+    item.dataset.id = todo.id;
+
+    // Checkbox para marcar/desmarcar
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "todo-checkbox";
+    checkbox.checked = todo.completada;
+    checkbox.setAttribute("aria-label", `Marcar como completada: ${todo.titulo}`);
+    checkbox.addEventListener("change", async () => {
+      try {
+        clearFeedback();
+        await api(`/api/todos/${todo.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ completada: checkbox.checked })
+        });
+        await loadTodos();
+      } catch (err) {
+        showFeedback(err.message);
+        checkbox.checked = todo.completada;
+      }
+    });
+
+    // Contenedor de contenido
+    const content = document.createElement("div");
+    content.className = "todo-content";
+
+    const titleSpan = document.createElement("span");
+    titleSpan.className = "todo-title";
+    titleSpan.textContent = todo.titulo;
+    content.appendChild(titleSpan);
+
+    // Acciones: Editar y Eliminar
+    const actions = document.createElement("div");
+    actions.className = "todo-actions";
+
+    const btnEdit = document.createElement("button");
+    btnEdit.type = "button";
+    btnEdit.className = "action-btn edit";
+    btnEdit.textContent = "Editar";
+    btnEdit.addEventListener("click", () => startEditing(todo, item));
+
+    const btnDelete = document.createElement("button");
+    btnDelete.type = "button";
+    btnDelete.className = "action-btn delete";
+    btnDelete.textContent = "Eliminar";
+    btnDelete.addEventListener("click", async () => {
+      if (!window.confirm("¿Seguro que deseas eliminar esta nota rápida?")) return;
+      try {
+        clearFeedback();
+        await api(`/api/todos/${todo.id}`, { method: "DELETE" });
+        await loadTodos();
+      } catch (err) {
+        showFeedback(err.message);
+      }
+    });
+
+    actions.append(btnEdit, btnDelete);
+    item.append(checkbox, content, actions);
+    todoList.appendChild(item);
+  });
+}
+
+function startEditing(todo, itemElement) {
+  const editWrap = document.createElement("div");
+  editWrap.className = "edit-form-wrap";
+
+  const editInput = document.createElement("input");
+  editInput.type = "text";
+  editInput.maxLength = 200;
+  editInput.value = todo.titulo;
+  editInput.className = "edit-input";
+
+  const saveEdit = async () => {
+    const newTitle = editInput.value.trim();
+    if (!newTitle) {
+      showFeedback("La nota no puede estar vacía.");
+      return;
+    }
     try {
-      feedback.textContent = "";
-      await api("/api/todos/" + todo.id, {
-        method: "PATCH", body: JSON.stringify({ titulo })
+      clearFeedback();
+      await api(`/api/todos/${todo.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ titulo: newTitle })
       });
       await loadTodos();
-    } catch (error) { showError(error); }
+    } catch (err) {
+      showFeedback(err.message);
+    }
   };
-  // Descarta los cambios pendientes y vuelve a dibujar la tarea original.
-  const cancel = () => render();
-  const buttons = document.createElement("div");
-  buttons.className = "actions";
-  buttons.append(makeButton("Guardar", "", save), makeButton("Cancelar", "", cancel));
-  // Permite guardar con Enter o cancelar con Escape desde el campo de texto.
-  editor.addEventListener("keydown", event => {
-    if (event.key === "Enter") save();
-    if (event.key === "Escape") cancel();
+
+  const cancelEdit = () => renderTodos();
+
+  const btnSave = document.createElement("button");
+  btnSave.type = "button";
+  btnSave.className = "action-btn save";
+  btnSave.textContent = "Guardar";
+  btnSave.addEventListener("click", saveEdit);
+
+  const btnCancel = document.createElement("button");
+  btnCancel.type = "button";
+  btnCancel.className = "action-btn cancel";
+  btnCancel.textContent = "Cancelar";
+  btnCancel.addEventListener("click", cancelEdit);
+
+  editInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveEdit();
+    } else if (e.key === "Escape") {
+      cancelEdit();
+    }
   });
-  item.replaceChildren(editor, buttons);
-  editor.focus();
+
+  editWrap.append(editInput, btnSave, btnCancel);
+  itemElement.replaceChildren(editWrap);
+  editInput.focus();
 }
 
 async function loadTodos() {
-  // Obtiene las tareas del servidor y actualiza la vista con los datos recibidos.
-  todos = await api("/api/todos");
-  render();
+  try {
+    const data = await api("/api/todos");
+    if (data) {
+      todos = data;
+      renderTodos();
+    }
+  } catch (err) {
+    showFeedback(err.message);
+  }
 }
 
-form.addEventListener("submit", async event => {
-  // Valida y crea la tarea del formulario, después limpia el campo y recarga la lista.
-  event.preventDefault();
-  const titulo = input.value.trim();
-  if (!titulo) return;
-  try {
-    feedback.textContent = "";
-    await api("/api/todos", { method: "POST", body: JSON.stringify({ titulo }) });
-    input.value = "";
-    await loadTodos();
-    input.focus();
-  } catch (error) { showError(error); }
-});
+// =============================================================================
+// 4. Inicialización de Formularios y Eventos
+// =============================================================================
 
-document.querySelectorAll("[data-filter]").forEach(button => {
-  // Asocia cada opción de filtro con la selección y actualización de su estado visual.
-  button.addEventListener("click", () => {
-    currentFilter = button.dataset.filter;
-    // Marca el filtro elegido como activo para tecnologías de asistencia y estilos.
-    document.querySelectorAll("[data-filter]").forEach(other => {
-      const active = other === button;
-      other.classList.toggle("active", active);
-      other.setAttribute("aria-pressed", String(active));
+function setupTodoEvents() {
+  if (todoForm) {
+    todoForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const titulo = todoInput.value.trim();
+      if (!titulo) return;
+
+      try {
+        clearFeedback();
+        await api("/api/todos", {
+          method: "POST",
+          body: JSON.stringify({ titulo })
+        });
+        todoInput.value = "";
+        if (charCounter) charCounter.textContent = "0/200";
+        await loadTodos();
+        todoInput.focus();
+      } catch (err) {
+        showFeedback(err.message);
+      }
     });
-    render();
-  });
-});
+  }
 
-// Carga la lista al abrir la página y muestra cualquier error de inicio.
-loadTodos().catch(showError);
+  // Contador dinámico de caracteres al escribir
+  if (todoInput && charCounter) {
+    todoInput.addEventListener("input", () => {
+      charCounter.textContent = `${todoInput.value.length}/200`;
+    });
+  }
+
+  // Filtros de tareas (Todas / Pendientes / Completadas)
+  document.querySelectorAll(".filter-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      currentFilter = btn.dataset.filter || "all";
+      document.querySelectorAll(".filter-btn").forEach(b => {
+        const isActive = b === btn;
+        b.classList.toggle("active", isActive);
+        b.setAttribute("aria-pressed", String(isActive));
+      });
+      renderTodos();
+    });
+  });
+
+  // Cerrar sesión
+  if (btnLogout) {
+    btnLogout.addEventListener("click", async () => {
+      try {
+        await api("/api/logout", { method: "POST" });
+        window.location.href = "/login";
+      } catch (err) {
+        window.location.href = "/login";
+      }
+    });
+  }
+}
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener("DOMContentLoaded", () => {
+  setupTabs();
+  setupTodoEvents();
+  loadTodos();
+});

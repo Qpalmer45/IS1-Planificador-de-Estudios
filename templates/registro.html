@@ -1,66 +1,166 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <!-- Configura la codificación, el diseño móvil y la hoja de estilos compartida. -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Registro | IS1</title>
+  <title>Registro | Planificador de Estudios</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
-  <!-- Limita y centra el contenido para conservar el mismo diseño que el resto del sitio. -->
-  <main class="container">
-    <!-- Presenta la marca, el título de registro y una breve descripción. -->
-    <header class="header">
-      <span class="eyebrow">IS1 · Planificador de estudios</span>
-      <h1>Crear cuenta</h1>
-      <p>Regístrate para guardar tu planificación personal.</p>
-    </header>
+<body class="auth-body">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="brand-icon-large">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+            <path d="M6 6h10"></path>
+            <path d="M6 10h10"></path>
+          </svg>
+        </div>
+        <h1 class="auth-title">Crear cuenta</h1>
+        <p class="auth-subtitle">Regístrate para guardar tu planificación y tareas en StudyPlan</p>
+      </div>
 
-    <!-- Panel visual que contiene el formulario de creación de cuenta y sus mensajes. -->
-    <section class="panel">
-      <!-- Formulario vertical con campos agrupados y botón principal. -->
-      <form id="registro-form" class="auth-form">
+      <div id="auth-alert" class="alert-box alert-error" role="alert" style="display: none;">
+        <span class="alert-icon">⚠️</span>
+        <span id="alert-message" class="alert-text"></span>
+      </div>
+
+      <form id="registro-form" class="auth-form" novalidate>
+        <div class="form-group">
+          <label for="nombre">Nombre de estudiante</label>
+          <div class="input-icon-group">
+            <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <input
+              id="nombre"
+              type="text"
+              required
+              maxlength="100"
+              placeholder="Ej. Lucas García"
+              autocomplete="name"
+              autofocus
+            >
+          </div>
+        </div>
+
         <div class="form-group">
           <label for="email">Correo electrónico</label>
-          <input id="email" type="email" required placeholder="estudiante@ucm.es" autocomplete="email">
+          <div class="input-icon-group">
+            <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            <input
+              id="email"
+              type="email"
+              required
+              placeholder="estudiante@universidad.es"
+              autocomplete="email"
+            >
+          </div>
         </div>
+
         <div class="form-group">
           <label for="password">Contraseña (mínimo 6 caracteres)</label>
-          <input id="password" type="password" required minlength="6" placeholder="••••••••">
+          <div class="input-icon-group">
+            <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <input
+              id="password"
+              type="password"
+              required
+              minlength="6"
+              placeholder="••••••••"
+              autocomplete="new-password"
+            >
+          </div>
         </div>
-        <button type="submit" class="primary">Registrarse</button>
+
+        <div class="form-group">
+          <label for="password_confirm">Confirmar contraseña</label>
+          <div class="input-icon-group">
+            <svg class="field-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            <input
+              id="password_confirm"
+              type="password"
+              required
+              minlength="6"
+              placeholder="••••••••"
+              autocomplete="new-password"
+            >
+          </div>
+        </div>
+
+        <button type="submit" class="primary-btn btn-block" id="btn-submit">
+          <span>Crear mi cuenta</span>
+        </button>
       </form>
-      <!-- Zona para errores y enlace para ir al formulario de inicio de sesión. -->
-      <p id="feedback" class="feedback" role="status"></p>
-      <p class="auth-switch">¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a>.</p>
-    </section>
-  </main>
 
-  <!-- Envía los datos de registro al backend y muestra errores o redirige al terminar. -->
+      <div class="auth-footer">
+        <p>¿Ya tienes cuenta? <a href="/login">Inicia sesión aquí</a></p>
+      </div>
+    </div>
+  </div>
+
   <script>
-    document.querySelector("#registro-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const feedback = document.querySelector("#feedback");
-      feedback.textContent = "";
+    const form = document.querySelector("#registro-form");
+    const alertBox = document.querySelector("#auth-alert");
+    const alertMsg = document.querySelector("#alert-message");
+    const submitBtn = document.querySelector("#btn-submit");
 
-      const email = document.querySelector("#email").value;
+    function showAlert(message, isError = true) {
+      alertBox.className = "alert-box " + (isError ? "alert-error" : "alert-success");
+      alertMsg.textContent = message;
+      alertBox.style.display = "flex";
+    }
+
+    function hideAlert() {
+      alertBox.style.display = "none";
+      alertMsg.textContent = "";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const nombre = document.querySelector("#nombre").value.trim();
+      const email = document.querySelector("#email").value.trim();
       const password = document.querySelector("#password").value;
+      const passwordConfirm = document.querySelector("#password_confirm").value;
+
+      if (!email) {
+        showAlert("Por favor, introduce tu correo electrónico.");
+        return;
+      }
+
+      if (password.length < 6) {
+        showAlert("La contraseña debe tener al menos 6 caracteres.");
+        return;
+      }
+
+      if (password !== passwordConfirm) {
+        showAlert("Las contraseñas no coinciden. Por favor, revísalas.");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = "<span>Creando cuenta...</span>";
 
       try {
         const res = await fetch("/api/registro", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ nombre, email, password })
         });
-        const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error);
-        
-        // Redirigir a la página principal tras registrarse
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          throw new Error(data.error || "No se pudo crear la cuenta.");
+        }
+
+        // Éxito: redirigir a la pantalla principal
         window.location.href = "/";
       } catch (err) {
-        feedback.textContent = err.message;
+        showAlert(err.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "<span>Crear mi cuenta</span>";
       }
     });
   </script>
