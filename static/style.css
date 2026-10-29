@@ -1,46 +1,89 @@
+/* Define la tipografía, el color del texto y el fondo general de todas las páginas. */
 :root { font-family: system-ui, -apple-system, Segoe UI, sans-serif; color: #1c2740; background: #f3f6fb; }
+/* Incluye bordes y rellenos en el tamaño total calculado de cada elemento. */
 * { box-sizing: border-box; }
+/* Elimina el margen que el navegador añade por defecto alrededor de la página. */
 body { margin: 0; }
+/* Centra el contenido, limita su ancho y reserva espacio lateral y superior. */
 .container { max-width: 800px; margin: 68px auto; padding: 0 20px; }
+/* Separa la cabecera del contenido que aparece debajo. */
 .header { margin-bottom: 30px; }
+/* Presenta la etiqueta superior de marca en mayúsculas, pequeña y destacada. */
 .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; color: #3767bb; }
+/* Da jerarquía al título principal y ajusta su tamaño según el espacio disponible. */
 h1 { font-size: clamp(34px, 5vw, 48px); letter-spacing: -.04em; margin: 10px 0 8px; }
+/* Atenúa los textos secundarios de la cabecera y el pie de página. */
 .header p, footer { color: #64748b; }
+/* Enmarca el contenido principal con fondo blanco, espacio interior y sombra suave. */
 .panel { background: #fff; padding: 28px; border-radius: 18px; box-shadow: 0 12px 42px #24345112; }
+/* Coloca el campo para nueva tarea y su botón en una fila con separación. */
 .new-todo { display: flex; gap: 10px; }
+/* Da a los campos una tipografía coherente, espacio interno, borde y esquinas redondeadas. */
 input { font: inherit; padding: 13px 15px; border: 1px solid #cbd5e1; border-radius: 9px; min-width: 0; }
+/* Hace que el campo de nueva tarea ocupe el espacio sobrante de la fila. */
 .new-todo input { flex: 1; }
+/* Unifica el aspecto y el cursor de los botones de la interfaz. */
 button { cursor: pointer; font: inherit; border-radius: 9px; border: 0; padding: 10px 14px; }
+/* Resalta con un contorno los campos y botones al navegar con teclado. */
 button:focus-visible, input:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+/* Da al botón principal un color de acción y texto de mayor peso. */
 .primary { background: #285fc5; color: white; font-weight: 600; }
+/* Oscurece el botón principal al pasar el puntero para indicar interacción. */
 .primary:hover { background: #1d4fae; }
+/* Distribuye filtros y contador en la barra y permite que salten de línea. */
 .toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 25px 0 12px; }
+/* Agrupa los filtros sobre un fondo suave y los mantiene alineados. */
 .filters { display: flex; gap: 5px; padding: 4px; border-radius: 11px; background: #f1f5f9; }
+/* Mantiene los filtros sin fondo propio cuando no están seleccionados. */
 .filter { background: transparent; color: #64748b; font-size: 13px; }
+/* Diferencia el filtro activo con fondo blanco, color de acción y texto en negrita. */
 .filter.active { background: white; color: #285fc5; box-shadow: 0 1px 5px #1d2a4217; font-weight: 700; }
+/* Presenta el contador con tamaño pequeño y color secundario. */
 #counter { color: #64748b; font-size: 13px; }
+/* Quita viñetas y espacios predeterminados de la lista de tareas. */
 .todo-list { list-style: none; margin: 0; padding: 0; }
+/* Alinea cada tarea en una fila y la separa de la siguiente con una línea fina. */
 .todo { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #edf0f5; padding: 15px 0; }
+/* Elimina el separador inferior de la última tarea. */
 .todo:last-child { border-bottom: 0; }
+/* Mantiene la casilla de estado a tamaño fijo y aplica el color de acción al marcarla. */
 .todo-check { width: 19px; height: 19px; flex: none; accent-color: #285fc5; }
+/* Permite que el título ocupe el espacio restante y que las palabras largas se ajusten. */
 .todo-title { flex: 1; overflow-wrap: anywhere; }
+/* Tacha y atenúa el título de las tareas ya completadas. */
 .todo.done .todo-title { text-decoration: line-through; color: #94a3b8; }
+/* Coloca los botones de acciones de cada tarea en una fila compacta. */
 .actions { display: flex; gap: 5px; }
+/* Da a los botones secundarios un fondo neutro y texto más pequeño. */
 .actions button { background: #f1f5f9; color: #475569; font-size: 13px; }
+/* Aclara el fondo de los botones de acción al pasar el puntero. */
 .actions button:hover { background: #e2e8f0; }
+/* Usa tonos rojos al pasar sobre el botón de borrar para señalar una acción destructiva. */
 .actions .delete:hover { background: #fee2e2; color: #b91c1c; }
+/* Permite que el campo de edición ocupe el espacio disponible junto a sus botones. */
 .edit-input { flex: 1; }
+/* Centra y separa el mensaje que aparece cuando no hay tareas visibles. */
 .empty { text-align: center; color: #64748b; padding: 30px 0; }
+/* Reserva el espacio y define el estilo del mensaje de error o estado. */
 .feedback { color: #b91c1c; font-size: 13px; min-height: 0; }
+/* Oculta el mensaje de estado cuando no contiene texto. */
 .feedback:empty { display: none; }
+/* Centra el pie de página, reduce su tamaño y lo separa del panel. */
 footer { text-align: center; font-size: 12px; margin: 24px 0; }
+/* Oculta visualmente etiquetas accesibles sin quitarlas del árbol de accesibilidad. */
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+/* En pantallas estrechas reduce márgenes, apila el formulario y permite ajustar las tareas. */
 @media (max-width: 540px) { .container { margin: 30px auto; } .panel { padding: 16px; } .new-todo { flex-direction: column; } .toolbar { align-items: flex-start; } .todo { flex-wrap: wrap; } .actions { margin-left: auto; } }
 
-/* Estilos adicionales para autenticación */
+/* Organiza verticalmente los formularios de acceso y registro con separación entre campos. */
 .auth-form { display: flex; flex-direction: column; gap: 16px; }
+/* Apila cada etiqueta y campo, manteniendo el texto alineado a la izquierda. */
 .form-group { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+/* Destaca las etiquetas de los campos de correo y contraseña. */
 .form-group label { font-size: 14px; font-weight: 600; color: #475569; }
+/* Separa y centra el texto que permite cambiar entre acceso y registro. */
 .auth-switch { margin-top: 18px; font-size: 14px; text-align: center; color: #64748b; }
+/* Da al enlace de cambio de formulario el color principal y mayor peso tipográfico. */
 .auth-switch a { color: #285fc5; text-decoration: none; font-weight: 600; }
+/* Subraya el enlace al pasar el puntero para mostrar que es interactivo. */
 .auth-switch a:hover { text-decoration: underline; }

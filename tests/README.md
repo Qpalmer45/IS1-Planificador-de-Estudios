@@ -16,11 +16,12 @@ Cada prueba trabaja con una base de datos SQLite temporal e independiente: **no 
 
 ## Cobertura provisional
 
+- Vistas HTML: página principal, inicio de sesión y registro.
 - Creación e inicialización de las tablas.
-- Conversión de tareas a diccionario.
+- Conexión SQLite y conversión de tareas a diccionario.
 - Registro: normalización, validación, hash y duplicados.
-- Inicio/cierre de sesión y estado de autenticación.
-- Tareas: creación, validaciones, listado, aislamiento al listar, modificación y borrado.
+- Inicio/cierre de sesión, credenciales incorrectas, petición sin JSON y estado de autenticación.
+- Tareas: creación, validaciones, listado, orden, aislamiento por usuario, modificación de uno o varios campos y borrado.
 
 ## Casos pendientes conocidos
 
@@ -38,3 +39,7 @@ Un resultado `expected failure` (fallo esperado) **no significa que la funcional
 Este primer conjunto cubre únicamente las funcionalidades que ya existen en `app.py`. No inventa funciones del planificador, asignaturas o exámenes aún no implementadas.
 
 **Estado:** archivos añadidos provisionalmente; ejecución en un entorno con dependencias instaladas pendiente de verificar.
+
+## Metodología
+
+La suite comprueba comportamientos mediante `unittest`, pero su estructura por sí sola no demuestra que se haya seguido TDD. Para afirmar TDD habría que verificar el historial de trabajo y confirmar el ciclo prueba fallida, implementación y refactorización. Los cuatro casos `expectedFailure` documentan requisitos que todavía no cumple el backend, no funcionalidades aprobadas.

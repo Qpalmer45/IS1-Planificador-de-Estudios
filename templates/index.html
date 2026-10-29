@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="es">
 <head>
+  <!-- Configura la codificación, la escala móvil y los recursos de estilos y comportamiento. -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mis To-Dos | IS1</title>
@@ -8,19 +9,25 @@
   <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
+  <!-- Centra y limita el ancho de toda la pantalla según la clase .container del CSS. -->
   <main class="container">
+    <!-- Identifica la aplicación y presenta el título y la descripción de esta vista. -->
     <header class="header">
       <span class="eyebrow">IS1 · Planificador de estudios</span>
       <h1>Mis tareas</h1>
       <p>Organiza lo que tienes pendiente, paso a paso.</p>
     </header>
+    <!-- Agrupa el formulario, los filtros, el listado y los mensajes de la aplicación. -->
     <section class="panel" aria-label="Lista de tareas">
+      <!-- Campo y botón para añadir una tarea; .new-todo los alinea y espacia. -->
       <form id="todo-form" class="new-todo">
         <label for="todo-input" class="sr-only">Nueva tarea</label>
         <input id="todo-input" type="text" maxlength="200" required placeholder="Ej. Repasar el tema 1 de Cálculo" autocomplete="off">
         <button type="submit" class="primary">+ Añadir</button>
       </form>
+      <!-- Barra con filtros de estado y el contador de tareas pendientes. -->
       <div class="toolbar">
+        <!-- Los botones comparten el estilo .filter y el activo añade .active. -->
         <div class="filters" aria-label="Filtrar tareas">
           <button type="button" class="filter active" data-filter="all" aria-pressed="true">Todas</button>
           <button type="button" class="filter" data-filter="pending" aria-pressed="false">Pendientes</button>
@@ -28,10 +35,12 @@
         </div>
         <span id="counter">Cargando...</span>
       </div>
+      <!-- Región para mensajes accesibles, lista dinámica y estado vacío. -->
       <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
       <ul id="todo-list" class="todo-list"></ul>
       <p id="empty-state" class="empty" hidden>No hay tareas en esta categoría.</p>
     </section>
+    <!-- Nota inferior que informa dónde se almacenan las tareas. -->
     <footer>Las tareas se guardan en SQLite en este servidor.</footer>
   </main>
 </body>

@@ -5,21 +5,26 @@ import sqlite3
 from flask import Flask, jsonify, render_template, request, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# Path: objeto que representa la carpeta donde está este archivo; sirve de base para localizar recursos.
 BASE_DIR = Path(__file__).resolve().parent
+# Path: ruta completa del archivo SQLite que almacena usuarios y tareas.
 DATABASE = BASE_DIR / "todos.db"
 
+# Flask: instancia principal de la aplicación que registra rutas y configura el servidor web.
 app = Flask(__name__)
-# Clave secreta necesaria para gestionar sesiones/cookies en Flask
+# str: clave usada por Flask para firmar y validar las cookies de sesión.
 app.secret_key = "clave_secreta_is1_planificador_estudios"
 
 
 def get_connection():
+    """Abre una conexión SQLite preparada para acceder a las filas por nombre de columna."""
     connection = sqlite3.connect(DATABASE)
     connection.row_factory = sqlite3.Row
     return connection
 
 
 def initialize_database():
+    """Crea las tablas necesarias si aún no existen para que la aplicación pueda guardar usuarios y tareas."""
     with get_connection() as connection:
         # Tabla de usuarios (HU20 y HU21)
         connection.execute(
@@ -42,6 +47,7 @@ def initialize_database():
 
 
 def to_dict(row):
+    """Convierte una fila de tarea de SQLite al formato JSON que consume la interfaz."""
     return {
         "id": row["id"],
         "titulo": row["titulo"],
@@ -53,16 +59,19 @@ def to_dict(row):
 
 @app.get("/")
 def home():
+    """Muestra la página principal con la lista de tareas."""
     return render_template("index.html")
 
 
 @app.get("/login")
 def login_view():
+    """Muestra el formulario para iniciar sesión."""
     return render_template("login.html")
 
 
 @app.get("/registro")
 def registro_view():
+    """Muestra el formulario para crear una cuenta."""
     return render_template("registro.html")
 
 
@@ -70,6 +79,7 @@ def registro_view():
 
 @app.post("/api/registro")
 def registrar_usuario():
+    """Valida los datos, registra al usuario con la contraseña almacenada como hash e inicia su sesión."""
     data = request.get_json(silent=True) or {}
     email = data.get("email", "").strip().lower()
     password = data.get("password", "").strip()
@@ -98,6 +108,7 @@ def registrar_usuario():
 
 @app.post("/api/login")
 def iniciar_sesion():
+    """Comprueba las credenciales e inicia la sesión del usuario si son correctas."""
     data = request.get_json(silent=True) or {}
     email = data.get("email", "").strip().lower()
     password = data.get("password", "").strip()
@@ -117,12 +128,14 @@ def iniciar_sesion():
 
 @app.post("/api/logout")
 def cerrar_sesion():
+    """Cierra la sesión eliminando los datos de autenticación actuales."""
     session.clear()
     return "", 204
 
 
 @app.get("/api/usuario_actual")
 def usuario_actual():
+    """Indica si hay una sesión activa y devuelve el correo de su usuario."""
     if "usuario_id" in session:
         return jsonify({"autenticado": True, "email": session["email"]})
     return jsonify({"autenticado": False}), 200
@@ -132,6 +145,7 @@ def usuario_actual():
 
 @app.get("/api/todos")
 def list_todos():
+    """Devuelve las tareas del usuario actual o, si no inició sesión, las anónimas."""
     usuario_id = session.get("usuario_id")
     with get_connection() as connection:
         if usuario_id:
@@ -148,6 +162,7 @@ def list_todos():
 
 @app.post("/api/todos")
 def create_todo():
+    """Valida y guarda una tarea asociada al usuario actual, si lo hay."""
     data = request.get_json(silent=True) or {}
     titulo = data.get("titulo", "").strip()
     if not titulo or len(titulo) > 200:
@@ -166,6 +181,7 @@ def create_todo():
 
 @app.patch("/api/todos/<int:todo_id>")
 def update_todo(todo_id):
+    """Actualiza el título o el estado de una tarea y devuelve la tarea resultante."""
     data = request.get_json(silent=True) or {}
     updates, params = [], []
 
@@ -195,6 +211,7 @@ def update_todo(todo_id):
 
 @app.delete("/api/todos/<int:todo_id>")
 def delete_todo(todo_id):
+    """Elimina una tarea e informa si no se encontró el identificador solicitado."""
     with get_connection() as connection:
         cursor = connection.execute("DELETE FROM todos WHERE id = ?", (todo_id,))
     if cursor.rowcount == 0:
@@ -202,7 +219,9 @@ def delete_todo(todo_id):
     return "", 204
 
 
-initialize_database()
-
+# Ejecuta el servidor de desarrollo solo cuando este archivo se inicia directamente,
+# no cuando se importa desde otro módulo, por ejemplo, desde las pruebas.
 if __name__ == "__main__":
+    # Prepara la base de datos antes de atender peticiones al iniciar el servidor.
+    initialize_database()
     app.run(debug=True)

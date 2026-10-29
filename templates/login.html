@@ -1,20 +1,25 @@
 <!doctype html>
 <html lang="es">
 <head>
+  <!-- Configura la codificación, el diseño móvil y la hoja de estilos compartida. -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Iniciar Sesión | IS1</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+  <!-- Limita y centra el contenido para conservar el mismo diseño que el resto del sitio. -->
   <main class="container">
+    <!-- Presenta la marca, el título de acceso y una breve descripción. -->
     <header class="header">
       <span class="eyebrow">IS1 · Planificador de estudios</span>
       <h1>Iniciar sesión</h1>
       <p>Accede a tu cuenta y a tus tareas guardadas.</p>
     </header>
 
+    <!-- Panel visual que contiene el formulario de inicio de sesión y sus mensajes. -->
     <section class="panel">
+      <!-- Formulario vertical con campos agrupados y botón principal. -->
       <form id="login-form" class="auth-form">
         <div class="form-group">
           <label for="email">Correo electrónico</label>
@@ -26,11 +31,13 @@
         </div>
         <button type="submit" class="primary">Entrar</button>
       </form>
+      <!-- Zona para errores y enlace para ir al formulario de registro. -->
       <p id="feedback" class="feedback" role="status"></p>
       <p class="auth-switch">¿No tienes cuenta? <a href="/registro">Regístrate aquí</a>.</p>
     </section>
   </main>
 
+  <!-- Envía las credenciales al backend y muestra errores o redirige al acceder. -->
   <script>
     document.querySelector("#login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
