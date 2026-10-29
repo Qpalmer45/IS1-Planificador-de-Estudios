@@ -2,21 +2,31 @@
 
 Sprint 1: Autenticación de usuarios (HU20 - Registro, HU21 - Inicio de sesión)
 y panel de notas rápidas (HU27 - Lista de To-Dos).
+
+Al cargar este módulo se preparan las rutas del proyecto y de la base de datos,
+se crea la aplicación Flask y se configura cómo se guardan las sesiones del usuario.
 """
+# Herramientas de Python para decoradores, rutas de archivos, expresiones regulares
+# y acceso a SQLite.
 from functools import wraps
 from pathlib import Path
 import re
 import sqlite3
 
+# Flask gestiona las rutas, las peticiones, las respuestas y la sesión del usuario.
 from flask import Flask, g, jsonify, redirect, render_template, request, session, url_for
+# Estas funciones permiten guardar contraseñas de forma segura y comprobarlas al iniciar sesión.
 from werkzeug.security import check_password_hash, generate_password_hash
 
+# Path absoluto a la carpeta del proyecto y archivo SQLite que almacena usuarios y tareas.
 BASE_DIR = Path(__file__).resolve().parent
 DATABASE = BASE_DIR / "todos.db"
 
+# Instancia principal de Flask: registra las rutas y atiende las peticiones web.
 app = Flask(__name__)
-# Clave secreta para la firma de cookies de sesión
+# Clave de tipo texto usada por Flask para firmar las cookies de sesión.
 app.secret_key = "clave_secreta_is1_planificador_estudios_segura"
+# Opciones de sesión: impedir el acceso desde JavaScript y limitar su envío entre sitios.
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 

@@ -5,11 +5,11 @@
  * Manejo de pestañas de navegación, dashboard del estudiante y gestión de To-Dos rápidos (HU27).
  */
 
-// Estado global de la aplicación
+// Estado global: lista (Array) de notas recibidas de la API y filtro activo (String).
 let todos = [];
 let currentFilter = "all";
 
-// Elementos DOM principales
+// Referencias (Element o null) a los controles de notas, mensajes y cierre de sesión.
 const todoForm = document.querySelector("#todo-form");
 const todoInput = document.querySelector("#todo-input");
 const charCounter = document.querySelector("#char-counter");
@@ -21,7 +21,7 @@ const emptyDesc = document.querySelector("#empty-desc");
 const feedbackEl = document.querySelector("#feedback");
 const btnLogout = document.querySelector("#btn-logout");
 
-// Contadores de métricas
+// Referencias (Element o null) a los contadores de notas en filtros, navegación y dashboard.
 const countAllEl = document.querySelector("#count-all");
 const countPendingEl = document.querySelector("#count-pending");
 const countDoneEl = document.querySelector("#count-done");
@@ -33,6 +33,11 @@ const dashDoneCountEl = document.querySelector("#dashboard-done-count");
 // 1. API Helper y Manejo de Errores
 // =============================================================================
 
+/**
+ * Envía una petición HTTP a la API en formato JSON y procesa la respuesta.
+ * Si la sesión ha caducado redirige al login; si hay otro error lo comunica
+ * lanzando una excepción. Devuelve una promesa con los datos JSON o null.
+ */
 async function api(path, options = {}) {
   const response = await fetch(path, {
     ...options,
@@ -56,12 +61,14 @@ async function api(path, options = {}) {
   return response.status === 204 ? null : response.json();
 }
 
+/** Muestra un mensaje de error en el elemento de feedback, si existe. */
 function showFeedback(message) {
   if (!feedbackEl) return;
   feedbackEl.textContent = message;
   feedbackEl.className = "feedback-alert error";
 }
 
+/** Limpia el mensaje de feedback y restablece su estilo normal. */
 function clearFeedback() {
   if (!feedbackEl) return;
   feedbackEl.textContent = "";
@@ -72,6 +79,10 @@ function clearFeedback() {
 // 2. Navegación por Pestañas (Tabs)
 // =============================================================================
 
+/**
+ * Activa la pestaña cuyo identificador se recibe, actualiza los botones
+ * y refleja la selección en el hash de la URL sin recargar la página.
+ */
 function switchTab(tabId) {
   const tabButtons = document.querySelectorAll(".tab-btn");
   const tabContents = document.querySelectorAll(".tab-content");
@@ -96,6 +107,7 @@ function switchTab(tabId) {
   history.replaceState(null, "", `#${tabId}`);
 }
 
+/** Conecta los botones de navegación y restaura la pestaña indicada por la URL. */
 function setupTabs() {
   const tabButtons = document.querySelectorAll(".tab-btn");
   tabButtons.forEach(btn => {
@@ -137,6 +149,7 @@ function setupTabs() {
 // 3. Renderizado y Gestión de To-Dos (HU27)
 // =============================================================================
 
+/** Calcula y actualiza los contadores de notas pendientes, completadas y totales. */
 function updateCounters() {
   const total = todos.length;
   const pending = todos.filter(t => !t.completada).length;
@@ -163,6 +176,10 @@ function updateCounters() {
   if (dashDoneCountEl) dashDoneCountEl.textContent = done;
 }
 
+/**
+ * Dibuja en el DOM las notas que coinciden con el filtro activo, junto con
+ * sus controles para completarlas, editarlas o eliminarlas.
+ */
 function renderTodos() {
   if (!todoList) return;
   todoList.replaceChildren();
@@ -259,6 +276,10 @@ function renderTodos() {
   });
 }
 
+/**
+ * Sustituye una nota por un formulario de edición temporal.
+ * Guarda los cambios en la API o restaura la lista si se cancela.
+ */
 function startEditing(todo, itemElement) {
   const editWrap = document.createElement("div");
   editWrap.className = "edit-form-wrap";
@@ -315,6 +336,7 @@ function startEditing(todo, itemElement) {
   editInput.focus();
 }
 
+/** Solicita las notas del usuario a la API y actualiza el estado y la vista. */
 async function loadTodos() {
   try {
     const data = await api("/api/todos");
@@ -331,6 +353,7 @@ async function loadTodos() {
 // 4. Inicialización de Formularios y Eventos
 // =============================================================================
 
+/** Conecta el formulario de notas, el contador de caracteres, los filtros y el logout. */
 function setupTodoEvents() {
   if (todoForm) {
     todoForm.addEventListener("submit", async (e) => {
@@ -387,7 +410,7 @@ function setupTodoEvents() {
   }
 }
 
-// Inicializar cuando el DOM esté listo
+// Inicializa navegación, eventos y carga inicial cuando el documento HTML ya está disponible.
 document.addEventListener("DOMContentLoaded", () => {
   setupTabs();
   setupTodoEvents();

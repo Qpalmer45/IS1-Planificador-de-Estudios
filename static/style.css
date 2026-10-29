@@ -1,6 +1,8 @@
 /* ==========================================================================
    Variables y Estilos Globales - StudyPlan (Planificador de Estudios)
    ========================================================================== */
+/* Variables reutilizables de color, radios, sombras y tipografía para mantener
+   una apariencia coherente y facilitar cambios globales de diseño. */
 :root {
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
@@ -39,10 +41,14 @@
   --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* El modelo border-box hace que padding y borde queden incluidos en el tamaño
+   declarado de cada elemento, haciendo más predecibles las dimensiones. */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
+/* Estilo base compartido por todas las páginas: elimina el margen del navegador
+   y define la fuente, color, fondo y legibilidad general. */
 body {
   margin: 0;
   font-family: var(--font-sans);
@@ -55,6 +61,8 @@ body {
 /* ==========================================================================
    Barra de Navegación (Navbar)
    ========================================================================== */
+/* Barra superior fija al desplazarse, con fondo blanco, borde y sombra para
+   distinguirla del contenido de la página. */
 .navbar {
   background: #ffffff;
   border-bottom: 1px solid var(--border-card);
@@ -64,6 +72,8 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* Limita y centra el contenido de navegación; Flexbox distribuye marca, pestañas
+   y usuario en una sola fila con alineación vertical común. */
 .nav-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -75,6 +85,7 @@ body {
   gap: 20px;
 }
 
+/* Marca del producto: alinea el icono y el texto y evita que se encojan. */
 .nav-brand {
   display: flex;
   align-items: center;
@@ -84,6 +95,7 @@ body {
   flex-shrink: 0;
 }
 
+/* Caja cuadrada para el icono de marca, centrado con Flexbox. */
 .brand-icon {
   width: 40px;
   height: 40px;
@@ -96,11 +108,13 @@ body {
   border: 1px solid var(--primary-border);
 }
 
+/* Coloca título y subtítulo de la marca en una columna. */
 .brand-text {
   display: flex;
   flex-direction: column;
 }
 
+/* Jerarquía tipográfica del nombre y descriptor de la aplicación. */
 .brand-title {
   font-size: 18px;
   font-weight: 700;
@@ -117,6 +131,7 @@ body {
 }
 
 /* Pestañas de Navegación */
+/* Agrupa las pestañas en una fila con desplazamiento horizontal si no caben. */
 .nav-tabs {
   display: flex;
   align-items: center;
@@ -125,6 +140,8 @@ body {
   padding: 4px 0;
 }
 
+/* Apariencia y alineación de cada botón de pestaña; los estados hover y active
+   se definen en las reglas siguientes. */
 .tab-btn {
   display: inline-flex;
   align-items: center;
@@ -152,6 +169,7 @@ body {
   font-weight: 600;
 }
 
+/* Indicador compacto para mostrar cantidades junto a una pestaña. */
 .badge-count {
   background: var(--primary);
   color: #fff;
@@ -165,6 +183,7 @@ body {
   background: var(--primary);
 }
 
+/* Etiquetas de estado para funcionalidades futuras y sus variantes atenuadas. */
 .tab-badge {
   font-size: 10px;
   font-weight: 700;
@@ -181,6 +200,7 @@ body {
 }
 
 /* Perfil de usuario y Logout */
+/* Distribuye información del usuario y botón de salida sin que se compriman. */
 .nav-user {
   display: flex;
   align-items: center;
@@ -188,12 +208,14 @@ body {
   flex-shrink: 0;
 }
 
+/* Alinea avatar e información básica en una fila. */
 .user-info {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
+/* Avatar circular con degradado; Flexbox centra su inicial. */
 .user-avatar {
   width: 38px;
   height: 38px;
@@ -208,6 +230,7 @@ body {
   box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
 }
 
+/* Nombre y correo aparecen apilados junto al avatar. */
 .user-details {
   display: flex;
   flex-direction: column;
@@ -224,6 +247,7 @@ body {
   color: var(--text-muted);
 }
 
+/* Botón de cerrar sesión y su estado hover de advertencia. */
 .btn-logout {
   display: inline-flex;
   align-items: center;
@@ -248,12 +272,14 @@ body {
 /* ==========================================================================
    Contenedor Principal y Vistas (Tabs)
    ========================================================================== */
+/* Centra el contenido principal, limita su ancho y reserva separación vertical. */
 .main-content {
   max-width: 1140px;
   margin: 32px auto 60px;
   padding: 0 20px;
 }
 
+/* Las vistas se ocultan por defecto; la clase active muestra una con transición. */
 .tab-content {
   display: none;
   animation: fadeIn 0.25s ease-in-out;
@@ -271,10 +297,13 @@ body {
 /* ==========================================================================
    TAB 1: DASHBOARD DE INICIO
    ========================================================================== */
+/* Separa el encabezado del dashboard de las tarjetas de métricas. */
 .dashboard-header {
   margin-bottom: 28px;
 }
 
+/* Panel de bienvenida en degradado; Flexbox separa texto y acción y permite
+   que se acomoden en varias líneas cuando falta espacio. */
 .welcome-card {
   background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
   color: #ffffff;
@@ -288,6 +317,7 @@ body {
   flex-wrap: wrap;
 }
 
+/* Ajusta el tamaño y jerarquía del saludo en el panel de bienvenida. */
 .welcome-text h2 {
   margin: 0 0 8px;
   font-size: clamp(24px, 3.5vw, 32px);
@@ -295,6 +325,7 @@ body {
   letter-spacing: -0.02em;
 }
 
+/* Texto secundario del saludo, con ancho máximo para facilitar la lectura. */
 .welcome-text p {
   margin: 0;
   color: #e0e7ff;
@@ -302,6 +333,8 @@ body {
   max-width: 600px;
 }
 
+/* El botón de llamada a la acción invierte los colores para destacar sobre
+   el fondo azul del panel de bienvenida. */
 .welcome-action .primary-btn {
   background: #ffffff;
   color: var(--primary);
@@ -314,6 +347,8 @@ body {
 }
 
 /* Métricas Rápidas */
+/* Cuadrícula adaptable: crea columnas de al menos 220px y ajusta su número
+   al ancho disponible. */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -321,6 +356,7 @@ body {
   margin-bottom: 36px;
 }
 
+/* Tarjeta de métrica: apila icono, cifras y descripción dentro de una tarjeta. */
 .metric-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -334,6 +370,8 @@ body {
   transition: var(--transition);
 }
 
+/* Las tarjetas interactivas indican clic y elevan su superficie al pasar
+   el puntero. */
 .metric-clickable {
   cursor: pointer;
 }
@@ -344,6 +382,8 @@ body {
   transform: translateY(-2px);
 }
 
+/* Marco y centrado común de los iconos de métricas; las clases icon-* asignan
+   un color distinto según la métrica. */
 .metric-icon {
   width: 44px;
   height: 44px;
@@ -358,11 +398,13 @@ body {
 .icon-subjects { background: var(--primary-light); color: var(--primary); }
 .icon-hours { background: #f3e8ff; color: #7e22ce; }
 
+/* Apila el nombre y valor de cada métrica. */
 .metric-info {
   display: flex;
   flex-direction: column;
 }
 
+/* Tamaños y colores para etiqueta, cifra principal y texto auxiliar. */
 .metric-label {
   font-size: 13px;
   font-weight: 600;
@@ -382,6 +424,7 @@ body {
 }
 
 /* Módulos de la Aplicación */
+/* Título y descripción que introducen la cuadrícula de módulos. */
 .section-title-wrap {
   margin-bottom: 18px;
 }
@@ -398,6 +441,7 @@ body {
   color: var(--text-muted);
 }
 
+/* Cuadrícula de tarjetas de módulos con columnas adaptables al espacio. */
 .modules-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -405,6 +449,7 @@ body {
   margin-bottom: 24px;
 }
 
+/* Tarjeta de módulo: distribuye encabezado, descripción y pie en columna. */
 .module-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -423,11 +468,13 @@ body {
   box-shadow: var(--shadow-md);
 }
 
+/* Variante resaltada para el módulo actualmente implementado. */
 .module-card.card-active {
   border-color: var(--primary-border);
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 
+/* Apila estado y nombre del módulo. */
 .module-header {
   display: flex;
   flex-direction: column;
@@ -448,6 +495,7 @@ body {
   flex-grow: 1;
 }
 
+/* Etiquetas tipo píldora para indicar si un módulo está listo, próximo o pendiente. */
 .status-pill {
   align-self: flex-start;
   font-size: 11px;
@@ -474,6 +522,7 @@ body {
   border: 1px solid #e2e8f0;
 }
 
+/* Pie de tarjeta separado por una línea: muestra categoría y acción. */
 .module-footer {
   display: flex;
   align-items: center;
@@ -489,6 +538,7 @@ body {
   font-weight: 500;
 }
 
+/* Acción de texto sin aspecto de botón relleno, usada en las tarjetas. */
 .btn-text {
   background: none;
   border: 0;
@@ -506,6 +556,7 @@ body {
 }
 
 /* Callout Arquitectura */
+/* Aviso informativo en una fila, con icono y texto alineados al inicio. */
 .callout-card {
   background: #f0fdf4;
   border: 1px solid #bbf7d0;
@@ -516,6 +567,7 @@ body {
   gap: 14px;
 }
 
+/* El icono mantiene su tamaño aunque el texto ocupe varias líneas. */
 .callout-icon {
   font-size: 20px;
   flex-shrink: 0;
@@ -536,11 +588,14 @@ body {
 /* ==========================================================================
    TAB 2: TO-DOS RÁPIDOS (HU27)
    ========================================================================== */
+/* Limita el ancho de la lista de tareas y centra su panel. */
 .todos-container {
   max-width: 820px;
   margin: 0 auto;
 }
 
+/* Encabezado de la pestaña To-Dos: título y distintivo pueden reorganizarse
+   en varias líneas en pantallas estrechas. */
 .section-header {
   display: flex;
   align-items: flex-start;
@@ -564,6 +619,7 @@ body {
   font-size: 14px;
 }
 
+/* Distintivo redondeado que identifica el alcance del panel. */
 .scope-badge {
   background: #f1f5f9;
   border: 1px solid var(--border-card);
@@ -574,6 +630,7 @@ body {
   color: var(--text-muted);
 }
 
+/* Superficie principal que agrupa el formulario, filtros, avisos y lista. */
 .todo-panel {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -583,12 +640,14 @@ body {
 }
 
 /* Formulario Nuevo To-Do */
+/* Campo y botón de alta en una fila; el campo toma el espacio sobrante. */
 .new-todo-form {
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
 }
 
+/* Permite superponer el contador de caracteres dentro del campo. */
 .input-wrapper {
   flex: 1;
   position: relative;
@@ -596,6 +655,7 @@ body {
   align-items: center;
 }
 
+/* Campo de nueva nota: ocupa el ancho disponible y reserva espacio al contador. */
 .input-wrapper input {
   width: 100%;
   font: inherit;
@@ -614,6 +674,7 @@ body {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+/* Contador ubicado dentro del campo, sin interferir con clics o escritura. */
 .char-limit {
   position: absolute;
   right: 14px;
@@ -623,6 +684,7 @@ body {
 }
 
 /* Botón Primario */
+/* Estilo compartido de acción principal: icono y texto alineados en una fila. */
 .primary-btn {
   display: inline-flex;
   align-items: center;
@@ -649,6 +711,7 @@ body {
   transform: translateY(1px);
 }
 
+/* Botón secundario de acciones menos prominentes. */
 .secondary-btn {
   display: inline-flex;
   align-items: center;
@@ -670,6 +733,7 @@ body {
 }
 
 /* Barra de Herramientas de To-Dos */
+/* Coloca filtros y resumen en extremos opuestos, permitiendo envolverlos. */
 .todo-toolbar {
   display: flex;
   align-items: center;
@@ -682,6 +746,7 @@ body {
   margin-bottom: 16px;
 }
 
+/* Agrupa los filtros dentro de una base común. */
 .filters-group {
   display: flex;
   background: #f1f5f9;
@@ -690,6 +755,7 @@ body {
   gap: 3px;
 }
 
+/* Botones de filtro y apariencia de la opción seleccionada. */
 .filter-btn {
   border: 0;
   background: transparent;
@@ -713,6 +779,7 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
+/* Texto de estado con el número de tareas pendientes. */
 .status-counter {
   font-size: 13px;
   font-weight: 600;
@@ -720,6 +787,8 @@ body {
 }
 
 /* Alerta de Feedback */
+/* Mensajes de feedback ocultos por defecto; la variante error los muestra
+   con colores de advertencia. */
 .feedback-alert {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
@@ -736,6 +805,7 @@ body {
 }
 
 /* Lista de Tareas */
+/* Lista sin viñetas y con separación vertical constante entre elementos. */
 .todo-list {
   list-style: none;
   margin: 0;
@@ -745,6 +815,7 @@ body {
   gap: 8px;
 }
 
+/* Cada tarea alinea checkbox, texto y acciones en una fila. */
 .todo-item {
   display: flex;
   align-items: center;
@@ -761,12 +832,14 @@ body {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
 }
 
+/* Variante visual de una tarea completada. */
 .todo-item.done {
   background: #fafbfc;
   border-color: #f1f5f9;
 }
 
 /* Checkbox personalizado */
+/* Tamaño y color del control de completado nativo del navegador. */
 .todo-checkbox {
   width: 22px;
   height: 22px;
@@ -775,6 +848,7 @@ body {
   flex-shrink: 0;
 }
 
+/* El texto ocupa el espacio sobrante y puede encogerse para evitar desbordes. */
 .todo-content {
   flex: 1;
   display: flex;
@@ -782,6 +856,7 @@ body {
   min-width: 0;
 }
 
+/* Título de tarea; si es larga puede partirse y, completada, aparece tachada. */
 .todo-title {
   font-size: 15px;
   color: var(--text-main);
@@ -794,6 +869,7 @@ body {
   color: var(--text-light);
 }
 
+/* Acciones de edición y eliminación alineadas a la derecha de la tarea. */
 .todo-actions {
   display: flex;
   align-items: center;
@@ -801,6 +877,7 @@ body {
   flex-shrink: 0;
 }
 
+/* Apariencia común de botones pequeños de acción y su variante de eliminación. */
 .action-btn {
   border: 0;
   background: #f1f5f9;
@@ -824,6 +901,7 @@ body {
 }
 
 /* Modo edición */
+/* Alinea campo de edición y botones mientras se modifica una nota. */
 .edit-form-wrap {
   flex: 1;
   display: flex;
@@ -831,6 +909,7 @@ body {
   align-items: center;
 }
 
+/* Campo de edición con borde destacado para indicar que está activo. */
 .edit-input {
   flex: 1;
   padding: 8px 12px;
@@ -845,11 +924,13 @@ body {
 }
 
 /* Estado Vacío */
+/* Mensaje centrado que se muestra cuando el filtro no tiene resultados. */
 .empty-state {
   text-align: center;
   padding: 48px 20px;
 }
 
+/* Jerarquía visual del icono, título y explicación del estado vacío. */
 .empty-icon {
   font-size: 42px;
   margin-bottom: 12px;
@@ -871,6 +952,8 @@ body {
 /* ==========================================================================
    TABS ROADMAP (Asignaturas, Horarios, Planificador)
    ========================================================================== */
+/* Tarjeta informativa de módulos aún no implementados; se centra y limita
+   su ancho para facilitar la lectura. */
 .roadmap-card {
   background: var(--bg-card);
   border: 1px solid var(--border-card);
@@ -881,6 +964,7 @@ body {
   box-shadow: var(--shadow-card);
 }
 
+/* Etiqueta de sprint/estado sobre el encabezado del módulo. */
 .roadmap-badge {
   display: inline-block;
   background: #fef3c7;
@@ -893,6 +977,7 @@ body {
   margin-bottom: 12px;
 }
 
+/* Título y descripción del módulo futuro. */
 .roadmap-header h2 {
   margin: 0 0 10px;
   font-size: 24px;
@@ -905,6 +990,7 @@ body {
   font-size: 15px;
 }
 
+/* Apila las características del módulo con una separación uniforme. */
 .roadmap-features {
   display: flex;
   flex-direction: column;
@@ -912,6 +998,7 @@ body {
   margin-bottom: 32px;
 }
 
+/* Cada característica se presenta en un bloque sombreado con icono y texto. */
 .feature-item {
   display: flex;
   align-items: flex-start;
@@ -930,6 +1017,7 @@ body {
 /* ==========================================================================
    PANTALLAS DE AUTENTICACIÓN (LOGIN & REGISTRO)
    ========================================================================== */
+/* Fondo y centrado vertical/horizontal de las pantallas de login y registro. */
 .auth-body {
   background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
   min-height: 100vh;
@@ -939,11 +1027,13 @@ body {
   padding: 24px;
 }
 
+/* Limita el ancho del formulario para que no se extienda demasiado. */
 .auth-container {
   width: 100%;
   max-width: 440px;
 }
 
+/* Tarjeta blanca que contiene marca, formulario y enlaces de autenticación. */
 .auth-card {
   background: #ffffff;
   border: 1px solid var(--border-card);
@@ -952,11 +1042,13 @@ body {
   box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1);
 }
 
+/* Marca centrada al inicio de la tarjeta. */
 .auth-brand {
   text-align: center;
   margin-bottom: 28px;
 }
 
+/* Icono de marca de mayor tamaño en las pantallas de acceso. */
 .brand-icon-large {
   width: 52px;
   height: 52px;
@@ -970,6 +1062,7 @@ body {
   border: 1px solid var(--primary-border);
 }
 
+/* Título y texto auxiliar del formulario de autenticación. */
 .auth-title {
   margin: 0 0 6px;
   font-size: 24px;
@@ -984,12 +1077,14 @@ body {
   font-size: 14px;
 }
 
+/* Apila los campos del formulario y establece el espacio entre ellos. */
 .auth-form {
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
+/* Agrupa cada etiqueta y campo; alinea el contenido a la izquierda. */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -1003,6 +1098,8 @@ body {
   color: var(--text-main);
 }
 
+/* Icono decorativo posicionado sobre el campo y campo con espacio izquierdo
+   suficiente para que el texto no se superponga. */
 .input-icon-group {
   position: relative;
   display: flex;
@@ -1028,12 +1125,14 @@ body {
   transition: var(--transition);
 }
 
+/* Enfoque visible para campos de autenticación. */
 .input-icon-group input:focus {
   outline: none;
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+/* Variante de botón principal que ocupa el ancho completo del formulario. */
 .btn-block {
   width: 100%;
   padding: 13px;
@@ -1041,6 +1140,7 @@ body {
   margin-top: 6px;
 }
 
+/* Enlaces de navegación entre inicio de sesión y registro. */
 .auth-footer {
   text-align: center;
   margin-top: 24px;
@@ -1059,6 +1159,7 @@ body {
 }
 
 /* Alertas de Login/Registro */
+/* Caja de mensaje accesible para errores y confirmaciones de autenticación. */
 .alert-box {
   display: flex;
   align-items: center;
@@ -1084,6 +1185,8 @@ body {
 /* ==========================================================================
    Responsive Queries
    ========================================================================== */
+/* En pantallas estrechas, la navegación pasa a columna y los formularios/listas
+   adaptan su distribución para seguir siendo utilizables. */
 @media (max-width: 768px) {
   .nav-container {
     height: auto;

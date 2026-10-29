@@ -1,12 +1,16 @@
 <!doctype html>
 <html lang="es">
 <head>
+  <!-- Configuración del documento y carga de estilos compartidos con el registro
+       y el dashboard. -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Iniciar Sesión | Planificador de Estudios</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="auth-body">
+  <!-- Tarjeta centrada de autenticación: identidad, formulario, avisos y enlace
+       para cambiar a la pantalla de registro. -->
   <div class="auth-container">
     <div class="auth-card">
       <div class="auth-brand">
@@ -21,11 +25,15 @@
         <p class="auth-subtitle">Accede a tu cuenta de estudiante en StudyPlan</p>
       </div>
 
+      <!-- Aviso inicialmente oculto; el script muestra aquí errores de validación
+           o respuesta de la API. -->
       <div id="auth-alert" class="alert-box alert-error" role="alert" style="display: none;">
         <span class="alert-icon">⚠️</span>
         <span id="alert-message" class="alert-text"></span>
       </div>
 
+      <!-- Formulario de acceso. novalidate deja la validación y los mensajes
+           bajo control del JavaScript de esta página. -->
       <form id="login-form" class="auth-form" novalidate>
         <div class="form-group">
           <label for="email">Correo electrónico</label>
@@ -69,18 +77,22 @@
     </div>
   </div>
 
+  <!-- Control del inicio de sesión: valida campos, envía credenciales JSON a la API,
+       presenta errores y redirige al dashboard si el acceso es correcto. -->
   <script>
     const form = document.querySelector("#login-form");
     const alertBox = document.querySelector("#auth-alert");
     const alertMsg = document.querySelector("#alert-message");
     const submitBtn = document.querySelector("#btn-submit");
 
+    // Muestra un mensaje y aplica el estilo de error o de éxito correspondiente.
     function showAlert(message, isError = true) {
       alertBox.className = "alert-box " + (isError ? "alert-error" : "alert-success");
       alertMsg.textContent = message;
       alertBox.style.display = "flex";
     }
 
+    // Oculta el aviso y borra su texto antes de procesar un nuevo envío.
     function hideAlert() {
       alertBox.style.display = "none";
       alertMsg.textContent = "";
