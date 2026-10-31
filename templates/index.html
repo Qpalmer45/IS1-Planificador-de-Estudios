@@ -43,7 +43,7 @@
         <button type="button" class="tab-btn" data-tab="asignaturas">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
           <span>Asignaturas</span>
-          <span class="tab-badge">Sprint 2</span>
+          <span class="badge-count" id="nav-asignaturas-count">0</span>
         </button>
         <button type="button" class="tab-btn" data-tab="horarios">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
@@ -132,9 +132,9 @@
           </div>
           <div class="metric-info">
             <span class="metric-label">Asignaturas</span>
-            <span class="metric-value">0</span>
+            <span class="metric-value" id="dashboard-subject-count">0</span>
           </div>
-          <span class="metric-sub">Sprint 2 (HU01)</span>
+          <span class="metric-sub">Materias en tu lista</span>
         </div>
 
         <div class="metric-card">
@@ -170,16 +170,16 @@
             </div>
           </article>
 
-          <!-- Módulo futuro: HU01 -->
+          <!-- Acceso al módulo de gestión de asignaturas ya implementado. -->
           <article class="module-card">
             <div class="module-header">
-              <span class="status-pill status-next">Sprint 2</span>
-              <h4>Gestión de Asignaturas (HU01, HU12, HU26)</h4>
+              <span class="status-pill status-ready">✓ Disponible</span>
+              <h4>Gestión de Asignaturas (HU01, HU23)</h4>
             </div>
-            <p>Añade materias, créditos, nivel de dificultad, horas deseadas y seguimiento detallado del temario.</p>
+            <p>Crea y organiza tus materias; cada asignatura tiene su propio apartado independiente.</p>
             <div class="module-footer">
               <span class="module-tag">Núcleo académico</span>
-              <button type="button" class="btn-text" data-open-tab="asignaturas">Conocer más →</button>
+              <button type="button" class="btn-text" data-open-tab="asignaturas">Gestionar asignaturas →</button>
             </div>
           </article>
 
@@ -292,34 +292,85 @@
       </div>
     </section>
 
-    <!-- Secciones roadmap: explican funcionalidades previstas; no son todavía
-         formularios de gestión. Los botones vuelven al inicio. -->
+    <!-- Módulo de asignaturas: permite crear materias y abrir un espacio
+         independiente para cada una, preparado para futuras funciones académicas. -->
     <section id="tab-asignaturas" class="tab-content">
-      <div class="roadmap-card">
-        <div class="roadmap-header">
-          <div class="roadmap-badge">Sprint 2</div>
-          <h2>Módulo de Asignaturas (HU01, HU12, HU13, HU23, HU26)</h2>
-          <p>Este módulo permitirá dar de alta tus asignaturas del curso, asignando dificultad, horas objetivo y temarios específicos.</p>
-        </div>
-        <div class="roadmap-features">
-          <div class="feature-item">
-            <span class="feature-icon">📚</span>
-            <strong>HU01 - Gestión de asignaturas:</strong> Añadir, editar y eliminar materias con créditos y cuatrimestre.
+      <div class="subjects-container">
+        <header class="section-header">
+          <div class="header-titles">
+            <h2>Mis asignaturas</h2>
+            <p>Crea tus materias y accede al espacio independiente de cada una.</p>
           </div>
-          <div class="feature-item">
-            <span class="feature-icon">⚡</span>
-            <strong>HU12 & HU13 - Dificultad y horas deseadas:</strong> Configuración de prioridad para el algoritmo de planificación.
+        </header>
+        <div class="card subject-panel">
+          <!-- El formulario envía el nombre a la API; el backend valida y guarda
+               la asignatura asociada a la cuenta que ha iniciado sesión. -->
+          <form id="subject-form" class="new-todo-form">
+            <div class="input-wrapper">
+              <input
+                id="subject-name"
+                type="text"
+                required
+                placeholder="Ej. Matemáticas, Historia..."
+                autocomplete="off"
+                aria-label="Nombre de la nueva asignatura"
+              >
+            </div>
+            <button type="submit" class="primary-btn">
+              <span>Añadir asignatura</span>
+            </button>
+          </form>
+
+          <!-- El feedback comunica errores de red o validación sin ocultar la lista. -->
+          <div id="subject-feedback" class="feedback-alert" role="status" aria-live="polite"></div>
+
+          <!-- JavaScript dibuja aquí las asignaturas y sus acciones de acceso,
+               edición y borrado. -->
+          <div id="subject-empty-state" class="empty-state" hidden>
+            <div class="empty-icon">📚</div>
+            <h4>Aún no tienes asignaturas</h4>
+            <p>Añade tu primera materia con el formulario de arriba.</p>
           </div>
-          <div class="feature-item">
-            <span class="feature-icon">📑</span>
-            <strong>HU26 - Temarios por asignatura:</strong> Control de temas estudiados y temas pendientes.
-          </div>
-        </div>
-        <div class="roadmap-action">
-          <button type="button" class="secondary-btn" data-open-tab="inicio">← Volver al Inicio</button>
+          <ul id="subject-list" class="subject-list" aria-label="Mis asignaturas"></ul>
+
         </div>
       </div>
     </section>
+
+    <!-- El apartado se muestra como un panel superpuesto, centrado y de tamaño
+         amplio, sin reservar espacio permanente debajo de la lista. -->
+    <div
+      id="subject-modal"
+      class="subject-modal"
+      role="presentation"
+      aria-hidden="true"
+      hidden
+    >
+      <section
+        class="subject-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="subject-dialog-title"
+        tabindex="-1"
+      >
+        <header class="subject-dialog-header">
+          <h2 id="subject-dialog-title">Apartado de asignatura</h2>
+          <button
+            id="subject-dialog-close"
+            class="subject-dialog-close"
+            type="button"
+            aria-label="Cerrar apartado"
+          >
+            Cerrar
+          </button>
+        </header>
+        <!-- Este espacio es la base visual para personalizar cada asignatura
+             más adelante; por ahora solo muestra su nombre y una guía inicial. -->
+        <div id="subject-detail" class="subject-detail" aria-live="polite">
+          <p>Selecciona Abrir en una asignatura para ver su apartado.</p>
+        </div>
+      </section>
+    </div>
 
     <!-- Información de planificación futura sobre disponibilidad, clases y calendario. -->
     <section id="tab-horarios" class="tab-content">

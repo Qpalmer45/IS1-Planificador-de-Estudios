@@ -60,6 +60,11 @@ class TestStudyPlannerApp(unittest.TestCase):
         active_client = client or self.client
         return active_client.post("/api/todos", json={"titulo": titulo})
 
+    def crear_asignatura(self, nombre="Matemáticas", client=None):
+        """Crea una asignatura mediante la API para preparar pruebas."""
+        active_client = client or self.client
+        return active_client.post("/api/asignaturas", json={"nombre": nombre})
+
     # ------------------------------------------------------------------
     # get_db devuelve y configura la conexión SQLite del contexto actual;
     # close_db la cierra al terminar; initialize_database crea las tablas
@@ -201,11 +206,11 @@ class TestStudyPlannerApp(unittest.TestCase):
         self.assertIsNone(result["fecha_creacion"])
 
     # ------------------------------------------------------------------
-    # home muestra el dashboard si hay sesión; login_view y registro_view
-    # muestran sus formularios a visitantes y evitan que usuarios autenticados
-    # vuelvan a las pantallas de acceso.
-    # Casos: redirección de visitantes, renderizado de cada página y redirección
-    # al dashboard cuando la sesión ya está iniciada.
+    # home muestra el dashboard con sesión, y contiene el diálogo de apartado
+    # individual oculto hasta que el usuario abra una asignatura. El diálogo
+    # no reserva espacio permanente en la lista y expone semántica accesible.
+    # Casos: redirección de visitantes, renderizado, estructura del diálogo,
+    # ausencia de un panel fijo y valores de sesión por defecto.
     # ------------------------------------------------------------------
     def test_home_redirige_a_login_si_no_hay_sesion(self):
         """home protege el dashboard redirigiendo al login a usuarios anónimos."""
@@ -223,6 +228,32 @@ class TestStudyPlannerApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Planificador de Estudios", response.data)
         self.assertIn(b"Alicia", response.data)
+
+    def test_home_incluye_dialogo_individual_oculto_y_accesible(self):
+        """El panel inicia oculto y usa semántica accesible de diálogo."""
+        self.registrar()
+
+        response = self.client.get("/")
+        html = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('id="subject-modal"', html)
+        self.assertIn('aria-hidden="true"\n      hidden', html)
+        self.assertIn('role="dialog"', html)
+        self.assertIn('aria-modal="true"', html)
+        self.assertIn('aria-labelledby="subject-dialog-title"', html)
+        self.assertIn('id="subject-dialog-close"', html)
+        self.assertIn('id="subject-detail"', html)
+
+    def test_home_no_reserva_un_panel_fijo_para_los_apartados(self):
+        """La lista no incluye una zona fija de apartados ni pestañas permanentes."""
+        self.registrar()
+
+        response = self.client.get("/")
+
+        self.assertNotIn(b"subject-workspace", response.data)
+        self.assertNotIn(b"subject-tabs", response.data)
+        self.assertNotIn(b"Apartados de asignaturas", response.data)
 
     def test_home_usa_valores_por_defecto_si_faltan_datos_de_sesion(self):
         """home muestra Estudiante y correo vacío si la sesión solo tiene el id."""
@@ -695,6 +726,224 @@ class TestStudyPlannerApp(unittest.TestCase):
         response = self.client.delete("/api/todos/9999")
 
         self.assertEqual(response.status_code, 404)
+
+    # ------------------------------------------------------------------
+    # La API de asignaturas permite crear y listar materias del usuario
+    # autenticado. Cada respuesta incluye los datos de la asignatura y su
+    # propietario, y los nombres se almacenan sin espacios exteriores.
+    # Casos: listado vacío, creación válida, recorte del nombre y validación
+    # de campos ausentes, vacíos o de tipo incorrecto.
+    # ------------------------------------------------------------------
+    def test_listado_inicial_de_asignaturas_vacio(self):
+        """GET /api/asignaturas devuelve una lista vacía al inicio."""
+        self.registrar()
+
+        response = self.client.get("/api/asignaturas")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), [])
+
+    def test_crear_asignatura_valida_y_recortar_espacios(self):
+        """POST /api/asignaturas guarda el nombre limpio y el usuario propietario."""
+        self.registrar()
+
+        response = self.crear_asignatura("  Matemáticas I  ")
+        asignatura = response.get_json()
+
+        self.assertEqual(response.status_code, 201)
+        self.assertIsInstance(asignatura["id"], int)
+        self.assertEqual(asignatura["nombre"], "Matemáticas I")
+        self.assertEqual(asignatura["usuario_id"], 1)
+
+    def test_crear_asignatura_rechaza_nombre_ausente_vacio_o_no_textual(self):
+        """La creación devuelve 400 si nombre falta, está vacío o no es texto."""
+        self.registrar()
+
+        responses = [
+            self.client.post("/api/asignaturas", json={}),
+            self.client.post("/api/asignaturas", json={"nombre": ""}),
+            self.client.post("/api/asignaturas", json={"nombre": "   "}),
+            self.client.post("/api/asignaturas", json={"nombre": None}),
+            self.client.post("/api/asignaturas", json={"nombre": 123}),
+            self.client.post("/api/asignaturas"),
+        ]
+
+        self.assertEqual([response.status_code for response in responses], [400] * 6)
+        self.assertEqual(self.client.get("/api/asignaturas").get_json(), [])
+
+    # ------------------------------------------------------------------
+    # get/list de asignaturas devuelve únicamente las materias del usuario
+    # autenticado y cada apartado individual se identifica por su propio ID.
+    # Casos: varias asignaturas, consulta de cada una y ausencia de datos
+    # cruzados entre apartados.
+    # ------------------------------------------------------------------
+    def test_listado_y_apartados_individuales_no_mezclan_asignaturas(self):
+        """Cada ID consulta su propia asignatura y el listado contiene ambas."""
+        self.registrar()
+        matematicas = self.crear_asignatura("Matemáticas").get_json()
+        historia = self.crear_asignatura("Historia").get_json()
+
+        listed = self.client.get("/api/asignaturas")
+        matematicas_detail = self.client.get(
+            f"/api/asignaturas/{matematicas['id']}"
+        )
+        historia_detail = self.client.get(
+            f"/api/asignaturas/{historia['id']}"
+        )
+
+        self.assertEqual(listed.status_code, 200)
+        self.assertEqual(
+            {item["id"] for item in listed.get_json()},
+            {matematicas["id"], historia["id"]},
+        )
+        self.assertEqual(matematicas_detail.status_code, 200)
+        self.assertEqual(
+            matematicas_detail.get_json()["id"],
+            matematicas["id"],
+        )
+        self.assertEqual(matematicas_detail.get_json()["usuario_id"], matematicas["usuario_id"])
+        self.assertEqual(matematicas_detail.get_json()["nombre"], "Matemáticas")
+        self.assertEqual(historia_detail.status_code, 200)
+        self.assertEqual(
+            historia_detail.get_json()["id"],
+            historia["id"],
+        )
+        self.assertEqual(historia_detail.get_json()["usuario_id"], historia["usuario_id"])
+        self.assertEqual(historia_detail.get_json()["nombre"], "Historia")
+        self.assertNotEqual(
+            matematicas_detail.get_json()["id"],
+            historia_detail.get_json()["id"],
+        )
+
+    # ------------------------------------------------------------------
+    # update_asignatura modifica solo una asignatura del usuario actual.
+    # Casos: cambio y recorte del nombre, conservación de otras asignaturas,
+    # rechazo de datos inválidos y ausencia de cambios ante errores.
+    # ------------------------------------------------------------------
+    def test_editar_asignatura_actualiza_solo_la_seleccionada(self):
+        """PATCH actualiza la materia solicitada sin modificar las demás."""
+        self.registrar()
+        matematicas = self.crear_asignatura("Matemáticas").get_json()
+        historia = self.crear_asignatura("Historia").get_json()
+
+        response = self.client.patch(
+            f"/api/asignaturas/{matematicas['id']}",
+            json={"nombre": "  Álgebra  "},
+        )
+        matematicas_detail = self.client.get(
+            f"/api/asignaturas/{matematicas['id']}"
+        )
+        historia_detail = self.client.get(f"/api/asignaturas/{historia['id']}")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["nombre"], "Álgebra")
+        self.assertEqual(matematicas_detail.get_json()["nombre"], "Álgebra")
+        self.assertEqual(historia_detail.get_json()["nombre"], "Historia")
+
+    def test_editar_asignatura_rechaza_nombre_invalido_o_cuerpo_vacio(self):
+        """PATCH devuelve 400 si nombre falta, es vacío o no es texto."""
+        self.registrar()
+        asignatura = self.crear_asignatura("Biología").get_json()
+        url = f"/api/asignaturas/{asignatura['id']}"
+
+        responses = [
+            self.client.patch(url, json={}),
+            self.client.patch(url, json={"nombre": ""}),
+            self.client.patch(url, json={"nombre": "   "}),
+            self.client.patch(url, json={"nombre": None}),
+            self.client.patch(url, json={"nombre": 123}),
+            self.client.patch(url),
+        ]
+
+        self.assertEqual([response.status_code for response in responses], [400] * 6)
+        unchanged = self.client.get(url)
+        self.assertEqual(unchanged.status_code, 200)
+        self.assertEqual(unchanged.get_json()["nombre"], "Biología")
+
+    # ------------------------------------------------------------------
+    # get/update/delete de una asignatura solo operan si pertenece al usuario.
+    # Casos: ID inexistente y acceso cruzado entre cuentas, comprobando que
+    # el propietario conserva sus datos después de intentos no autorizados.
+    # ------------------------------------------------------------------
+    def test_detalle_edicion_y_borrado_de_asignatura_inexistente_devuelven_404(self):
+        """Las operaciones por ID devuelven 404 si no existe la asignatura."""
+        self.registrar()
+        existing = self.crear_asignatura("Existente")
+        self.assertEqual(existing.status_code, 201)
+        url = "/api/asignaturas/9999"
+
+        detail = self.client.get(url)
+        update = self.client.patch(url, json={"nombre": "No existe"})
+        delete = self.client.delete(url)
+
+        self.assertEqual(detail.status_code, 404)
+        self.assertEqual(update.status_code, 404)
+        self.assertEqual(delete.status_code, 404)
+        self.assertTrue(all(response.is_json for response in (detail, update, delete)))
+
+    def test_asignaturas_aisladas_entre_usuarios(self):
+        """Un usuario no lista, consulta, edita ni borra asignaturas ajenas."""
+        client1 = main_app.app.test_client()
+        client2 = main_app.app.test_client()
+        self.registrar("uno@ucm.es", client=client1, nombre="Usuario 1")
+        asignatura = self.crear_asignatura("Privada", client=client1).get_json()
+        self.registrar("dos@ucm.es", client=client2, nombre="Usuario 2")
+        url = f"/api/asignaturas/{asignatura['id']}"
+
+        user2_list = client2.get("/api/asignaturas")
+        user2_detail = client2.get(url)
+        user2_update = client2.patch(url, json={"nombre": "Modificación ajena"})
+        user2_delete = client2.delete(url)
+        owner_detail = client1.get(url)
+
+        self.assertEqual(user2_list.status_code, 200)
+        self.assertEqual(user2_list.get_json(), [])
+        self.assertEqual(user2_detail.status_code, 404)
+        self.assertEqual(user2_update.status_code, 404)
+        self.assertEqual(user2_delete.status_code, 404)
+        self.assertEqual(owner_detail.status_code, 200)
+        self.assertEqual(owner_detail.get_json()["nombre"], "Privada")
+
+    # ------------------------------------------------------------------
+    # delete_asignatura elimina únicamente la materia seleccionada y deja
+    # de estar disponible tanto en el listado como en su apartado individual.
+    # Casos: borrado correcto, conservación de las demás e ID ya eliminado.
+    # ------------------------------------------------------------------
+    def test_borrar_asignatura_no_elimina_las_demas(self):
+        """DELETE elimina una asignatura propia y conserva el resto."""
+        self.registrar()
+        matematicas = self.crear_asignatura("Matemáticas").get_json()
+        historia = self.crear_asignatura("Historia").get_json()
+
+        delete = self.client.delete(f"/api/asignaturas/{matematicas['id']}")
+        listed = self.client.get("/api/asignaturas")
+        deleted_detail = self.client.get(
+            f"/api/asignaturas/{matematicas['id']}"
+        )
+
+        self.assertEqual(delete.status_code, 200)
+        self.assertEqual(
+            [item["id"] for item in listed.get_json()],
+            [historia["id"]],
+        )
+        self.assertEqual(deleted_detail.status_code, 404)
+
+    # ------------------------------------------------------------------
+    # Todas las operaciones de gestión requieren autenticación, igual que
+    # las rutas protegidas existentes de la aplicación.
+    # Casos: listado, creación, detalle, edición y borrado sin sesión.
+    # ------------------------------------------------------------------
+    def test_api_asignaturas_requiere_autenticacion(self):
+        """Las operaciones de asignaturas sin sesión responden 401."""
+        responses = [
+            self.client.get("/api/asignaturas"),
+            self.client.post("/api/asignaturas", json={"nombre": "Física"}),
+            self.client.get("/api/asignaturas/1"),
+            self.client.patch("/api/asignaturas/1", json={"nombre": "Física"}),
+            self.client.delete("/api/asignaturas/1"),
+        ]
+
+        self.assertEqual([response.status_code for response in responses], [401] * 5)
 
 
 if __name__ == "__main__":
