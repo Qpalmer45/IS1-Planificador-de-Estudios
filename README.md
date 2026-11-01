@@ -35,13 +35,15 @@ Pila tecnológica aprobada y utilizada para la aplicación web:
 - **Backend:** Flask
 - **Frontend:** HTML5, CSS3 y JavaScript moderno
 - **Base de datos:** SQLite (módulo estándar `sqlite3` de Python)
+- **Pruebas del backend:** `unittest`
+- **Pruebas del frontend:** Jest y jsdom (Node.js 20 o posterior)
 - **Control de versiones:** Git & GitHub
 
 ## Metodología
 
 El proyecto se desarrolla utilizando **Scrum**.
 
-Los Sprints tienen una duración de **una semana**.
+Los Sprints tienen una duración de **dos semanas**.
 
 El trabajo se organiza mediante **GitHub Issues** y **GitHub Projects**.
 
@@ -84,9 +86,32 @@ python app.py
 ```
 Acceder a la aplicación web en [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
-### 4. Ejecución de pruebas automatizadas
+### 4. Instalación de dependencias del frontend
+
+Desde la raíz del proyecto:
+
+```powershell
+npm.cmd install --no-package-lock
+```
+
+### 5. Ejecución de pruebas automatizadas
+
+Pruebas del backend:
+
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+python -m unittest discover -s tests -p test_app.py -v
+```
+
+Pruebas del frontend con Jest:
+
+```powershell
+npm.cmd run test:frontend
+```
+
+Para ejecutar ambas suites:
+
+```powershell
+npm.cmd run test:all
 ```
 
 ## Estructura del proyecto
@@ -95,6 +120,7 @@ python -m unittest discover -s tests -p "test_*.py"
 IS1-Planificador-de-Estudios/
 ├── app.py                # Servidor web Flask, rutas, lógica de autenticación y APIs
 ├── requirements.txt      # Dependencias del proyecto
+├── package.json          # Dependencias y comandos Jest del frontend
 ├── todos.db              # Base de datos SQLite (se genera automáticamente)
 ├── static/
 │   ├── app.js            # Lógica cliente: pestañas, llamadas fetch y gestión de To-Dos
@@ -104,13 +130,15 @@ IS1-Planificador-de-Estudios/
 │   ├── login.html        # Pantalla de inicio de sesión (HU21)
 │   └── registro.html     # Pantalla de creación de cuenta (HU20)
 ├── tests/
-│   └── test_app.py       # Pruebas unitarias automatizadas (HU20, HU21, HU27)
-└── docs/                 # Documentación del proyecto, backlog e implementaciones
+│   ├── test_app.py       # Pruebas unitarias del backend con unittest
+│   ├── app.test.js       # Pruebas del frontend con Jest y jsdom
+│   └── README.md         # Instrucciones, cobertura y alcance de las pruebas
+├── docs/                 # Historias de usuario, backlog y documentación
 ```
 
 ## Estado del proyecto
 
-- **Sprint 1 (Completado):**
+- **Sprint 2 (Completado):**
   - **HU20 - Registro:** Creación de cuentas con hash seguro de contraseñas.
   - **HU21 - Inicio de sesión:** Autenticación con sesiones seguras y control de acceso.
   - **HU27 - Lista de To-Dos:** Notas rápidas independientes con CRUD completo, filtros y aislamiento por usuario.

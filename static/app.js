@@ -127,20 +127,18 @@ function clearSubjectFeedback() {
 function switchTab(tabId) {
   const tabButtons = document.querySelectorAll(".tab-btn");
   const tabContents = document.querySelectorAll(".tab-content");
+  const targetContent = Array.from(tabContents).find(
+    content => content.id === `tab-${tabId}`
+  );
 
-  // Busca la sección destino y apaga el resto; `found` evita dejar una URL
-  // apuntando a una pestaña que no exista en el documento.
-  let found = false;
+  // Valida el destino antes de modificar la vista para conservar la pestaña actual
+  // cuando el identificador solicitado no existe.
+  if (!targetContent) return;
+
+  // Activa la sección solicitada y desactiva las demás.
   tabContents.forEach(content => {
-    if (content.id === `tab-${tabId}`) {
-      content.classList.add("active");
-      found = true;
-    } else {
-      content.classList.remove("active");
-    }
+    content.classList.toggle("active", content === targetContent);
   });
-
-  if (!found) return;
 
   // Sincroniza el estado visual de los botones con la sección que quedó activa.
   tabButtons.forEach(btn => {
@@ -628,10 +626,11 @@ async function deleteAsignatura(asignatura) {
   try {
     clearSubjectFeedback();
     await api(`/api/asignaturas/${asignatura.id}`, { method: "DELETE" });
-    // Si se borró la materia abierta, limpia la selección; si no, conserva el diálogo.
-    await loadAsignaturas(
-      selectedAsignaturaId === asignatura.id ? null : selectedAsignaturaId
-    );
+    const wasSelected = selectedAsignaturaId === asignatura.id;
+    // Cierra el diálogo antes de recargar si se eliminó la asignatura que mostraba.
+    if (wasSelected) closeAsignaturaModal();
+    // Mantiene abierta otra asignatura seleccionada cuando se elimina una distinta.
+    await loadAsignaturas(wasSelected ? null : selectedAsignaturaId);
   } catch (err) {
     showSubjectFeedback(err.message);
   }
