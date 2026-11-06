@@ -136,6 +136,11 @@ IS1-Planificador-de-Estudios/
 ├── docs/                 # Historias de usuario, backlog y documentación
 ```
 
+
+## Documentación técnica y de usuario
+
+Hemos reunido la documentación del estado actual de la aplicación en [docs/tecnica/](docs/tecnica/README.md). Incluye requisitos y alcance, arquitectura, base de datos, API de Flask y un manual para instalar y utilizar la web. Los documentos distinguen entre las funcionalidades implementadas y las que siguen en el Product Backlog.
+
 ## Estado del proyecto
 
 - **Sprint 2 (Completado):**
