@@ -50,27 +50,4 @@
 | [HU28 Filtrar To-Dos](../issues/36) | △ | ✅ | ✅ | ✅ | ✅ | ✅ | Requiere HU27 y autenticación; criterios adecuados, fijar si filtra backend o frontend. Propuesta, no implementada. |
 | [HU29 Buscar To-Dos](../issues/37) | △ | ✅ | ✅ | ✅ | ✅ | ✅ | Requiere HU27 y autenticación; criterios adecuados, definir coincidencia parcial y espacios. Propuesta, no implementada. |
 
-## 3. Hallazgos transversales y acciones
 
-1. **Dependencias y solapamientos:** identificar HU06 como motor y HU02/HU05/HU08/HU11/HU12/HU13 como fuentes de configuración o reglas; evitar dependencias circulares. HU07 absorbe preferiblemente HU09. HU18 puede actuar como historia contenedora del dashboard y HU22/HU24/HU25 como subhistorias o indicadores. Documentar claramente que HU04 es gestión de entregas con fechas y HU27 es una lista rápida.
-2. **Criterios verificables:** añadir para cada HU casos válidos, inválidos, vacíos, límites y permisos de acceso cuando aplique. Evitar «correctamente», «próximos» o «importante» sin umbral observable.
-3. **Estimación:** los issues incluyen estimaciones iniciales en días, pero las notas de estimación ágil explican puntos de historia relativos y Planning Poker. Reestimar en equipo y registrar incertidumbre; no confundir estimación con duración garantizada.
-4. **Pruebas:** distinguir aceptación funcional/caja negra de pruebas unitarias del backend. En HU20/HU21/HU27–HU29 revisar aislamiento de usuarios; no declarar ejecución exitosa sin resultados.
-5. **Trazabilidad y Scrum:** enlazar HU ↔ criterios ↔ tareas/PR ↔ pruebas ↔ defectos; mantener estados reales, Sprint Goal y Definition of Done. La existencia de criterios de aceptación no demuestra la entrega de un incremento.
-6. **Refinamiento propuesto, no cambio aplicado:** conservar las historias originales hasta la decisión del equipo; este documento no cierra issues ni modifica el alcance aprobado.
-
-## 4. Conclusión de conformidad
-
-**Conclusión responsable:** las **29 historias son susceptibles de cumplir INVEST tras el refinamiento descrito**, y todas expresan valor para el usuario y un enunciado negociable. No es verificable afirmar que **todas cumplen ya los seis criterios**: hay dependencias, redundancias, incertidumbres de tamaño y criterios de aceptación ambiguos. La tabla registra estas reservas de forma explícita y accionable.
-
-**Diferencia crucial:** *INVEST evalúa la calidad de las historias de usuario*, no el resultado de las pruebas del código. Ninguna marca de esta tabla debe interpretarse como «test pasado».
-
-## 5. Referencias de la asignatura
-
-- **03b-Scrum.pdf** y **wuolah-free-T2-Scrum.pdf**: Product Backlog, refinamiento, criterios de incremento, transparencia, inspección y adaptación.
-- **02c-Técnicas de estimación en modelos ágiles.pdf**: puntos de historia, estimación relativa, Planning Poker, priorización y MVP.
-- **03-Pruebas orientadas a objetos.pdf**: pruebas de unidad, integración, sistema y validación; caja blanca y caja negra.
-- **05-GarantiaCalidadSoftware.pdf**: revisiones, prevención de defectos, documentación de desviaciones y SQA.
-- Registro complementario: [issue #31: contradicciones y solapamientos](../issues/31).
-
-> Documento de análisis de requisitos y calidad del backlog, no acta de aceptación ni certificado de pruebas.
