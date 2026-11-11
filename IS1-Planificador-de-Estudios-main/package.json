@@ -1,0 +1,20 @@
+{
+  "name": "is1-planificador-de-estudios",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "npm run test:frontend",
+    "test:frontend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/app.test.js",
+    "test:all": "npm run test:frontend && python -m unittest discover -s tests -p test_app.py"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "jsdom": "^26.1.0"
+  },
+  "jest": {
+    "transform": {}
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
