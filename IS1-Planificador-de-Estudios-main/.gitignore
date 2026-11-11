@@ -1,9 +1,0 @@
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-node_modules/
-coverage/
-*.db
-*.db-journal
-.pytest_cache/

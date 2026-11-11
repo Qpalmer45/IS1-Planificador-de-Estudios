@@ -8,6 +8,8 @@ se crea la aplicación Flask y se configura cómo se guardan las sesiones del us
 """
 # Herramientas de Python para decoradores, rutas de archivos, expresiones regulares
 # y acceso a SQLite.
+from datetime import datetime, timedelta
+from flask import jsonify, session
 from functools import wraps
 from pathlib import Path
 import re
@@ -554,6 +556,110 @@ def delete_asignatura(asignatura_id):
 # Prepara o actualiza el esquema al importar el módulo, antes de atender rutas.
 initialize_database()
 
+# ==============================================================================
+# HISTORIA DE USUARIO 19 (HU19) - RECORDATORIOS DE EVENTOS PRÓXIMOS
+# ==============================================================================
+import os
+import sqlite3
+from datetime import datetime, timedelta
+from flask import jsonify, session
+@app.route('/api/recordatorios', methods=['GET'])
+def obtener_recordatorios():
+    # Detectar el ID de usuario desde la sesión
+    user_id = session.get('usuario_id') or session.get('user_id')
+    if not user_id:
+        return jsonify({'status': 'error', 'mensaje': 'No autorizado'}), 401
+
+    ahora = datetime.now()
+    limite_dias = ahora + timedelta(days=7)
+    recordatorios = []
+
+    try:
+        db = get_db()
+        cursor = db.cursor()
+
+        # 1. Tareas / Entregas próximas
+        try:
+            cursor.execute("""
+                SELECT id, titulo, fecha_entrega 
+                FROM tareas 
+                WHERE (user_id = ? OR usuario_id = ?)
+            """, (user_id, user_id))
+            
+            for row in cursor.fetchall():
+                raw_fecha = row['fecha_entrega'] if 'fecha_entrega' in row.keys() else None
+                if not raw_fecha:
+                    continue
+                
+                try:
+                    fecha_obj = datetime.strptime(str(raw_fecha).split('.')[0], '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    try:
+                        fecha_obj = datetime.strptime(str(raw_fecha), '%Y-%m-%d')
+                    except ValueError:
+                        continue
+
+                if ahora.date() <= fecha_obj.date() <= limite_dias.date():
+                    dias = (fecha_obj.date() - ahora.date()).days
+                    recordatorios.append({
+                        'id': f"tarea-{row['id']}",
+                        'tipo': 'Entrega',
+                        'titulo': row['titulo'],
+                        'fecha': str(raw_fecha),
+                        'dias_restantes': dias,
+                        'mensaje': f"Entrega próxima en {dias} día(s)" if dias > 0 else "¡La entrega es HOY!",
+                        'urgencia': 'alta' if dias <= 1 else ('media' if dias <= 3 else 'baja')
+                    })
+        except Exception:
+            pass
+
+        # 2. Exámenes próximos
+        try:
+            cursor.execute("""
+                SELECT id, titulo, fecha_examen 
+                FROM examenes 
+                WHERE (user_id = ? OR usuario_id = ?)
+            """, (user_id, user_id))
+
+            for row in cursor.fetchall():
+                raw_fecha = row['fecha_examen'] if 'fecha_examen' in row.keys() else None
+                if not raw_fecha:
+                    continue
+
+                try:
+                    fecha_obj = datetime.strptime(str(raw_fecha).split('.')[0], '%Y-%m-%d %H:%M:%S')
+                except ValueError:
+                    try:
+                        fecha_obj = datetime.strptime(str(raw_fecha), '%Y-%m-%d')
+                    except ValueError:
+                        continue
+
+                if ahora.date() <= fecha_obj.date() <= limite_dias.date():
+                    dias = (fecha_obj.date() - ahora.date()).days
+                    recordatorios.append({
+                        'id': f"examen-{row['id']}",
+                        'tipo': 'Examen',
+                        'titulo': row['titulo'],
+                        'fecha': str(raw_fecha),
+                        'dias_restantes': dias,
+                        'mensaje': f"Examen programado en {dias} día(s)" if dias > 0 else "¡El examen es HOY!",
+                        'urgencia': 'alta' if dias <= 2 else 'media'
+                    })
+        except Exception:
+            pass
+
+        recordatorios.sort(key=lambda item: item['dias_restantes'])
+
+        return jsonify({
+            'status': 'success',
+            'total': len(recordatorios),
+            'recordatorios': recordatorios
+        }), 200
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'mensaje': str(e)}), 500
+
 if __name__ == "__main__":
     # Permite ejecutar este módulo directamente para desarrollo local.
     app.run(debug=True)
+

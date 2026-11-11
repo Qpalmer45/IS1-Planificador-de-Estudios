@@ -948,3 +948,37 @@ class TestStudyPlannerApp(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+# ==============================================================================
+# PRUEBAS UNITARIAS - HISTORIA DE USUARIO 19 (HU19: RECORDATORIOS)
+# ==============================================================================
+class TestHU19Recordatorios(unittest.TestCase):
+
+    def setUp(self):
+        """Inicializa el cliente de pruebas de Flask antes de cada test."""
+        main_app.app.config['TESTING'] = True
+        main_app.app.config['SECRET_KEY'] = 'clave_secreta_pruebas'
+        self.client = main_app.app.test_client()
+
+    def test_recordatorios_sin_autenticacion(self):
+        """Comprueba que sin iniciar sesión la API retorne 401 Unauthorized."""
+        respuesta = self.client.get('/api/recordatorios')
+        self.assertEqual(respuesta.status_code, 401)
+        
+        datos = respuesta.get_json()
+        self.assertIn('error', datos)
+
+    def test_recordatorios_usuario_autenticado(self):
+        """Comprueba que con sesión activa retorne 200 OK y la lista de avisos."""
+        with self.client.session_transaction() as sesion:
+            sesion['user_id'] = 1
+
+        respuesta = self.client.get('/api/recordatorios')
+        self.assertEqual(respuesta.status_code, 200)
+
+        datos = respuesta.get_json()
+        self.assertEqual(datos['status'], 'success')
+        self.assertIn('recordatorios', datos)
+        self.assertIsInstance(datos['recordatorios'], list)
+
+    

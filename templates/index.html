@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Planificador de Estudios | Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+  
 </head>
 <body class="app-body">
   <!-- Marco principal de la aplicación: navegación, perfil y acceso a las vistas. -->
@@ -149,12 +149,40 @@
         </div>
       </div>
 
-      <!-- Catálogo visual del estado de los módulos del proyecto y sus historias de usuario. -->
-      <div class="dashboard-modules">
-        <div class="section-title-wrap">
-          <h3>Módulos de la Aplicación</h3>
-          <p>Evolución del sistema planificado por historias de usuario en Scrum</p>
-        </div>
+
+<!-- ======================================================================= -->
+<!-- PANEL VISUAL DE RECORDATORIOS (HU19)                                    -->
+<!-- ======================================================================= -->
+<div class="recordatorios-card" style="margin-bottom: 2rem; background: #ffffff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); border: 1px solid #e2e8f0;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #eff6ff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+        🔔
+      </div>
+      <div>
+        <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e293b;">Próximos Recordatorios</h3>
+        <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Entregas y exámenes programados para los próximos 7 días</p>
+      </div>
+    </div>
+    <span id="badge-total-recordatorios" style="background: #2563eb; color: #ffffff; font-size: 0.85rem; font-weight: 700; padding: 4px 12px; border-radius: 20px;">0</span>
+  </div>
+
+  <div id="lista-recordatorios">
+    <div style="text-align: center; padding: 1.5rem; color: #64748b; font-size: 0.9rem;">
+      <span>Cargando tus recordatorios...</span>
+    </div>
+  </div>
+</div>
+
+    <!-- Catálogo visual del estado de los módulos del proyecto -->
+    <div class="dashboard-modules">
+      <div class="section-title-wrap">
+        <h3>Módulos de la Aplicación</h3>
+        <p>Evolución del sistema planificado por historias de usuario en Scrum</p>
+      </div>
+
+      
+
 
         <div class="modules-grid">
           <!-- Módulo activo: HU27 -->
@@ -429,5 +457,7 @@
     </section>
 
   </main>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
+
