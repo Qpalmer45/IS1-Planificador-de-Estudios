@@ -145,6 +145,8 @@ class TestStudyPlannerApp(unittest.TestCase):
         """initialize_database añade columnas nuevas a tablas de una versión antigua."""
         connection = sqlite3.connect(main_app.DATABASE)
         try:
+            connection.execute("DROP TABLE IF EXISTS temas")
+            connection.execute("DROP TABLE IF EXISTS asignaturas")
             connection.execute("DROP TABLE todos")
             connection.execute("DROP TABLE usuarios")
             connection.execute(
@@ -163,6 +165,20 @@ class TestStudyPlannerApp(unittest.TestCase):
                     FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
                 )"""
             )
+            connection.execute(
+                """CREATE TABLE asignaturas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL,
+                    nombre TEXT NOT NULL,
+                    dificultad TEXT NOT NULL DEFAULT 'media',
+                    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios (id)
+                )"""
+            )
+            connection.execute(
+                "INSERT INTO asignaturas (usuario_id, nombre, dificultad) VALUES (1, ?, ?)",
+                ("Asignatura heredada", "alta"),
+            )
             connection.commit()
         finally:
             connection.close()
@@ -177,11 +193,19 @@ class TestStudyPlannerApp(unittest.TestCase):
             todo_columns = {
                 row[1] for row in connection.execute("PRAGMA table_info(todos)")
             }
+            subject_columns = {
+                row[1] for row in connection.execute("PRAGMA table_info(asignaturas)")
+            }
+            legacy_subject = connection.execute(
+                "SELECT dificultad, prioridad FROM asignaturas WHERE id = 1"
+            ).fetchone()
         finally:
             connection.close()
 
         self.assertTrue({"nombre", "fecha_creacion"}.issubset(user_columns))
         self.assertIn("fecha_creacion", todo_columns)
+        self.assertIn("prioridad", subject_columns)
+        self.assertEqual(legacy_subject, ("alta", "media"))
 
     # ------------------------------------------------------------------
     # todo_to_dict convierte una fila de la tabla todos en un diccionario
@@ -1300,6 +1324,420 @@ class TestStudyPlannerApp(unittest.TestCase):
 
         self.assertEqual([response.status_code for response in responses], [401] * 5)
         self.assertTrue(all(response.is_json for response in responses))
+
+
+    # ------------------------------------------------------------------
+    # HISTORIA DE USUARIO 12 (HU12) - DIFICULTAD Y PRIORIDAD
+    # Permite indicar dificultad y prioridad ('baja', 'media', 'alta') por
+    # asignatura y prioridad por tarea, con persistencia y exposición en API/HU06.
+    # Casos: valores por defecto, creación/edición válida e inválida, migración,
+    # datos disponibles para HU06 y aislamiento estricto entre usuarios.
+    # ------------------------------------------------------------------
+    def test_crear_asignatura_dificultad_por_defecto_es_media(self):
+        """POST /api/asignaturas asigna dificultad y prioridad 'media' por defecto."""
+        self.registrar()
+
+        response = self.client.post(
+            "/api/asignaturas",
+            json={"nombre": "Física Cuántica"},
+        )
+        data = response.get_json()
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(data["nombre"], "Física Cuántica")
+        self.assertEqual(data["dificultad"], "media")
+        self.assertEqual(data["prioridad"], "media")
+
+        # Verifica persistencia directa en base de datos
+        with main_app.app.app_context():
+            row = main_app.get_db().execute(
+                "SELECT dificultad, prioridad FROM asignaturas WHERE id = ?",
+                (data["id"],),
+            ).fetchone()
+            self.assertEqual(tuple(row), ("media", "media"))
+
+    def test_crear_asignatura_con_niveles_dificultad_validos(self):
+        """POST /api/asignaturas guarda correctamente niveles 'baja', 'media' y 'alta'."""
+        self.registrar()
+
+        for nivel in ["baja", "media", "alta", "  ALTA  ", "Media"]:
+            with self.subTest(nivel=nivel):
+                res = self.client.post(
+                    "/api/asignaturas",
+                    json={"nombre": f"Asignatura {nivel.strip()}", "dificultad": nivel},
+                )
+                self.assertEqual(res.status_code, 201)
+                self.assertEqual(res.get_json()["dificultad"], nivel.strip().lower())
+
+    def test_crear_asignatura_con_niveles_prioridad_validos(self):
+        """POST /api/asignaturas guarda prioridades válidas y las expone en API."""
+        self.registrar()
+
+        for nivel in ["baja", "media", "alta", "  ALTA  ", "Media"]:
+            with self.subTest(nivel=nivel):
+                response = self.client.post(
+                    "/api/asignaturas",
+                    json={"nombre": f"Asignatura prioridad {nivel.strip()}", "prioridad": nivel},
+                )
+                self.assertEqual(response.status_code, 201)
+                self.assertEqual(
+                    response.get_json()["prioridad"],
+                    nivel.strip().lower(),
+                )
+                with main_app.app.app_context():
+                    row = main_app.get_db().execute(
+                        "SELECT prioridad FROM asignaturas WHERE id = ?",
+                        (response.get_json()["id"],),
+                    ).fetchone()
+                    self.assertEqual(row["prioridad"], nivel.strip().lower())
+
+    def test_crear_asignatura_rechaza_dificultad_invalida(self):
+        """POST /api/asignaturas devuelve 400 si la dificultad no es baja, media o alta."""
+        self.registrar()
+
+        casos_invalidos = ["extrema", "facil", "muy alta", "", 123, None, []]
+        for invalido in casos_invalidos:
+            with self.subTest(invalido=invalido):
+                response = self.client.post(
+                    "/api/asignaturas",
+                    json={"nombre": "Álgebra", "dificultad": invalido},
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertIn("error", response.get_json())
+                self.assertIn("dificultad", response.get_json()["error"].lower())
+
+    def test_crear_asignatura_rechaza_prioridad_invalida(self):
+        """POST /api/asignaturas devuelve 400 si la prioridad es inválida."""
+        self.registrar()
+
+        for invalido in ["urgente", "critica", "", 123, None, []]:
+            with self.subTest(invalido=invalido):
+                response = self.client.post(
+                    "/api/asignaturas",
+                    json={"nombre": "Álgebra", "prioridad": invalido},
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertIn("prioridad", response.get_json()["error"].lower())
+
+    def test_editar_asignatura_actualiza_dificultad_individual_o_combinada(self):
+        """PATCH /api/asignaturas/<id> permite modificar dificultad sola o junto con el nombre."""
+        self.registrar()
+        asig = self.client.post(
+            "/api/asignaturas",
+            json={"nombre": "Cálculo", "dificultad": "baja"},
+        ).get_json()
+
+        # Modificación exclusiva de dificultad
+        res_diff = self.client.patch(
+            f"/api/asignaturas/{asig['id']}",
+            json={"dificultad": "alta"},
+        )
+        self.assertEqual(res_diff.status_code, 200)
+        self.assertEqual(res_diff.get_json()["dificultad"], "alta")
+        self.assertEqual(res_diff.get_json()["nombre"], "Cálculo")
+
+        # Modificación combinada de nombre y dificultad
+        res_comb = self.client.patch(
+            f"/api/asignaturas/{asig['id']}",
+            json={"nombre": "Cálculo Avanzado", "dificultad": "media"},
+        )
+        self.assertEqual(res_comb.status_code, 200)
+        self.assertEqual(res_comb.get_json()["nombre"], "Cálculo Avanzado")
+        self.assertEqual(res_comb.get_json()["dificultad"], "media")
+
+        # Verifica detalle individual y listado
+        detalle = self.client.get(f"/api/asignaturas/{asig['id']}").get_json()
+        self.assertEqual(detalle["dificultad"], "media")
+        self.assertEqual(detalle["prioridad"], "media")
+
+    def test_editar_asignatura_actualiza_prioridad_y_conserva_dificultad(self):
+        """PATCH permite cambiar solo prioridad o junto con nombre y dificultad."""
+        self.registrar()
+        asig = self.client.post(
+            "/api/asignaturas",
+            json={"nombre": "Cálculo", "dificultad": "alta", "prioridad": "baja"},
+        ).get_json()
+
+        only_priority = self.client.patch(
+            f"/api/asignaturas/{asig['id']}",
+            json={"prioridad": "  ALTA  "},
+        )
+        self.assertEqual(only_priority.status_code, 200)
+        self.assertEqual(only_priority.get_json()["prioridad"], "alta")
+        self.assertEqual(only_priority.get_json()["dificultad"], "alta")
+
+        combined = self.client.patch(
+            f"/api/asignaturas/{asig['id']}",
+            json={"nombre": "Cálculo II", "dificultad": "baja", "prioridad": "media"},
+        )
+        self.assertEqual(combined.status_code, 200)
+        self.assertEqual(
+            {
+                key: combined.get_json()[key]
+                for key in ("nombre", "dificultad", "prioridad")
+            },
+            {"nombre": "Cálculo II", "dificultad": "baja", "prioridad": "media"},
+        )
+        self.assertEqual(
+            self.client.get(f"/api/asignaturas/{asig['id']}").get_json()["prioridad"],
+            "media",
+        )
+
+    def test_editar_asignatura_rechaza_dificultad_invalida(self):
+        """PATCH /api/asignaturas/<id> devuelve 400 si la dificultad es inválida y no muta datos."""
+        self.registrar()
+        asig = self.client.post(
+            "/api/asignaturas",
+            json={"nombre": "Química", "dificultad": "alta"},
+        ).get_json()
+
+        response = self.client.patch(
+            f"/api/asignaturas/{asig['id']}",
+            json={"dificultad": "imposible"},
+        )
+        self.assertEqual(response.status_code, 400)
+
+        detalle = self.client.get(f"/api/asignaturas/{asig['id']}").get_json()
+        self.assertEqual(detalle["dificultad"], "alta")
+
+    def test_editar_asignatura_rechaza_prioridad_invalida_sin_mutar_datos(self):
+        """PATCH devuelve 400 y conserva datos si la prioridad no es válida."""
+        self.registrar()
+        asig = self.client.post(
+            "/api/asignaturas",
+            json={"nombre": "Química", "dificultad": "alta", "prioridad": "baja"},
+        ).get_json()
+
+        response = self.client.patch(
+            f"/api/asignaturas/{asig['id']}",
+            json={"prioridad": "urgente"},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("prioridad", response.get_json()["error"].lower())
+        detalle = self.client.get(f"/api/asignaturas/{asig['id']}").get_json()
+        self.assertEqual(detalle["dificultad"], "alta")
+        self.assertEqual(detalle["prioridad"], "baja")
+
+    def test_crear_todo_prioridad_por_defecto_es_media(self):
+        """POST /api/todos asigna prioridad 'media' por defecto si no se especifica."""
+        self.registrar()
+
+        response = self.client.post(
+            "/api/todos",
+            json={"titulo": "Estudiar Tema 1"},
+        )
+        data = response.get_json()
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(data["titulo"], "Estudiar Tema 1")
+        self.assertEqual(data["prioridad"], "media")
+
+        # Verifica persistencia directa en base de datos
+        with main_app.app.app_context():
+            row = main_app.get_db().execute(
+                "SELECT prioridad FROM todos WHERE id = ?",
+                (data["id"],),
+            ).fetchone()
+            self.assertEqual(row["prioridad"], "media")
+
+    def test_crear_todo_con_niveles_prioridad_validos(self):
+        """POST /api/todos guarda correctamente prioridades 'baja', 'media' y 'alta'."""
+        self.registrar()
+
+        for nivel in ["baja", "media", "alta", "  ALTA  ", "Baja"]:
+            with self.subTest(nivel=nivel):
+                res = self.client.post(
+                    "/api/todos",
+                    json={"titulo": f"Tarea {nivel.strip()}", "prioridad": nivel},
+                )
+                self.assertEqual(res.status_code, 201)
+                self.assertEqual(res.get_json()["prioridad"], nivel.strip().lower())
+
+    def test_crear_todo_rechaza_prioridad_invalida(self):
+        """POST /api/todos devuelve 400 si la prioridad no es baja, media o alta."""
+        self.registrar()
+
+        casos_invalidos = ["urgente", "critica", 1, None, ""]
+        for invalido in casos_invalidos:
+            with self.subTest(invalido=invalido):
+                response = self.client.post(
+                    "/api/todos",
+                    json={"titulo": "Práctica", "prioridad": invalido},
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertIn("error", response.get_json())
+                self.assertIn("prioridad", response.get_json()["error"].lower())
+
+    def test_update_todo_actualiza_prioridad_individual_o_combinada(self):
+        """PATCH /api/todos/<id> permite modificar prioridad sola o junto con otros campos."""
+        self.registrar()
+        todo = self.client.post(
+            "/api/todos",
+            json={"titulo": "Hacer ejercicios", "prioridad": "baja"},
+        ).get_json()
+
+        # Actualizar solo prioridad
+        res_prio = self.client.patch(
+            f"/api/todos/{todo['id']}",
+            json={"prioridad": "alta"},
+        )
+        self.assertEqual(res_prio.status_code, 200)
+        self.assertEqual(res_prio.get_json()["prioridad"], "alta")
+        self.assertEqual(res_prio.get_json()["titulo"], "Hacer ejercicios")
+
+        # Actualizar combinado
+        res_comb = self.client.patch(
+            f"/api/todos/{todo['id']}",
+            json={"titulo": "Hacer ejercicios de cálculo", "prioridad": "media", "completada": True},
+        )
+        self.assertEqual(res_comb.status_code, 200)
+        self.assertEqual(res_comb.get_json()["titulo"], "Hacer ejercicios de cálculo")
+        self.assertEqual(res_comb.get_json()["prioridad"], "media")
+        self.assertTrue(res_comb.get_json()["completada"])
+
+    def test_update_todo_rechaza_prioridad_invalida(self):
+        """PATCH /api/todos/<id> rechaza prioridades desconocidas con 400 sin alterar datos."""
+        self.registrar()
+        todo = self.client.post(
+            "/api/todos",
+            json={"titulo": "Leer capítulo 3", "prioridad": "alta"},
+        ).get_json()
+
+        response = self.client.patch(
+            f"/api/todos/{todo['id']}",
+            json={"prioridad": "invalida"},
+        )
+        self.assertEqual(response.status_code, 400)
+
+        # Comprueba que el valor original permanece intacto
+        items = self.client.get("/api/todos").get_json()
+        self.assertEqual(items[0]["prioridad"], "alta")
+
+    def test_hu12_datos_guardados_y_disponibles_para_generador_hu06(self):
+        """Criterio de aceptación 3: Dificultad y prioridad disponibles para HU06 vía modelo y API."""
+        self.registrar()
+
+        # Crea asignaturas con dificultad y prioridad independientes.
+        asig_alta = self.client.post(
+            "/api/asignaturas",
+            json={"nombre": "Sistemas Operativos", "dificultad": "alta", "prioridad": "baja"},
+        ).get_json()
+        asig_baja = self.client.post(
+            "/api/asignaturas",
+            json={"nombre": "Inglés Técnico", "dificultad": "baja", "prioridad": "alta"},
+        ).get_json()
+
+        # Crea tareas con diferentes prioridades
+        todo_urgente = self.client.post(
+            "/api/todos",
+            json={"titulo": "Entrega laboratorio SO", "prioridad": "alta"},
+        ).get_json()
+        todo_repaso = self.client.post(
+            "/api/todos",
+            json={"titulo": "Repaso vocabulario", "prioridad": "baja"},
+        ).get_json()
+
+        # 1. Disponibles vía listado API de asignaturas
+        asigs_api = self.client.get("/api/asignaturas").get_json()
+        asigs_dict = {a["nombre"]: a["dificultad"] for a in asigs_api}
+        asigs_priority = {a["nombre"]: a["prioridad"] for a in asigs_api}
+        self.assertEqual(asigs_dict["Sistemas Operativos"], "alta")
+        self.assertEqual(asigs_dict["Inglés Técnico"], "baja")
+        self.assertEqual(asigs_priority["Sistemas Operativos"], "baja")
+        self.assertEqual(asigs_priority["Inglés Técnico"], "alta")
+
+        # 2. Disponibles vía listado API de todos
+        todos_api = self.client.get("/api/todos").get_json()
+        todos_dict = {t["titulo"]: t["prioridad"] for t in todos_api}
+        self.assertEqual(todos_dict["Entrega laboratorio SO"], "alta")
+        self.assertEqual(todos_dict["Repaso vocabulario"], "baja")
+
+        # 3. Disponibles en el modelo / función interna de backend para HU06
+        with main_app.app.app_context():
+            datos = main_app.obtener_datos_planificacion(1)
+            self.assertIn("asignaturas", datos)
+            self.assertIn("tareas", datos)
+            asigs_modelo = {a["nombre"]: a["dificultad"] for a in datos["asignaturas"]}
+            asigs_prioridad_modelo = {
+                a["nombre"]: a["prioridad"] for a in datos["asignaturas"]
+            }
+            tareas_modelo = {t["titulo"]: t["prioridad"] for t in datos["tareas"]}
+            self.assertEqual(asigs_modelo["Sistemas Operativos"], "alta")
+            self.assertEqual(asigs_modelo["Inglés Técnico"], "baja")
+            self.assertEqual(asigs_prioridad_modelo["Sistemas Operativos"], "baja")
+            self.assertEqual(asigs_prioridad_modelo["Inglés Técnico"], "alta")
+            self.assertEqual(tareas_modelo["Entrega laboratorio SO"], "alta")
+            self.assertEqual(tareas_modelo["Repaso vocabulario"], "baja")
+
+        # 4. Disponibles en endpoint específico de planificación
+        plan_res = self.client.get("/api/plan/datos")
+        self.assertEqual(plan_res.status_code, 200)
+        self.assertEqual(plan_res.get_json(), datos)
+
+    def test_aislamiento_dificultad_y_prioridad_entre_usuarios(self):
+        """La dificultad y prioridad configuradas no se filtran ni alteran entre usuarios."""
+        client1 = main_app.app.test_client()
+        client2 = main_app.app.test_client()
+        self.registrar("alumno1@ucm.es", client=client1, nombre="Estudiante 1")
+        asig1 = client1.post(
+            "/api/asignaturas",
+            json={"nombre": "IS1 Privada", "dificultad": "alta", "prioridad": "alta"},
+        ).get_json()
+        todo1 = client1.post(
+            "/api/todos",
+            json={"titulo": "Tarea Privada", "prioridad": "alta"},
+        ).get_json()
+
+        self.registrar("alumno2@ucm.es", client=client2, nombre="Estudiante 2")
+
+        # Usuario 2 no puede modificar ningún atributo de una asignatura ajena.
+        res_asig = client2.patch(
+            f"/api/asignaturas/{asig1['id']}",
+            json={"dificultad": "baja", "prioridad": "baja"},
+        )
+        self.assertEqual(res_asig.status_code, 404)
+
+        # Usuario 2 no puede modificar prioridad de tarea ajena
+        res_todo = client2.patch(
+            f"/api/todos/{todo1['id']}",
+            json={"prioridad": "baja"},
+        )
+        self.assertEqual(res_todo.status_code, 404)
+
+        # Los valores de Usuario 1 siguen siendo 'alta'
+        self.assertEqual(
+            client1.get(f"/api/asignaturas/{asig1['id']}").get_json()["dificultad"],
+            "alta",
+        )
+        self.assertEqual(
+            client1.get(f"/api/asignaturas/{asig1['id']}").get_json()["prioridad"],
+            "alta",
+        )
+        self.assertEqual(
+            client1.get("/api/todos").get_json()[0]["prioridad"],
+            "alta",
+        )
+
+    def test_todo_y_asignatura_to_dict_manejan_dificultad_y_prioridad(self):
+        """todo_to_dict y asignatura_to_dict serializan correctamente dificultad y prioridad."""
+        connection = sqlite3.connect(":memory:")
+        connection.row_factory = sqlite3.Row
+        row_todo = connection.execute(
+            """SELECT 10 AS id, 2 AS usuario_id, 'Hacer ejercicio' AS titulo,
+                      0 AS completada, 'alta' AS prioridad, '2026-11-15' AS fecha_creacion"""
+        ).fetchone()
+        row_asig = connection.execute(
+            """SELECT 5 AS id, 2 AS usuario_id, 'Redes' AS nombre,
+                      'alta' AS dificultad, 'baja' AS prioridad"""
+        ).fetchone()
+
+        dict_todo = main_app.todo_to_dict(row_todo)
+        dict_asig = main_app.asignatura_to_dict(row_asig)
+        connection.close()
+
+        self.assertEqual(dict_todo["prioridad"], "alta")
+        self.assertEqual(dict_asig["dificultad"], "alta")
+        self.assertEqual(dict_asig["prioridad"], "baja")
 
 
 if __name__ == "__main__":

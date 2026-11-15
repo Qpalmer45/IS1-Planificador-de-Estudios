@@ -1711,3 +1711,118 @@ body.subject-modal-open {
     align-items: flex-start;
   }
 }
+
+
+/* ==========================================================================
+   HU12: Dificultad y Prioridad de Asignaturas y Tareas
+   ========================================================================== */
+.select-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.priority-select,
+.difficulty-select {
+  font: inherit;
+  font-size: 14px;
+  color: var(--text-body);
+  background: #ffffff;
+  border: 1.5px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.priority-select:focus,
+.difficulty-select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.edit-select {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--primary);
+  background: #ffffff;
+  color: var(--text-body);
+}
+
+/* Badges de Prioridad (Tareas) */
+.priority-badge {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+.priority-badge.priority-alta {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.priority-badge.priority-media {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.priority-badge.priority-baja {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* Badges de Dificultad (Asignaturas) */
+.difficulty-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.difficulty-badge.difficulty-alta {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.difficulty-badge.difficulty-media {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.difficulty-badge.difficulty-baja {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.todo-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.subject-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.subject-dialog-meta {
+  margin-bottom: 1.25rem;
+}

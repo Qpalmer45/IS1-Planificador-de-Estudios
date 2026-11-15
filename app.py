@@ -86,36 +86,51 @@ def initialize_database():
             if "fecha_creacion" not in cols_usuarios:
                 conn.execute("ALTER TABLE usuarios ADD COLUMN fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP")
 
-            # Tabla de To-Dos (HU27) asociada estrictamente a cada usuario
+            # Tabla de To-Dos (HU27, HU12) asociada estrictamente a cada usuario
             conn.execute(
                 """CREATE TABLE IF NOT EXISTS todos (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     usuario_id INTEGER NOT NULL,
                     titulo TEXT NOT NULL,
                     completada INTEGER NOT NULL DEFAULT 0 CHECK (completada IN (0, 1)),
+                    prioridad TEXT NOT NULL DEFAULT 'media' CHECK (prioridad IN ('baja', 'media', 'alta')),
                     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
                 )"""
             )
 
             # Conserva compatibilidad con bases previas que todavía no guardaban
-            # la fecha de creación de las tareas.
+            # la fecha de creación o la prioridad de las tareas (HU12).
             cols_todos = [row[1] for row in conn.execute("PRAGMA table_info(todos)").fetchall()]
             if "fecha_creacion" not in cols_todos:
                 conn.execute("ALTER TABLE todos ADD COLUMN fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP")
+            if "prioridad" not in cols_todos:
+                conn.execute("ALTER TABLE todos ADD COLUMN prioridad TEXT NOT NULL DEFAULT 'media'")
 
             # Cada asignatura pertenece a un usuario y puede consultarse de forma
-            # independiente. Las futuras tablas de temario o exámenes podrán
-            # relacionarse con asignatura_id sin mezclar datos entre materias.
+            # independiente (HU01, HU12).
             conn.execute(
                 """CREATE TABLE IF NOT EXISTS asignaturas (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     usuario_id INTEGER NOT NULL,
                     nombre TEXT NOT NULL,
+                    dificultad TEXT NOT NULL DEFAULT 'media' CHECK (dificultad IN ('baja', 'media', 'alta')),
+                    prioridad TEXT NOT NULL DEFAULT 'media' CHECK (prioridad IN ('baja', 'media', 'alta')),
                     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
                 )"""
             )
+
+            cols_asignaturas = [row[1] for row in conn.execute("PRAGMA table_info(asignaturas)").fetchall()]
+            if "fecha_creacion" not in cols_asignaturas:
+                conn.execute("ALTER TABLE asignaturas ADD COLUMN fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP")
+            if "dificultad" not in cols_asignaturas:
+                conn.execute("ALTER TABLE asignaturas ADD COLUMN dificultad TEXT NOT NULL DEFAULT 'media'")
+            if "prioridad" not in cols_asignaturas:
+                conn.execute(
+                    """ALTER TABLE asignaturas ADD COLUMN prioridad TEXT NOT NULL
+                       DEFAULT 'media' CHECK (prioridad IN ('baja', 'media', 'alta'))"""
+                )
 
             # Cada tema organiza un bloque de apuntes dentro de una asignatura.
             # Se guarda el usuario también en el tema para filtrar todas las
@@ -153,28 +168,44 @@ def login_required(f):
     return decorated_function
 
 
+# Niveles válidos para dificultad y prioridad de asignaturas y tareas (HU12)
+NIVELES_DIFICULTAD = ("baja", "media", "alta")
+NIVELES_PRIORIDAD = ("baja", "media", "alta")
+
+
 def todo_to_dict(row):
-    """Convierte una fila de la tabla todos a un diccionario serializable."""
+    """Convierte una fila de la tabla todos a un diccionario serializable (HU27, HU12)."""
     # Normaliza el estado entero de SQLite a booleano y admite filas heredadas
-    # que no incluyan todavía la columna fecha_creacion.
-    return {
+    # que no incluyan todavía la columna fecha_creacion o prioridad.
+    data = {
         "id": row["id"],
         "usuario_id": row["usuario_id"],
         "titulo": row["titulo"],
         "completada": bool(row["completada"]),
-        "fecha_creacion": row["fecha_creacion"] if "fecha_creacion" in row.keys() else None,
     }
+    if "prioridad" in row.keys():
+        data["prioridad"] = row["prioridad"]
+    if "fecha_creacion" in row.keys():
+        data["fecha_creacion"] = row["fecha_creacion"]
+    else:
+        data["fecha_creacion"] = None
+    return data
 
 
 def asignatura_to_dict(row):
-    """Convierte una fila de asignaturas en un diccionario para la API."""
-    # Limita la respuesta a los datos que la interfaz necesita para identificar
-    # la materia y su propietario.
-    return {
+    """Convierte una fila de asignaturas en un diccionario para la API (HU01, HU12)."""
+    # Limita la respuesta a los datos que la interfaz y el planificador
+    # necesitan para identificar la materia y sus atributos HU12.
+    data = {
         "id": row["id"],
         "usuario_id": row["usuario_id"],
         "nombre": row["nombre"],
     }
+    if "dificultad" in row.keys():
+        data["dificultad"] = row["dificultad"]
+    if "prioridad" in row.keys():
+        data["prioridad"] = row["prioridad"]
+    return data
 
 
 def tema_to_dict(row):
@@ -350,14 +381,14 @@ def usuario_actual():
 @app.get("/api/todos")
 @login_required
 def list_todos():
-    """Devuelve todas las notas rápidas del usuario autenticado."""
+    """Devuelve todas las notas rápidas del usuario autenticado (HU27, HU12)."""
     # El identificador se toma de la sesión, nunca del cuerpo de la petición,
     # para que el listado quede limitado a la cuenta actual.
     usuario_id = session["usuario_id"]
     db = get_db()
     # Ordena por ID descendente para mostrar primero las notas más recientes.
     rows = db.execute(
-        "SELECT id, usuario_id, titulo, completada, fecha_creacion FROM todos WHERE usuario_id = ? ORDER BY id DESC",
+        "SELECT id, usuario_id, titulo, completada, prioridad, fecha_creacion FROM todos WHERE usuario_id = ? ORDER BY id DESC",
         (usuario_id,),
     ).fetchall()
     return jsonify([todo_to_dict(row) for row in rows])
@@ -366,14 +397,24 @@ def list_todos():
 @app.post("/api/todos")
 @login_required
 def create_todo():
-    """Crea una nueva nota rápida para el usuario autenticado (HU27)."""
+    """Crea una nueva nota rápida para el usuario autenticado (HU27, HU12)."""
     # Extrae el título del JSON y elimina espacios exteriores para validar
     # y persistir una versión normalizada del texto.
     data = request.get_json(silent=True) or {}
-    titulo = data.get("titulo", "").strip()
+    titulo = data.get("titulo", "")
+    if not isinstance(titulo, str):
+        return jsonify({"error": "La tarea debe tener entre 1 y 200 caracteres."}), 400
+    titulo = titulo.strip()
     # Rechaza títulos vacíos o que superen el límite admitido por la interfaz.
     if not titulo or len(titulo) > 200:
         return jsonify({"error": "La tarea debe tener entre 1 y 200 caracteres."}), 400
+
+    prioridad = "media"
+    if "prioridad" in data:
+        prio_val = data["prioridad"]
+        if not isinstance(prio_val, str) or prio_val.strip().lower() not in NIVELES_PRIORIDAD:
+            return jsonify({"error": "La prioridad debe ser baja, media o alta."}), 400
+        prioridad = prio_val.strip().lower()
 
     # La relación de propiedad se crea con el usuario de la sesión. Después
     # se vuelve a leer la fila para devolver también ID y fecha generados por SQLite.
@@ -381,10 +422,10 @@ def create_todo():
     db = get_db()
     with db:
         cursor = db.execute(
-            "INSERT INTO todos (usuario_id, titulo) VALUES (?, ?)", (usuario_id, titulo)
+            "INSERT INTO todos (usuario_id, titulo, prioridad) VALUES (?, ?, ?)", (usuario_id, titulo, prioridad)
         )
         row = db.execute(
-            "SELECT id, usuario_id, titulo, completada, fecha_creacion FROM todos WHERE id = ?",
+            "SELECT id, usuario_id, titulo, completada, prioridad, fecha_creacion FROM todos WHERE id = ?",
             (cursor.lastrowid,),
         ).fetchone()
     return jsonify(todo_to_dict(row)), 201
@@ -393,7 +434,7 @@ def create_todo():
 @app.patch("/api/todos/<int:todo_id>")
 @login_required
 def update_todo(todo_id):
-    """Actualiza una nota rápida existente: título y/o estado completado (HU27)."""
+    """Actualiza una nota rápida existente: título, completada y/o prioridad (HU27, HU12)."""
     # Identifica al propietario desde la sesión; los campos que se modificarán
     # se construyen únicamente a partir de nombres de columna permitidos.
     usuario_id = session["usuario_id"]
@@ -410,10 +451,13 @@ def update_todo(todo_id):
     if existing is None:
         return jsonify({"error": "Tarea no encontrada o no pertenece a tu usuario."}), 404
 
-    # Acepta título, estado o ambos, validando cada campo presente de manera
-    # independiente para poder realizar actualizaciones parciales.
+    # Acepta título, estado, prioridad o combinación de ellos, validando cada
+    # campo presente de manera independiente para poder realizar actualizaciones parciales.
     if "titulo" in data:
-        titulo = data["titulo"].strip()
+        titulo = data["titulo"]
+        if not isinstance(titulo, str):
+            return jsonify({"error": "El título debe tener entre 1 y 200 caracteres."}), 400
+        titulo = titulo.strip()
         if not titulo or len(titulo) > 200:
             return jsonify({"error": "El título debe tener entre 1 y 200 caracteres."}), 400
         updates.append("titulo = ?")
@@ -422,6 +466,13 @@ def update_todo(todo_id):
     if "completada" in data:
         updates.append("completada = ?")
         params.append(1 if data["completada"] else 0)
+
+    if "prioridad" in data:
+        prio_val = data["prioridad"]
+        if not isinstance(prio_val, str) or prio_val.strip().lower() not in NIVELES_PRIORIDAD:
+            return jsonify({"error": "La prioridad debe ser baja, media o alta."}), 400
+        updates.append("prioridad = ?")
+        params.append(prio_val.strip().lower())
 
     # No ejecutar un UPDATE vacío: se exige al menos un campo reconocido.
     if not updates:
@@ -435,7 +486,7 @@ def update_todo(todo_id):
             (*params, todo_id, usuario_id),
         )
         row = db.execute(
-            "SELECT id, usuario_id, titulo, completada, fecha_creacion FROM todos WHERE id = ?",
+            "SELECT id, usuario_id, titulo, completada, prioridad, fecha_creacion FROM todos WHERE id = ?",
             (todo_id,),
         ).fetchone()
     return jsonify(todo_to_dict(row))
@@ -463,12 +514,12 @@ def delete_todo(todo_id):
 @app.get("/api/asignaturas")
 @login_required
 def list_asignaturas():
-    """Devuelve las asignaturas de la cuenta actual, de más nueva a más antigua."""
+    """Devuelve las asignaturas de la cuenta actual, de más nueva a más antigua (HU01, HU12)."""
     # Filtra siempre por el propietario de la sesión y presenta primero las
     # asignaturas añadidas más recientemente.
     usuario_id = session["usuario_id"]
     rows = get_db().execute(
-        """SELECT id, usuario_id, nombre
+        """SELECT id, usuario_id, nombre, dificultad, prioridad
            FROM asignaturas
            WHERE usuario_id = ?
            ORDER BY id DESC""",
@@ -480,7 +531,7 @@ def list_asignaturas():
 @app.post("/api/asignaturas")
 @login_required
 def create_asignatura():
-    """Crea una asignatura para el usuario autenticado."""
+    """Crea una asignatura para el usuario autenticado (HU01, HU12)."""
     # El cuerpo debe ser un objeto JSON; validar el tipo evita llamar a
     # métodos de texto sobre valores nulos, numéricos u otras estructuras.
     data = request.get_json(silent=True)
@@ -494,17 +545,31 @@ def create_asignatura():
         return jsonify({"error": "El nombre de la asignatura no puede estar vacío."}), 400
     nombre = nombre.strip()
 
+    dificultad = "media"
+    if "dificultad" in data:
+        dif_val = data["dificultad"]
+        if not isinstance(dif_val, str) or dif_val.strip().lower() not in NIVELES_DIFICULTAD:
+            return jsonify({"error": "La dificultad debe ser baja, media o alta."}), 400
+        dificultad = dif_val.strip().lower()
+
+    prioridad = "media"
+    if "prioridad" in data:
+        prio_val = data["prioridad"]
+        if not isinstance(prio_val, str) or prio_val.strip().lower() not in NIVELES_PRIORIDAD:
+            return jsonify({"error": "La prioridad debe ser baja, media o alta."}), 400
+        prioridad = prio_val.strip().lower()
+
     # Asocia la nueva materia al usuario actual y lee el registro insertado
     # para devolver el ID generado por la base de datos.
     usuario_id = session["usuario_id"]
     db = get_db()
     with db:
         cursor = db.execute(
-            "INSERT INTO asignaturas (usuario_id, nombre) VALUES (?, ?)",
-            (usuario_id, nombre),
+            "INSERT INTO asignaturas (usuario_id, nombre, dificultad, prioridad) VALUES (?, ?, ?, ?)",
+            (usuario_id, nombre, dificultad, prioridad),
         )
         row = db.execute(
-            "SELECT id, usuario_id, nombre FROM asignaturas WHERE id = ? AND usuario_id = ?",
+            "SELECT id, usuario_id, nombre, dificultad, prioridad FROM asignaturas WHERE id = ? AND usuario_id = ?",
             (cursor.lastrowid, usuario_id),
         ).fetchone()
     return jsonify(asignatura_to_dict(row)), 201
@@ -513,11 +578,11 @@ def create_asignatura():
 @app.get("/api/asignaturas/<int:asignatura_id>")
 @login_required
 def get_asignatura(asignatura_id):
-    """Devuelve el contenido base del apartado de una asignatura propia."""
+    """Devuelve el contenido base del apartado de una asignatura propia (HU23, HU12)."""
     # El ID solicitado y el ID de sesión forman juntos la condición: las
     # asignaturas inexistentes y las ajenas producen el mismo 404.
     row = get_db().execute(
-        """SELECT id, usuario_id, nombre
+        """SELECT id, usuario_id, nombre, dificultad, prioridad
            FROM asignaturas
            WHERE id = ? AND usuario_id = ?""",
         (asignatura_id, session["usuario_id"]),
@@ -530,7 +595,7 @@ def get_asignatura(asignatura_id):
 @app.patch("/api/asignaturas/<int:asignatura_id>")
 @login_required
 def update_asignatura(asignatura_id):
-    """Cambia el nombre de una asignatura propia sin afectar a las demás."""
+    """Cambia el nombre y/o atributos HU12 de una asignatura propia (HU01, HU12)."""
     # Restringe toda consulta y actualización al propietario de la sesión.
     usuario_id = session["usuario_id"]
     db = get_db()
@@ -542,24 +607,47 @@ def update_asignatura(asignatura_id):
     if existing is None:
         return jsonify({"error": "Asignatura no encontrada."}), 404
 
-    # Valida el JSON y el nuevo nombre antes de iniciar la escritura.
+    # Valida el JSON y los campos antes de iniciar la escritura.
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify({"error": "Debes enviar un objeto JSON con el nombre de la asignatura."}), 400
 
-    nombre = data.get("nombre")
-    if not isinstance(nombre, str) or not nombre.strip():
-        return jsonify({"error": "El nombre de la asignatura no puede estar vacío."}), 400
+    updates = []
+    params = []
+
+    if "nombre" in data:
+        nombre = data["nombre"]
+        if not isinstance(nombre, str) or not nombre.strip():
+            return jsonify({"error": "El nombre de la asignatura no puede estar vacío."}), 400
+        updates.append("nombre = ?")
+        params.append(nombre.strip())
+
+    if "dificultad" in data:
+        dif_val = data["dificultad"]
+        if not isinstance(dif_val, str) or dif_val.strip().lower() not in NIVELES_DIFICULTAD:
+            return jsonify({"error": "La dificultad debe ser baja, media o alta."}), 400
+        updates.append("dificultad = ?")
+        params.append(dif_val.strip().lower())
+
+    if "prioridad" in data:
+        prio_val = data["prioridad"]
+        if not isinstance(prio_val, str) or prio_val.strip().lower() not in NIVELES_PRIORIDAD:
+            return jsonify({"error": "La prioridad debe ser baja, media o alta."}), 400
+        updates.append("prioridad = ?")
+        params.append(prio_val.strip().lower())
+
+    if not updates:
+        return jsonify({"error": "Debes enviar al menos un campo para actualizar."}), 400
 
     # Actualiza exclusivamente la fila validada y vuelve a leerla para devolver
-    # al frontend el nombre normalizado y el resto de datos públicos.
+    # al frontend los datos normalizados y el resto de información pública.
     with db:
         db.execute(
-            "UPDATE asignaturas SET nombre = ? WHERE id = ? AND usuario_id = ?",
-            (nombre.strip(), asignatura_id, usuario_id),
+            f"UPDATE asignaturas SET {', '.join(updates)} WHERE id = ? AND usuario_id = ?",
+            (*params, asignatura_id, usuario_id),
         )
         row = db.execute(
-            "SELECT id, usuario_id, nombre FROM asignaturas WHERE id = ? AND usuario_id = ?",
+            "SELECT id, usuario_id, nombre, dificultad, prioridad FROM asignaturas WHERE id = ? AND usuario_id = ?",
             (asignatura_id, usuario_id),
         ).fetchone()
     return jsonify(asignatura_to_dict(row)), 200
@@ -743,6 +831,40 @@ def delete_tema(tema_id):
         return jsonify({"error": "Tema no encontrado."}), 404
     return jsonify({"mensaje": "Tema eliminado con éxito."}), 200
 
+
+
+
+# --- MODELO / API PARA GENERADOR DE PLANES DE ESTUDIO (HU12, HU06) ---
+
+def obtener_datos_planificacion(usuario_id):
+    """Devuelve dificultad y prioridad de asignaturas y tareas para HU06."""
+    db = get_db()
+    asignaturas_rows = db.execute(
+        """SELECT id, usuario_id, nombre, dificultad, prioridad
+           FROM asignaturas
+           WHERE usuario_id = ?
+           ORDER BY id DESC""",
+        (usuario_id,),
+    ).fetchall()
+    todos_rows = db.execute(
+        """SELECT id, usuario_id, titulo, completada, prioridad, fecha_creacion
+           FROM todos
+           WHERE usuario_id = ?
+           ORDER BY id DESC""",
+        (usuario_id,),
+    ).fetchall()
+    return {
+        "asignaturas": [asignatura_to_dict(row) for row in asignaturas_rows],
+        "tareas": [todo_to_dict(row) for row in todos_rows],
+    }
+
+
+@app.get("/api/plan/datos")
+@login_required
+def api_datos_planificacion():
+    """Expone dificultad y prioridad de asignaturas y tareas al generador (HU06)."""
+    usuario_id = session["usuario_id"]
+    return jsonify(obtener_datos_planificacion(usuario_id)), 200
 
 # Prepara o actualiza el esquema al importar el módulo, antes de atender rutas.
 initialize_database()

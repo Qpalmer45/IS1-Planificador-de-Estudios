@@ -160,14 +160,16 @@ Estado consultado: 27 issues abiertas y 0 cerradas.
 
 [Issue #12](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/12)
 
-**Historia:** Como usuario, quiero indicar la dificultad de mis asignaturas para distribuir mejor el tiempo de estudio.
+**Historia:** Como usuario, quiero indicar la dificultad y la prioridad de mis asignaturas, así como la prioridad de mis tareas, para distribuir mejor el tiempo de estudio.
 
 **Valor:** Alto  
 **Estimación:** 1 día
 
 **Criterios de aceptación:**
-- Se puede asignar un nivel de dificultad.
-- El generador utiliza esta información al planificar.
+- Cada asignatura puede guardar una dificultad y una prioridad (baja, media o alta).
+- Las tareas conservan su propio campo de prioridad (baja, media o alta).
+- La API valida y devuelve ambos atributos de las asignaturas.
+- El generador recibe la dificultad y prioridad de las asignaturas, y la prioridad de las tareas.
 
 ## HU13 - Horas deseadas por asignatura
 

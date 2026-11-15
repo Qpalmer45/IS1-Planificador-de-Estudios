@@ -65,6 +65,16 @@ const htmlFixture = `
       <section id="tab-asignaturas" class="tab-content">
         <form id="subject-form">
           <input id="subject-name" maxlength="100">
+          <select id="subject-difficulty">
+            <option value="baja">Dificultad Baja</option>
+            <option value="media" selected>Dificultad Media</option>
+            <option value="alta">Dificultad Alta</option>
+          </select>
+          <select id="subject-priority">
+            <option value="baja">Prioridad Baja</option>
+            <option value="media" selected>Prioridad Media</option>
+            <option value="alta">Prioridad Alta</option>
+          </select>
         </form>
         <div id="subject-feedback" class="feedback-alert" role="status"></div>
         <div id="subject-empty-state" hidden>Sin asignaturas</div>
@@ -912,8 +922,8 @@ describe("listado y apartado individual de asignaturas", () => {
   it("renderiza varias asignaturas como texto seguro con acciones identificables", async () => {
     const context = createContext();
     queueResponse(context, [
-      { id: 21, nombre: "Matemáticas" },
-      { id: 22, nombre: "<img src=x>" },
+      { id: 21, nombre: "Matemáticas", dificultad: "alta", prioridad: "baja" },
+      { id: 22, nombre: "<img src=x>", dificultad: "baja", prioridad: "alta" },
     ]);
 
     await context.window.loadAsignaturas();
@@ -921,6 +931,10 @@ describe("listado y apartado individual de asignaturas", () => {
     expect(context.document.querySelectorAll("#subject-list li")).toHaveLength(2);
     expect(subjectItem(context, 0).querySelector(".subject-list-name").textContent)
       .toBe("Matemáticas");
+    expect(subjectItem(context, 0).querySelector(".difficulty-badge").textContent)
+      .toBe("Dificultad: Alta");
+    expect(subjectItem(context, 0).querySelector(".priority-badge").textContent)
+      .toBe("Prioridad: Baja");
     expect(subjectItem(context, 1).querySelector("img")).toBeNull();
     expect(subjectItem(context, 1).querySelector(".subject-list-name").textContent)
       .toBe("<img src=x>");
@@ -1160,8 +1174,20 @@ describe("eventos y operaciones de asignaturas", () => {
     const context = createContext();
     setupInterface(context);
     context.document.querySelector("#subject-name").value = "  Geología  ";
-    queueResponse(context, { id: 31, nombre: "Geología" });
-    queueResponse(context, [{ id: 31, nombre: "Geología" }]);
+    context.document.querySelector("#subject-difficulty").value = "alta";
+    context.document.querySelector("#subject-priority").value = "baja";
+    queueResponse(context, {
+      id: 31,
+      nombre: "Geología",
+      dificultad: "alta",
+      prioridad: "baja",
+    });
+    queueResponse(context, [{
+      id: 31,
+      nombre: "Geología",
+      dificultad: "alta",
+      prioridad: "baja",
+    }]);
 
     context.document.querySelector("#subject-form").dispatchEvent(
       new context.window.Event("submit", { bubbles: true, cancelable: true }),
@@ -1172,10 +1198,18 @@ describe("eventos y operaciones de asignaturas", () => {
     expect(context.fetchMock.mock.calls[0][1].method).toBe("POST");
     expect(JSON.parse(context.fetchMock.mock.calls[0][1].body)).toEqual({
       nombre: "Geología",
+      dificultad: "alta",
+      prioridad: "baja",
     });
     expect(context.document.querySelector("#subject-name").value).toBe("");
+    expect(context.document.querySelector("#subject-difficulty").value).toBe("media");
+    expect(context.document.querySelector("#subject-priority").value).toBe("media");
     expect(subjectItem(context).querySelector(".subject-list-name").textContent)
       .toBe("Geología");
+    expect(subjectItem(context).querySelector(".difficulty-badge").textContent)
+      .toBe("Dificultad: Alta");
+    expect(subjectItem(context).querySelector(".priority-badge").textContent)
+      .toBe("Prioridad: Baja");
     expect(context.document.activeElement.id).toBe("subject-name");
   });
 
@@ -1233,6 +1267,50 @@ describe("eventos y operaciones de asignaturas", () => {
     expect(context.fetchMock.mock.calls[1][1].method).toBe("PATCH");
     expect(JSON.parse(context.fetchMock.mock.calls[1][1].body)).toEqual({
       nombre: "Análisis",
+    });
+
+    it("permite editar dificultad y prioridad de una asignatura", async () => {
+      const context = createContext();
+      setupInterface(context);
+      queueResponse(context, [{
+        id: 35,
+        nombre: "Biología",
+        dificultad: "baja",
+        prioridad: "media",
+      }]);
+      await context.window.loadAsignaturas();
+      queueResponse(context, {
+        id: 35,
+        nombre: "Biología",
+        dificultad: "alta",
+        prioridad: "alta",
+      });
+      queueResponse(context, [{
+        id: 35,
+        nombre: "Biología",
+        dificultad: "alta",
+        prioridad: "alta",
+      }]);
+
+      subjectItem(context).querySelector(".action-btn.edit").click();
+      const form = subjectItem(context).querySelector("form");
+      form.querySelector(".difficulty-select").value = "alta";
+      form.querySelector(".priority-select").value = "alta";
+      form.dispatchEvent(new context.window.Event("submit", {
+        bubbles: true,
+        cancelable: true,
+      }));
+      await settlePromises();
+
+      expect(JSON.parse(context.fetchMock.mock.calls[1][1].body)).toEqual({
+        nombre: "Biología",
+        dificultad: "alta",
+        prioridad: "alta",
+      });
+      expect(subjectItem(context).querySelector(".difficulty-badge").textContent)
+        .toBe("Dificultad: Alta");
+      expect(subjectItem(context).querySelector(".priority-badge").textContent)
+        .toBe("Prioridad: Alta");
     });
     expect(subjectItem(context).querySelector(".subject-list-name").textContent)
       .toBe("Análisis");

@@ -298,10 +298,20 @@ function renderTodos() {
     const content = document.createElement("div");
     content.className = "todo-content";
 
+    const titleRow = document.createElement("div");
+    titleRow.className = "todo-title-row";
+
     const titleSpan = document.createElement("span");
     titleSpan.className = "todo-title";
     titleSpan.textContent = todo.titulo;
-    content.appendChild(titleSpan);
+
+    const prio = todo.prioridad || "media";
+    const prioBadge = document.createElement("span");
+    prioBadge.className = `priority-badge priority-${prio}`;
+    prioBadge.textContent = prio.charAt(0).toUpperCase() + prio.slice(1);
+
+    titleRow.append(titleSpan, prioBadge);
+    content.appendChild(titleRow);
 
     // Añade los controles de edición y borrado para esta tarea concreta.
     const actions = document.createElement("div");
@@ -350,6 +360,21 @@ function startEditing(todo, itemElement) {
   editInput.value = todo.titulo;
   editInput.className = "edit-input";
 
+  const editPriority = document.createElement("select");
+  editPriority.className = "edit-select priority-select";
+  editPriority.setAttribute("aria-label", "Prioridad de la tarea");
+  [
+    { value: "baja", label: "Prioridad Baja" },
+    { value: "media", label: "Prioridad Media" },
+    { value: "alta", label: "Prioridad Alta" },
+  ].forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt.value;
+    option.textContent = opt.label;
+    if ((todo.prioridad || "media") === opt.value) option.selected = true;
+    editPriority.appendChild(option);
+  });
+
   const saveEdit = async () => {
     const newTitle = editInput.value.trim();
     // Evita enviar una modificación sin título después de quitar espacios.
@@ -357,11 +382,17 @@ function startEditing(todo, itemElement) {
       showFeedback("La nota no puede estar vacía.");
       return;
     }
+    const currentPrio = todo.prioridad || "media";
+    const newPrio = editPriority.value;
+    const patchBody = { titulo: newTitle };
+    if (newPrio !== currentPrio) {
+      patchBody.prioridad = newPrio;
+    }
     try {
       clearFeedback();
       await api(`/api/todos/${todo.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ titulo: newTitle })
+        body: JSON.stringify(patchBody)
       });
       await loadTodos();
     } catch (err) {
@@ -394,7 +425,7 @@ function startEditing(todo, itemElement) {
   });
 
   // Reemplaza la fila en el DOM y enfoca el campo para que se pueda escribir de inmediato.
-  editWrap.append(editInput, btnSave, btnCancel);
+  editWrap.append(editInput, editPriority, btnSave, btnCancel);
   itemElement.replaceChildren(editWrap);
   editInput.focus();
 }
@@ -435,9 +466,24 @@ function renderSubjects() {
     const item = document.createElement("li");
     item.className = "subject-list-item";
 
+    const info = document.createElement("div");
+    info.className = "subject-info";
+
     const name = document.createElement("span");
     name.className = "subject-list-name";
     name.textContent = asignatura.nombre;
+
+    const diff = asignatura.dificultad || "media";
+    const diffBadge = document.createElement("span");
+    diffBadge.className = `difficulty-badge difficulty-${diff}`;
+    diffBadge.textContent = `Dificultad: ${diff.charAt(0).toUpperCase() + diff.slice(1)}`;
+
+    const priority = asignatura.prioridad || "media";
+    const priorityBadge = document.createElement("span");
+    priorityBadge.className = `priority-badge priority-${priority}`;
+    priorityBadge.textContent = `Prioridad: ${priority.charAt(0).toUpperCase() + priority.slice(1)}`;
+
+    info.append(name, diffBadge, priorityBadge);
 
     const actions = document.createElement("div");
     actions.className = "subject-list-actions";
@@ -464,7 +510,7 @@ function renderSubjects() {
     deleteButton.addEventListener("click", () => deleteAsignatura(asignatura));
 
     actions.append(openButton, editButton, deleteButton);
-    item.append(name, actions);
+    item.append(info, actions);
     subjectListEl.appendChild(item);
   });
 
@@ -484,6 +530,19 @@ function renderSubjectDetail(asignatura) {
   if (subjectDialogTitleEl) {
     subjectDialogTitleEl.textContent = asignatura.nombre;
   }
+
+  const subjectMeta = document.createElement("div");
+  subjectMeta.className = "subject-dialog-meta";
+  const diffVal = asignatura.dificultad || "media";
+  const diffBadge = document.createElement("span");
+  diffBadge.className = `difficulty-badge difficulty-${diffVal}`;
+  diffBadge.textContent = `Dificultad: ${diffVal.charAt(0).toUpperCase() + diffVal.slice(1)}`;
+  const priorityVal = asignatura.prioridad || "media";
+  const priorityBadge = document.createElement("span");
+  priorityBadge.className = `priority-badge priority-${priorityVal}`;
+  priorityBadge.textContent = `Prioridad: ${priorityVal.charAt(0).toUpperCase() + priorityVal.slice(1)}`;
+  subjectMeta.append(diffBadge, priorityBadge);
+  subjectDetailEl.appendChild(subjectMeta);
 
   // El formulario, los filtros, el estado vacío y la lista se crean aquí
   // porque el contenido depende del detalle que devuelva la API.
@@ -997,6 +1056,36 @@ function editAsignatura(asignatura, item) {
   input.value = asignatura.nombre;
   input.setAttribute("aria-label", `Nuevo nombre para ${asignatura.nombre}`);
 
+  const diffSelect = document.createElement("select");
+  diffSelect.className = "edit-select difficulty-select";
+  diffSelect.setAttribute("aria-label", `Dificultad para ${asignatura.nombre}`);
+  [
+    { value: "baja", label: "Dificultad Baja" },
+    { value: "media", label: "Dificultad Media" },
+    { value: "alta", label: "Dificultad Alta" },
+  ].forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt.value;
+    option.textContent = opt.label;
+    if ((asignatura.dificultad || "media") === opt.value) option.selected = true;
+    diffSelect.appendChild(option);
+  });
+
+  const prioritySelect = document.createElement("select");
+  prioritySelect.className = "edit-select priority-select";
+  prioritySelect.setAttribute("aria-label", `Prioridad para ${asignatura.nombre}`);
+  [
+    { value: "baja", label: "Prioridad Baja" },
+    { value: "media", label: "Prioridad Media" },
+    { value: "alta", label: "Prioridad Alta" },
+  ].forEach(opt => {
+    const option = document.createElement("option");
+    option.value = opt.value;
+    option.textContent = opt.label;
+    if ((asignatura.prioridad || "media") === opt.value) option.selected = true;
+    prioritySelect.appendChild(option);
+  });
+
   const saveButton = document.createElement("button");
   saveButton.type = "submit";
   saveButton.className = "action-btn save";
@@ -1011,11 +1100,22 @@ function editAsignatura(asignatura, item) {
   form.addEventListener("submit", async event => {
     event.preventDefault();
     try {
-      // Persiste el nombre; después recarga la lista para mostrar la versión guardada.
+      // Persiste el nombre y los atributos HU12; después recarga la lista guardada.
       clearSubjectFeedback();
+      const currentDiff = asignatura.dificultad || "media";
+      const newDiff = diffSelect.value;
+      const currentPriority = asignatura.prioridad || "media";
+      const newPriority = prioritySelect.value;
+      const patchBody = { nombre: input.value };
+      if (newDiff !== currentDiff) {
+        patchBody.dificultad = newDiff;
+      }
+      if (newPriority !== currentPriority) {
+        patchBody.prioridad = newPriority;
+      }
       await api(`/api/asignaturas/${asignatura.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ nombre: input.value })
+        body: JSON.stringify(patchBody)
       });
       await loadAsignaturas(null);
     } catch (err) {
@@ -1023,7 +1123,7 @@ function editAsignatura(asignatura, item) {
     }
   });
 
-  form.append(input, saveButton, cancelButton);
+  form.append(input, diffSelect, prioritySelect, saveButton, cancelButton);
   item.replaceChildren(form);
   input.focus();
 }
@@ -1059,14 +1159,21 @@ function setupTodoEvents() {
       const titulo = todoInput.value.trim();
       if (!titulo) return;
 
+      const prioritySelect = document.querySelector("#todo-priority");
+      const payload = { titulo };
+      if (prioritySelect && prioritySelect.value) {
+        payload.prioridad = prioritySelect.value;
+      }
+
       try {
         clearFeedback();
         await api("/api/todos", {
           method: "POST",
-          body: JSON.stringify({ titulo })
+          body: JSON.stringify(payload)
         });
         // Limpia el formulario y actualiza la lista solo tras guardar correctamente.
         todoInput.value = "";
+        if (prioritySelect) prioritySelect.value = "media";
         if (charCounter) charCounter.textContent = "0/200";
         await loadTodos();
         todoInput.focus();
@@ -1169,14 +1276,26 @@ function setupSubjectEvents() {
       return;
     }
 
+    const diffInput = document.querySelector("#subject-difficulty");
+    const priorityInput = document.querySelector("#subject-priority");
+    const payload = { nombre };
+    if (diffInput && diffInput.value) {
+      payload.dificultad = diffInput.value;
+    }
+    if (priorityInput && priorityInput.value) {
+      payload.prioridad = priorityInput.value;
+    }
+
     try {
       clearSubjectFeedback();
       await api("/api/asignaturas", {
         method: "POST",
-        body: JSON.stringify({ nombre })
+        body: JSON.stringify(payload)
       });
       // Reinicia el formulario, actualiza el listado y devuelve el cursor al campo.
       subjectNameInput.value = "";
+      if (diffInput) diffInput.value = "media";
+      if (priorityInput) priorityInput.value = "media";
       await loadAsignaturas(null);
       subjectNameInput.focus();
     } catch (err) {
