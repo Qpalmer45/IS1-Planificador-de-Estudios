@@ -676,6 +676,9 @@ function renderTopics() {
           content.value = `${content.value.slice(0, lineStart - 1)}${content.value.slice(lineStart)}`;
           content.setSelectionRange(lineStart - 1, lineStart - 1);
           content.dispatchEvent(new window.Event("input", { bubbles: true }));
+          // La edición del valor por código no dispara el evento change;
+          // guarda aquí la eliminación para que no reaparezca al recargar.
+          saveTopicContent(tema, content);
         }
       }
     });

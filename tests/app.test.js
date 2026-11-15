@@ -1762,6 +1762,7 @@ describe("temas y apuntes del apartado individual", () => {
     const content = item.querySelector(".topic-content");
     content.focus();
     content.setSelectionRange(14, 14);
+    queueResponse(context, { contenido: "Primera línea\nTercera línea" });
     const backspace = new context.window.KeyboardEvent("keydown", {
       key: "Backspace",
       bubbles: true,
@@ -1769,13 +1770,22 @@ describe("temas y apuntes del apartado individual", () => {
     });
 
     content.dispatchEvent(backspace);
+    await settlePromises();
 
     expect(backspace.defaultPrevented).toBe(true);
     expect(item.open).toBe(true);
     expect(content.value).toBe("Primera línea\nTercera línea");
     expect(content.rows).toBe(2);
     expect(content.selectionStart).toBe(13);
-    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+    expect(context.fetchMock).toHaveBeenCalledTimes(3);
+    expect(context.fetchMock.mock.calls[2]).toEqual([
+      "/api/temas/7144",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ contenido: "Primera línea\nTercera línea" }),
+        headers: { "Content-Type": "application/json" },
+      },
+    ]);
   });
 
   it("reduce las filas del editor al eliminar líneas de apuntes", async () => {
