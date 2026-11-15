@@ -11,6 +11,9 @@ let currentFilter = "all";
 let asignaturas = [];
 let selectedAsignaturaId = null;
 let subjectModalTrigger = null;
+let temas = [];
+let currentTopicFilter = "all";
+let topicsSubjectId = null;
 
 // Referencias (Element o null) a los controles de notas, mensajes y cierre de sesión.
 const todoForm = document.querySelector("#todo-form");
@@ -471,24 +474,427 @@ function renderSubjects() {
 /** Muestra el contenido inicial en el panel superpuesto de la asignatura. */
 function renderSubjectDetail(asignatura) {
   if (!subjectDetailEl) return;
-  // Limpia la información anterior para que el panel muestre solo esta asignatura.
+  // Reconstruye el detalle para que no queden controles ni temas de la materia
+  // abierta anteriormente y reinicia el filtro al estado "Todos".
   subjectDetailEl.replaceChildren();
+  temas = [];
+  currentTopicFilter = "all";
+  topicsSubjectId = asignatura.id;
   // El nombre se presenta en la cabecera externa del diálogo, no dentro del contenido.
   if (subjectDialogTitleEl) {
     subjectDialogTitleEl.textContent = asignatura.nombre;
   }
 
-  // Reserva un espacio claro para las futuras herramientas de temario y exámenes.
-  const description = document.createElement("p");
-  description.className = "subject-detail-description";
-  description.textContent = "Este es el espacio individual de esta asignatura.";
+  // El formulario, los filtros, el estado vacío y la lista se crean aquí
+  // porque el contenido depende del detalle que devuelva la API.
+  const topicManager = document.createElement("section");
+  topicManager.className = "topic-manager";
 
-  const placeholder = document.createElement("div");
-  placeholder.className = "subject-detail-placeholder";
-  placeholder.textContent =
-    "Aquí podrás organizar el temario, los exámenes y otra información propia de esta materia.";
+  const form = document.createElement("form");
+  form.id = "topic-form";
+  form.className = "topic-create-form";
 
-  subjectDetailEl.append(description, placeholder);
+  // La línea de creación mantiene el botón + junto al campo del nuevo tema.
+  // Los apuntes se escriben directamente bajo el bloque una vez creado.
+  const titleInput = document.createElement("input");
+  titleInput.id = "topic-title";
+  titleInput.type = "text";
+  titleInput.maxLength = 200;
+  titleInput.placeholder = "Escribe el nombre de un tema...";
+  titleInput.setAttribute("aria-label", "Título del tema");
+
+  const createButton = document.createElement("button");
+  createButton.id = "topic-add-button";
+  createButton.type = "submit";
+  createButton.className = "topic-add-button";
+  createButton.textContent = "+";
+  createButton.setAttribute("aria-label", "Añadir tema");
+  createButton.title = "Añadir tema";
+  form.append(createButton, titleInput);
+
+  // Separa los mensajes de guardado de temas de los errores del módulo general
+  // de asignaturas y los anuncia a tecnologías de asistencia.
+  const feedback = document.createElement("div");
+  feedback.id = "topic-feedback";
+  feedback.className = "feedback-alert";
+  feedback.setAttribute("role", "status");
+  feedback.setAttribute("aria-live", "polite");
+
+  // El filtro cambia solo la presentación local; no genera otra petición API.
+  const filters = document.createElement("div");
+  filters.className = "topic-filters";
+  filters.setAttribute("role", "group");
+  filters.setAttribute("aria-label", "Filtrar temas");
+  filters.append(
+    createTopicFilterButton("all", "Todos"),
+    createTopicFilterButton("pending", "Pendientes"),
+    createTopicFilterButton("studied", "Estudiados"),
+  );
+
+  const emptyState = document.createElement("p");
+  emptyState.id = "topic-empty-state";
+  emptyState.className = "topic-empty-state";
+  emptyState.textContent = "Aún no hay temas en esta asignatura.";
+
+  const list = document.createElement("div");
+  list.id = "topic-list";
+  list.className = "topic-list";
+  list.setAttribute("role", "list");
+  list.setAttribute("aria-label", "Temas de la asignatura");
+
+  // Inserta todos los controles antes de conectar eventos, de forma que sus
+  // manejadores puedan consultar el resto del detalle mediante el DOM.
+  topicManager.append(form, feedback, filters, emptyState, list);
+  subjectDetailEl.appendChild(topicManager);
+  setupTopicEvents(form, titleInput);
+}
+
+/** Crea un filtro accesible y repinta los temas con el criterio seleccionado. */
+function createTopicFilterButton(filter, label) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "topic-filter-btn";
+  button.dataset.topicFilter = filter;
+  button.textContent = label;
+  button.setAttribute("aria-pressed", String(filter === currentTopicFilter));
+  button.addEventListener("click", () => {
+    // Sincroniza el estado accesible de los botones y actualiza la lista
+    // a partir de los datos ya cargados, sin modificar la API.
+    currentTopicFilter = filter;
+    subjectDetailEl.querySelectorAll(".topic-filter-btn").forEach(item => {
+      item.setAttribute("aria-pressed", String(item === button));
+    });
+    renderTopics();
+  });
+  return button;
+}
+
+/** Presenta un error de validación o API dentro del apartado actual. */
+function showTopicFeedback(message) {
+  const feedback = subjectDetailEl?.querySelector("#topic-feedback");
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.className = "feedback-alert error";
+}
+
+/** Limpia el error de temas antes de comenzar otra operación. */
+function clearTopicFeedback() {
+  const feedback = subjectDetailEl?.querySelector("#topic-feedback");
+  if (!feedback) return;
+  feedback.textContent = "";
+  feedback.className = "feedback-alert";
+}
+
+/** Dibuja los temas del apartado aplicando el filtro activo. */
+function renderTopics() {
+  const list = subjectDetailEl?.querySelector("#topic-list");
+  const emptyState = subjectDetailEl?.querySelector("#topic-empty-state");
+  if (!list || !emptyState) return;
+
+  // El filtro se aplica a la copia local. Los apuntes se crean como nodos y
+  // se asignan con textContent para no interpretar el contenido como HTML.
+  const filteredTopics = temas.filter(tema => {
+    if (currentTopicFilter === "pending") return !tema.estudiado;
+    if (currentTopicFilter === "studied") return tema.estudiado;
+    return true;
+  });
+  list.replaceChildren();
+  emptyState.hidden = filteredTopics.length > 0;
+  if (filteredTopics.length === 0) {
+    emptyState.textContent = temas.length === 0
+      ? "Aún no hay temas en esta asignatura."
+      : "No hay temas en este filtro.";
+  }
+
+  // Cada tema se dibuja como un bloque desplegable; <details> aporta su
+  // comportamiento nativo de abrir/cerrar y el indicador de flecha.
+  filteredTopics.forEach(tema => {
+    const item = document.createElement("details");
+    item.className = "topic-item";
+    item.dataset.id = String(tema.id);
+    item.setAttribute("role", "listitem");
+    item.open = true;
+
+    const heading = document.createElement("summary");
+    heading.className = "topic-heading";
+    const title = document.createElement("h4");
+    title.className = "topic-title";
+    title.textContent = tema.titulo;
+    heading.appendChild(title);
+
+    const statusLabel = document.createElement("label");
+    statusLabel.className = "topic-studied-label";
+    const status = document.createElement("input");
+    status.type = "checkbox";
+    status.className = "topic-studied-toggle";
+    status.checked = Boolean(tema.estudiado);
+    status.setAttribute("aria-label", `Marcar ${tema.titulo} como estudiado`);
+    status.addEventListener("change", () => updateTopicStatus(tema, status));
+    status.addEventListener("click", event => event.stopPropagation());
+    statusLabel.append(status, document.createTextNode("Estudiado"));
+    heading.appendChild(statusLabel);
+
+    // Los apuntes se pueden editar directamente en el bloque. El evento
+    // change los guarda al confirmar la edición y abandonar el área de texto.
+    const body = document.createElement("div");
+    body.className = "topic-body";
+    const content = document.createElement("textarea");
+    content.className = "topic-content";
+    content.rows = Math.max(1, tema.contenido.split("\n").length);
+    content.value = tema.contenido;
+    content.placeholder = "Escribe aquí...";
+    content.setAttribute("aria-label", `Apuntes de ${tema.titulo}`);
+    content.addEventListener("input", () => {
+      // Ajusta las filas al contenido actual para no dejar altura sobrante
+      // cuando se eliminan saltos de línea de los apuntes.
+      content.rows = Math.max(1, content.value.split("\n").length);
+      content.style.height = "auto";
+      content.style.height = `${Math.max(34, content.scrollHeight)}px`;
+    });
+    content.addEventListener("change", () => saveTopicContent(tema, content));
+    content.addEventListener("keydown", event => {
+      const cursor = content.selectionStart;
+      const lineStart = content.value.lastIndexOf("\n", cursor - 1) + 1;
+      const lineEnd = content.value.indexOf("\n", cursor);
+      const currentLine = content.value.slice(
+        lineStart,
+        lineEnd === -1 ? content.value.length : lineEnd,
+      );
+      if (
+        event.key === "Backspace"
+        && content.selectionStart === content.selectionEnd
+        && currentLine === ""
+      ) {
+        event.preventDefault();
+        if (content.value === "") {
+          // Solo se sale del tema si no queda ninguna línea ni apunte.
+          item.open = false;
+          subjectDetailEl.querySelector("#topic-title")?.focus();
+        } else if (lineStart > 0) {
+          // En una línea vacía interior, elimina el salto anterior y conserva
+          // el tema abierto para que se pueda seguir escribiendo.
+          content.value = `${content.value.slice(0, lineStart - 1)}${content.value.slice(lineStart)}`;
+          content.setSelectionRange(lineStart - 1, lineStart - 1);
+          content.dispatchEvent(new window.Event("input", { bubbles: true }));
+        }
+      }
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "topic-actions";
+    const editButton = document.createElement("button");
+    editButton.type = "button";
+    editButton.className = "action-btn topic-edit";
+    editButton.textContent = "Editar";
+    editButton.setAttribute("aria-label", `Editar ${tema.titulo}`);
+    editButton.addEventListener("click", () => startEditingTopic(tema, item));
+
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "action-btn delete topic-delete";
+    deleteButton.textContent = "Eliminar";
+    deleteButton.setAttribute("aria-label", `Eliminar ${tema.titulo}`);
+    deleteButton.addEventListener("click", () => deleteTema(tema));
+    actions.append(editButton, deleteButton);
+
+    // Las acciones quedan junto al encabezado para que no se confundan con
+    // los controles de escritura del contenido.
+    body.append(actions, content);
+    item.append(heading, body);
+    list.appendChild(item);
+  });
+}
+
+/** Carga los temas y descarta respuestas que ya no correspondan al diálogo. */
+async function loadAsignaturaTopics(asignaturaId) {
+  try {
+    const data = await api(`/api/asignaturas/${asignaturaId}/temas`);
+    // Una petición puede terminar después de cerrar o cambiar de asignatura.
+    // En ese caso no se deben mezclar datos de dos apartados.
+    if (
+      !data ||
+      selectedAsignaturaId !== asignaturaId ||
+      topicsSubjectId !== asignaturaId ||
+      !subjectModalEl ||
+      subjectModalEl.hidden
+    ) return;
+    if (!Array.isArray(data)) {
+      throw new Error("La respuesta de temas no tiene el formato esperado.");
+    }
+    // Actualiza el estado local solo después de comprobar el formato recibido.
+    temas = data;
+    renderTopics();
+  } catch (err) {
+    if (selectedAsignaturaId === asignaturaId && topicsSubjectId === asignaturaId) {
+      showTopicFeedback(err.message);
+    }
+  }
+}
+
+/** Conecta el formulario para crear temas y guardar sus apuntes. */
+function setupTopicEvents(form, titleInput) {
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    // Evita enviar títulos vacíos y conserva intacto el contenido si la
+    // validación falla para que el usuario no pierda lo que escribió.
+    const titulo = titleInput.value.trim();
+    if (!titulo) {
+      showTopicFeedback("Escribe el título del tema.");
+      return;
+    }
+
+    // Captura la asignatura activa antes de esperar la respuesta de red.
+    const asignaturaId = topicsSubjectId;
+    try {
+      clearTopicFeedback();
+      const created = await api(`/api/asignaturas/${asignaturaId}/temas`, {
+        method: "POST",
+        body: JSON.stringify({ titulo, contenido: "" }),
+      });
+      if (!created) return;
+      // No limpiar ni enfocar controles de un diálogo que ya cambió de contexto.
+      if (selectedAsignaturaId !== asignaturaId || subjectModalEl.hidden) return;
+      // Solo se vacía el formulario cuando la API confirmó la creación.
+      titleInput.value = "";
+      await loadAsignaturaTopics(asignaturaId);
+      const newTopic = temas.find(tema => tema.id === created.id);
+      const content = newTopic && subjectDetailEl.querySelector(
+        `.topic-item[data-id="${newTopic.id}"] .topic-content`,
+      );
+      if (content) content.focus();
+      else titleInput.focus();
+    } catch (err) {
+      if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+        showTopicFeedback(err.message);
+      }
+    }
+  });
+}
+
+/** Guarda automáticamente los apuntes cuando se confirma su edición. */
+async function saveTopicContent(tema, content) {
+  const asignaturaId = topicsSubjectId;
+  const contenido = content.value;
+  if (contenido === tema.contenido) return;
+
+  try {
+    clearTopicFeedback();
+    const updated = await api(`/api/temas/${tema.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ contenido }),
+    });
+    if (!updated) return;
+    // Actualiza el estado local sin volver a dibujar ni quitar el foco del editor.
+    if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+      tema.contenido = updated.contenido;
+    }
+  } catch (err) {
+    // Conserva en pantalla el texto escrito y comunica el error para que se
+    // pueda reintentar, en lugar de reemplazarlo por la versión anterior.
+    if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+      showTopicFeedback(err.message);
+    }
+  }
+}
+
+/** Guarda el cambio del estado estudiado y revierte la casilla si falla. */
+async function updateTopicStatus(tema, checkbox) {
+  // El cambio visual es inmediato; se conserva el valor anterior del tema para
+  // restaurarlo si el servidor rechaza la actualización.
+  const asignaturaId = topicsSubjectId;
+  const estudiado = checkbox.checked;
+  try {
+    clearTopicFeedback();
+    await api(`/api/temas/${tema.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ estudiado }),
+    });
+    if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+      await loadAsignaturaTopics(asignaturaId);
+    }
+  } catch (err) {
+    checkbox.checked = Boolean(tema.estudiado);
+    if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+      showTopicFeedback(err.message);
+    }
+  }
+}
+
+/** Sustituye temporalmente el título por un formulario de edición del nombre. */
+function startEditingTopic(tema, item) {
+  // La edición del nombre es independiente de los apuntes, que siguen siendo
+  // editables directamente en el área de contenido.
+  const form = document.createElement("form");
+  form.className = "topic-edit-form";
+
+  const titleInput = document.createElement("input");
+  titleInput.type = "text";
+  titleInput.className = "topic-edit-title";
+  titleInput.maxLength = 200;
+  titleInput.value = tema.titulo;
+  titleInput.setAttribute("aria-label", `Título de ${tema.titulo}`);
+
+  const saveButton = document.createElement("button");
+  saveButton.type = "submit";
+  saveButton.className = "action-btn save";
+  saveButton.textContent = "Guardar";
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "action-btn cancel topic-edit-cancel";
+  cancelButton.textContent = "Cancelar";
+  cancelButton.addEventListener("click", renderTopics);
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+    // Impide guardar un título vacío después de quitar los espacios exteriores.
+    const titulo = titleInput.value.trim();
+    if (!titulo) {
+      showTopicFeedback("Escribe el título del tema.");
+      return;
+    }
+
+    const asignaturaId = topicsSubjectId;
+    try {
+      clearTopicFeedback();
+      await api(`/api/temas/${tema.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ titulo }),
+      });
+      // Tras guardar, recarga la versión persistida para mantener estado y
+      // orden sincronizados con el backend.
+      if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+        await loadAsignaturaTopics(asignaturaId);
+      }
+    } catch (err) {
+      if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+        showTopicFeedback(err.message);
+      }
+    }
+  });
+
+  // Reemplaza la fila mientras se edita y enfoca el nombre inmediatamente.
+  form.append(titleInput, saveButton, cancelButton);
+  item.replaceChildren(form);
+  titleInput.focus();
+}
+
+/** Elimina un tema solo tras confirmación y mantiene el listado sincronizado. */
+async function deleteTema(tema) {
+  // La confirmación reduce borrados accidentales desde la lista de temas.
+  if (!window.confirm(`¿Seguro que deseas eliminar el tema "${tema.titulo}"?`)) return;
+  const asignaturaId = topicsSubjectId;
+  try {
+    clearTopicFeedback();
+    await api(`/api/temas/${tema.id}`, { method: "DELETE" });
+    // Recarga solo si el usuario sigue dentro de la misma asignatura.
+    if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+      await loadAsignaturaTopics(asignaturaId);
+    }
+  } catch (err) {
+    if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
+      showTopicFeedback(err.message);
+    }
+  }
 }
 
 /** Solicita el apartado individual y evita mostrar una respuesta obsoleta. */
@@ -506,6 +912,7 @@ async function loadAsignaturaDetail(asignaturaId) {
     // Ignora respuestas tardías si ya se cerró la ventana o se abrió otra materia.
     if (asignatura && selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
       renderSubjectDetail(asignatura);
+      await loadAsignaturaTopics(asignaturaId);
     }
   } catch (err) {
     if (selectedAsignaturaId === asignaturaId && !subjectModalEl.hidden) {
@@ -726,7 +1133,7 @@ function setupSubjectEvents() {
 
       if (event.key === "Tab" && subjectDialogEl) {
         const focusable = subjectDialogEl.querySelectorAll(
-          'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
         );
         if (focusable.length === 0) {
           event.preventDefault();
@@ -783,6 +1190,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupSubjectEvents();
   loadTodos();
   loadAsignaturas();
+  cargarRecordatorios();
 });
 
 // ==============================================================================
@@ -865,6 +1273,3 @@ function escaparHTML(cadena) {
         caracter => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[caracter] || caracter)
     );
 }
-
-// Ejecución automática al cargar el DOM
-document.addEventListener('DOMContentLoaded', cargarRecordatorios);

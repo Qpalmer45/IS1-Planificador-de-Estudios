@@ -116,6 +116,23 @@ def initialize_database():
                     FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
                 )"""
             )
+
+            # Cada tema organiza un bloque de apuntes dentro de una asignatura.
+            # Se guarda el usuario también en el tema para filtrar todas las
+            # consultas por propietario; las claves en cascada evitan huérfanos
+            # al eliminar una cuenta o una asignatura.
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS temas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL,
+                    asignatura_id INTEGER NOT NULL,
+                    titulo TEXT NOT NULL,
+                    contenido TEXT NOT NULL DEFAULT '',
+                    estudiado INTEGER NOT NULL DEFAULT 0 CHECK (estudiado IN (0, 1)),
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+                    FOREIGN KEY (asignatura_id) REFERENCES asignaturas (id) ON DELETE CASCADE
+                )"""
+            )
     finally:
         # La inicialización no mantiene una conexión abierta durante el uso normal.
         conn.close()
@@ -157,6 +174,19 @@ def asignatura_to_dict(row):
         "id": row["id"],
         "usuario_id": row["usuario_id"],
         "nombre": row["nombre"],
+    }
+
+
+def tema_to_dict(row):
+    """Convierte una fila SQLite de tema al formato público de la API."""
+    # SQLite almacena estudiado como entero; la API expone un booleano JSON.
+    return {
+        "id": row["id"],
+        "usuario_id": row["usuario_id"],
+        "asignatura_id": row["asignatura_id"],
+        "titulo": row["titulo"],
+        "contenido": row["contenido"],
+        "estudiado": bool(row["estudiado"]),
     }
 
 
@@ -553,6 +583,167 @@ def delete_asignatura(asignatura_id):
     return jsonify({"mensaje": "Asignatura eliminada con éxito."}), 200
 
 
+@app.get("/api/asignaturas/<int:asignatura_id>/temas")
+@login_required
+def list_temas(asignatura_id):
+    """Lista los temas de una asignatura propia, con filtro de estado opcional."""
+    # El usuario procede de la sesión y nunca de los parámetros del cliente.
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    # Comprueba primero la propiedad de la asignatura para devolver el mismo
+    # 404 tanto si no existe como si pertenece a otra cuenta.
+    asignatura = db.execute(
+        "SELECT id FROM asignaturas WHERE id = ? AND usuario_id = ?",
+        (asignatura_id, usuario_id),
+    ).fetchone()
+    if asignatura is None:
+        return jsonify({"error": "Asignatura no encontrada."}), 404
+
+    # Acepta únicamente los estados que entiende la interfaz; sin filtro
+    # devuelve los temas pendientes y estudiados.
+    estado = request.args.get("estado")
+    if estado not in (None, "pendiente", "estudiado"):
+        return jsonify({"error": "El estado debe ser pendiente o estudiado."}), 400
+
+    # La consulta limita resultados por asignatura y propietario. Los valores
+    # del filtro se pasan como parámetros para no interpolarlos en SQL.
+    query = """SELECT id, usuario_id, asignatura_id, titulo, contenido, estudiado
+               FROM temas
+               WHERE asignatura_id = ? AND usuario_id = ?"""
+    params = [asignatura_id, usuario_id]
+    if estado is not None:
+        query += " AND estudiado = ?"
+        params.append(1 if estado == "estudiado" else 0)
+    # Mantiene un orden estable entre consultas para facilitar la lectura.
+    query += " ORDER BY id"
+    rows = db.execute(query, params).fetchall()
+    return jsonify([tema_to_dict(row) for row in rows]), 200
+
+
+@app.post("/api/asignaturas/<int:asignatura_id>/temas")
+@login_required
+def create_tema(asignatura_id):
+    """Crea un tema pendiente en una asignatura propia."""
+    # Obtiene el propietario de la sesión y verifica antes que la materia
+    # destino existe y está disponible para esta cuenta.
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    asignatura = db.execute(
+        "SELECT id FROM asignaturas WHERE id = ? AND usuario_id = ?",
+        (asignatura_id, usuario_id),
+    ).fetchone()
+    if asignatura is None:
+        return jsonify({"error": "Asignatura no encontrada."}), 404
+
+    # Solo se aceptan objetos JSON. El contenido es opcional, pero cuando se
+    # envía debe ser texto; no se recortan sus espacios ni saltos de línea.
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Debes enviar un objeto JSON con título y contenido."}), 400
+
+    titulo = data.get("titulo")
+    contenido = data.get("contenido", "")
+    if not isinstance(titulo, str) or not titulo.strip():
+        return jsonify({"error": "El título del tema no puede estar vacío."}), 400
+    if not isinstance(contenido, str):
+        return jsonify({"error": "El contenido del tema debe ser texto."}), 400
+
+    # El estado inicial estudiado se establece en la base de datos a false.
+    # La transacción inserta el tema y lee la fila creada para devolver su ID.
+    with db:
+        cursor = db.execute(
+            """INSERT INTO temas
+               (usuario_id, asignatura_id, titulo, contenido)
+               VALUES (?, ?, ?, ?)""",
+            (usuario_id, asignatura_id, titulo.strip(), contenido),
+        )
+        row = db.execute(
+            """SELECT id, usuario_id, asignatura_id, titulo, contenido, estudiado
+               FROM temas WHERE id = ? AND usuario_id = ?""",
+            (cursor.lastrowid, usuario_id),
+        ).fetchone()
+    return jsonify(tema_to_dict(row)), 201
+
+
+@app.patch("/api/temas/<int:tema_id>")
+@login_required
+def update_tema(tema_id):
+    """Actualiza uno o varios campos de un tema propio."""
+    # La condición conjunta por ID y usuario hace indistinguibles los temas
+    # inexistentes de los que pertenecen a otra cuenta.
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    existing = db.execute(
+        "SELECT id FROM temas WHERE id = ? AND usuario_id = ?",
+        (tema_id, usuario_id),
+    ).fetchone()
+    if existing is None:
+        return jsonify({"error": "Tema no encontrado."}), 404
+
+    # PATCH permite cambios parciales, pero exige al menos un campo permitido.
+    # Se valida el objeto completo antes de ejecutar cualquier modificación.
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not data:
+        return jsonify({"error": "Debes enviar los campos que quieres actualizar."}), 400
+
+    allowed_fields = {"titulo", "contenido", "estudiado"}
+    if not set(data).issubset(allowed_fields):
+        return jsonify({"error": "El tema contiene campos no permitidos."}), 400
+
+    # Construye los nuevos valores solo después de comprobar el tipo de cada
+    # dato. Así, un campo inválido no deja guardado un cambio parcial.
+    updates = {}
+    if "titulo" in data:
+        titulo = data["titulo"]
+        if not isinstance(titulo, str) or not titulo.strip():
+            return jsonify({"error": "El título del tema no puede estar vacío."}), 400
+        updates["titulo"] = titulo.strip()
+    if "contenido" in data:
+        contenido = data["contenido"]
+        if not isinstance(contenido, str):
+            return jsonify({"error": "El contenido del tema debe ser texto."}), 400
+        updates["contenido"] = contenido
+    if "estudiado" in data:
+        estudiado = data["estudiado"]
+        # bool es una subclase de int en Python: se requiere tipo booleano
+        # exacto para rechazar números como 0 y 1 en el JSON recibido.
+        if type(estudiado) is not bool:
+            return jsonify({"error": "El estado estudiado debe ser booleano."}), 400
+        updates["estudiado"] = int(estudiado)
+
+    # Los nombres de columna provienen de la lista permitida y los valores
+    # siguen parametrizados. La escritura y lectura de la respuesta son atómicas.
+    assignments = ", ".join(f"{field} = ?" for field in updates)
+    with db:
+        db.execute(
+            f"UPDATE temas SET {assignments} WHERE id = ? AND usuario_id = ?",
+            (*updates.values(), tema_id, usuario_id),
+        )
+        row = db.execute(
+            """SELECT id, usuario_id, asignatura_id, titulo, contenido, estudiado
+               FROM temas WHERE id = ? AND usuario_id = ?""",
+            (tema_id, usuario_id),
+        ).fetchone()
+    return jsonify(tema_to_dict(row)), 200
+
+
+@app.delete("/api/temas/<int:tema_id>")
+@login_required
+def delete_tema(tema_id):
+    """Elimina únicamente el tema perteneciente al usuario actual."""
+    # Filtra por usuario en el propio DELETE para impedir que conocer un ID
+    # permita borrar temas de otra cuenta.
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            "DELETE FROM temas WHERE id = ? AND usuario_id = ?",
+            (tema_id, session["usuario_id"]),
+        )
+    if cursor.rowcount == 0:
+        return jsonify({"error": "Tema no encontrado."}), 404
+    return jsonify({"mensaje": "Tema eliminado con éxito."}), 200
+
+
 # Prepara o actualiza el esquema al importar el módulo, antes de atender rutas.
 initialize_database()
 
@@ -568,7 +759,11 @@ def obtener_recordatorios():
     # Detectar el ID de usuario desde la sesión
     user_id = session.get('usuario_id') or session.get('user_id')
     if not user_id:
-        return jsonify({'status': 'error', 'mensaje': 'No autorizado'}), 401
+        return jsonify({
+            'status': 'error',
+            'error': 'No autorizado',
+            'mensaje': 'No autorizado',
+        }), 401
 
     ahora = datetime.now()
     limite_dias = ahora + timedelta(days=7)
@@ -662,4 +857,3 @@ def obtener_recordatorios():
 if __name__ == "__main__":
     # Permite ejecutar este módulo directamente para desarrollo local.
     app.run(debug=True)
-

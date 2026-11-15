@@ -68,6 +68,7 @@ con Jest.
 - Inicio/cierre de sesión, credenciales incorrectas, petición sin JSON y estado de autenticación.
 - Tareas: creación, validaciones, listado, orden, aislamiento por usuario, modificación de uno o varios campos y borrado.
 - Asignaturas: creación, listado, detalle individual, edición, borrado, validación de entradas, autenticación y aislamiento por usuario.
+- Temas y apuntes por asignatura: contrato TDD de creación, listado y filtro de pendientes, edición, estado estudiado, borrado, validación, aislamiento, autenticación y respuestas tardías en la interfaz.
 - Frontend: API HTTP simulada, navegación, feedback, listado/filtros/contadores de tareas, operaciones CRUD de tareas y asignaturas, diálogo accesible y carga inicial.
 
 ## Casos pendientes conocidos

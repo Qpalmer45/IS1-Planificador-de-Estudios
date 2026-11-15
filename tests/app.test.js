@@ -171,6 +171,19 @@ function subjectItem(context, index = 0) {
   return context.document.querySelectorAll("#subject-list li")[index] ?? null;
 }
 
+/** Devuelve una fila de tema por su posición en el apartado abierto. */
+function topicItem(context, index = 0) {
+  return context.document.querySelectorAll("#subject-detail .topic-item")[index] ?? null;
+}
+
+/** Abre una asignatura con respuestas preparadas para su detalle y sus temas. */
+async function openSubjectWithTopics(context, asignatura, temas) {
+  queueResponse(context, asignatura);
+  queueResponse(context, temas);
+  context.window.openAsignatura(asignatura.id, context.document.createElement("button"));
+  await settlePromises();
+}
+
 beforeEach(() => {
   contexts.length = 0;
 });
@@ -963,6 +976,7 @@ describe("listado y apartado individual de asignaturas", () => {
     queueResponse(context, [{ id: 24, nombre: "Historia" }]);
     await context.window.loadAsignaturas();
     queueResponse(context, { id: 24, nombre: "Historia" });
+    queueResponse(context, []);
 
     const trigger = subjectItem(context).querySelector(".secondary-btn");
     trigger.click();
@@ -974,10 +988,10 @@ describe("listado y apartado individual de asignaturas", () => {
     expect(context.document.body.classList.contains("subject-modal-open")).toBe(true);
     expect(context.document.querySelector("#subject-dialog-title").textContent)
       .toBe("Historia");
-    expect(context.document.querySelector(".subject-detail-description").textContent)
-      .toBe("Este es el espacio individual de esta asignatura.");
-    expect(context.document.querySelector(".subject-detail-placeholder").textContent)
-      .toContain("temario, los exámenes");
+    expect(context.document.querySelector(".subject-detail-description")).toBeNull();
+    expect(context.document.querySelector(".subject-detail-placeholder")).toBeNull();
+    expect(context.document.querySelector("#subject-detail").children)
+      .toHaveLength(1);
     expect(context.document.activeElement.id).toBe("subject-dialog-close");
 
     context.document.querySelector("#subject-dialog-close").click();
@@ -1100,6 +1114,7 @@ describe("listado y apartado individual de asignaturas", () => {
     queueResponse(context, [{ id: 301, nombre: "Abierta" }]);
     await context.window.loadAsignaturas();
     queueResponse(context, { id: 301, nombre: "Abierta" });
+    queueResponse(context, []);
     subjectItem(context).querySelector(".secondary-btn").click();
     await settlePromises();
     queueResponse(context, []);
@@ -1111,6 +1126,7 @@ describe("listado y apartado individual de asignaturas", () => {
     expect(context.fetchMock.mock.calls.map(([url]) => url)).toEqual([
       "/api/asignaturas",
       "/api/asignaturas/301",
+      "/api/asignaturas/301/temas",
       "/api/asignaturas",
     ]);
   });
@@ -1305,6 +1321,7 @@ describe("eventos y operaciones de asignaturas", () => {
     queueResponse(context, [{ id: 361, nombre: "Abierta" }]);
     await context.window.loadAsignaturas();
     queueResponse(context, { id: 361, nombre: "Abierta" });
+    queueResponse(context, []);
     subjectItem(context).querySelector(".secondary-btn").click();
     await settlePromises();
     queueResponse(context, null);
@@ -1313,8 +1330,8 @@ describe("eventos y operaciones de asignaturas", () => {
     subjectItem(context).querySelector(".action-btn.delete").click();
     await settlePromises();
 
-    expect(context.fetchMock.mock.calls[2][0]).toBe("/api/asignaturas/361");
-    expect(context.fetchMock.mock.calls[2][1].method).toBe("DELETE");
+    expect(context.fetchMock.mock.calls[3][0]).toBe("/api/asignaturas/361");
+    expect(context.fetchMock.mock.calls[3][1].method).toBe("DELETE");
     expect(context.document.querySelector("#subject-modal").hidden).toBe(true);
     expect(context.document.querySelector("#subject-list").children).toHaveLength(0);
   });
@@ -1383,11 +1400,15 @@ describe("eventos y operaciones de asignaturas", () => {
     queueResponse(context, [{ id: 40, nombre: "Diseño" }]);
     await context.window.loadAsignaturas();
     queueResponse(context, { id: 40, nombre: "Diseño" });
+    queueResponse(context, []);
     subjectItem(context).querySelector(".secondary-btn").click();
     await settlePromises();
 
-    const lastButton = context.document.querySelector("#dialog-last-action");
-    lastButton.focus();
+    const focusable = context.document.querySelectorAll(
+      ".subject-dialog button:not([disabled]), .subject-dialog input:not([disabled]), .subject-dialog textarea:not([disabled])",
+    );
+    const lastFocusable = focusable[focusable.length - 1];
+    lastFocusable.focus();
     const tabEvent = new context.window.KeyboardEvent("keydown", {
       key: "Tab",
       bubbles: true,
@@ -1405,11 +1426,14 @@ describe("eventos y operaciones de asignaturas", () => {
     queueResponse(context, [{ id: 41, nombre: "Economía" }]);
     await context.window.loadAsignaturas();
     queueResponse(context, { id: 41, nombre: "Economía" });
+    queueResponse(context, []);
     subjectItem(context).querySelector(".secondary-btn").click();
     await settlePromises();
 
-    const firstButton = context.document.querySelector("#subject-dialog-close");
-    firstButton.focus();
+    const focusable = context.document.querySelectorAll(
+      ".subject-dialog button:not([disabled]), .subject-dialog input:not([disabled]), .subject-dialog textarea:not([disabled])",
+    );
+    focusable[0].focus();
     const tabEvent = new context.window.KeyboardEvent("keydown", {
       key: "Tab",
       shiftKey: true,
@@ -1419,7 +1443,7 @@ describe("eventos y operaciones de asignaturas", () => {
     context.document.dispatchEvent(tabEvent);
 
     expect(tabEvent.defaultPrevented).toBe(true);
-    expect(context.document.activeElement.id).toBe("dialog-last-action");
+    expect(context.document.activeElement).toBe(focusable[focusable.length - 1]);
   });
 
   it("no intenta devolver el foco a un botón de apertura que ya fue retirado", async () => {
@@ -1470,6 +1494,651 @@ describe("eventos y operaciones de asignaturas", () => {
       headers: { "Content-Type": "application/json" },
     });
     await settlePromises();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// El apartado individual permite escribir apuntes agrupados en temas,
+// consultar los pendientes y mantener el contenido guardado.
+// Casos: carga, creación/validación, filtro, edición, estado, borrado y errores.
+// ---------------------------------------------------------------------------
+describe("temas y apuntes del apartado individual", () => {
+  const subject = { id: 71, nombre: "Física" };
+
+  it("carga los temas de la asignatura y permite escribir apuntes en su apartado", async () => {
+    const context = createContext();
+    setupInterface(context);
+    queueResponse(context, subject);
+    queueResponse(context, []);
+
+    context.window.openAsignatura(subject.id, context.document.createElement("button"));
+    await settlePromises();
+
+    expect(context.fetchMock.mock.calls.map(([url]) => url)).toEqual([
+      "/api/asignaturas/71",
+      "/api/asignaturas/71/temas",
+    ]);
+    expect(context.document.querySelector("#topic-form")).not.toBeNull();
+    expect(context.document.querySelector("#topic-title")).not.toBeNull();
+    expect(context.document.querySelector("#topic-add-button")).not.toBeNull();
+    expect(context.document.querySelector("#topic-content")).toBeNull();
+    expect(context.document.querySelector("#topic-empty-state").hidden).toBe(false);
+  });
+
+  it("crea un tema con + y escribe apuntes multilínea directamente debajo", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, []);
+    const title = context.document.querySelector("#topic-title");
+    const notes = "  Primera línea\n\n<img src=x onerror=alert(1)>  ";
+    title.value = "  Cinemática  ";
+    queueResponse(context, {
+      id: 711,
+      asignatura_id: subject.id,
+      titulo: "Cinemática",
+      contenido: "",
+      estudiado: false,
+    });
+    queueResponse(context, [{
+      id: 711,
+      asignatura_id: subject.id,
+      titulo: "Cinemática",
+      contenido: "",
+      estudiado: false,
+    }]);
+
+    context.document.querySelector("#topic-add-button").click();
+    await settlePromises();
+
+    const item = topicItem(context);
+    expect(context.fetchMock.mock.calls[2][0]).toBe(
+      "/api/asignaturas/71/temas",
+    );
+    expect(context.fetchMock.mock.calls[2][1].method).toBe("POST");
+    expect(JSON.parse(context.fetchMock.mock.calls[2][1].body)).toEqual({
+      titulo: "Cinemática",
+      contenido: "",
+    });
+    expect(item.querySelector(".topic-title").textContent).toBe("Cinemática");
+    expect(item.querySelector(".topic-content").value).toBe("");
+    expect(context.document.activeElement).toBe(item.querySelector(".topic-content"));
+    expect(context.document.querySelector("#topic-title").value).toBe("");
+
+    queueResponse(context, { contenido: notes });
+    const content = item.querySelector(".topic-content");
+    content.value = notes;
+    content.dispatchEvent(new context.window.Event("change", { bubbles: true }));
+    await settlePromises();
+
+    expect(context.fetchMock.mock.calls[4][0]).toBe("/api/temas/711");
+    expect(context.fetchMock.mock.calls[4][1].method).toBe("PATCH");
+    expect(JSON.parse(context.fetchMock.mock.calls[4][1].body))
+      .toEqual({ contenido: notes });
+    expect(content.value).toBe(notes);
+    expect(context.document.querySelector(".topic-content img")).toBeNull();
+  });
+
+  it("no envía un tema sin título y conserva el texto introducido", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, []);
+
+    for (const invalidTitle of ["", "   "]) {
+      context.document.querySelector("#topic-title").value = invalidTitle;
+      context.document.querySelector("#topic-form").dispatchEvent(
+        new context.window.Event("submit", { bubbles: true, cancelable: true }),
+      );
+    }
+    await settlePromises();
+
+    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+    expect(context.document.querySelector("#topic-feedback").textContent)
+      .toMatch(/título/i);
+  });
+
+  it("conserva el título y muestra el error si falla la creación", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, []);
+    context.document.querySelector("#topic-title").value = "Ondas";
+    queueApiError(context, "No se pudo guardar el tema.", 500);
+
+    context.document.querySelector("#topic-form").dispatchEvent(
+      new context.window.Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await settlePromises();
+
+    expect(context.document.querySelector("#topic-title").value).toBe("Ondas");
+    expect(context.document.querySelector("#topic-feedback").textContent)
+      .toBe("No se pudo guardar el tema.");
+  });
+
+  it("muestra todos los temas y filtra pendientes sin mezclar asignaturas", async () => {
+    const context = createContext();
+    setupInterface(context);
+    const temas = [
+      {
+        id: 712,
+        asignatura_id: subject.id,
+        titulo: "Óptica",
+        contenido: "Pendiente",
+        estudiado: false,
+      },
+      {
+        id: 713,
+        asignatura_id: subject.id,
+        titulo: "Electricidad",
+        contenido: "Ya repasado",
+        estudiado: true,
+      },
+    ];
+    await openSubjectWithTopics(context, subject, temas);
+
+    expect(context.document.querySelectorAll("#subject-detail .topic-item"))
+      .toHaveLength(2);
+    expect(topicItem(context, 0).querySelector(".topic-title").textContent)
+      .toBe("Óptica");
+    expect(topicItem(context, 1).querySelector(".topic-content").value)
+      .toBe("Ya repasado");
+    expect(topicItem(context, 0).querySelector(".topic-studied-toggle").checked)
+      .toBe(false);
+    expect(topicItem(context, 1).querySelector(".topic-studied-toggle").checked)
+      .toBe(true);
+
+    const pendingFilter = context.document.querySelector(
+      '[data-topic-filter="pending"]',
+    );
+    pendingFilter.click();
+
+    expect(context.document.querySelectorAll("#subject-detail .topic-item"))
+      .toHaveLength(1);
+    expect(topicItem(context).querySelector(".topic-title").textContent)
+      .toBe("Óptica");
+    expect(pendingFilter.getAttribute("aria-pressed")).toBe("true");
+    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("coloca las acciones de tema entre el título y el editor de contenido", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 7131,
+      asignatura_id: subject.id,
+      titulo: "Cálculo",
+      contenido: "Derivadas",
+      estudiado: false,
+    }]);
+    const item = topicItem(context);
+    const body = item.querySelector(".topic-body");
+
+    expect(body.firstElementChild.className).toBe("topic-actions");
+    expect(body.lastElementChild.className).toBe("topic-content");
+    expect(item.querySelector(".topic-edit-content")).toBeNull();
+  });
+
+  it("muestra el estado vacío del filtro cuando no hay temas pendientes", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 714,
+      asignatura_id: subject.id,
+      titulo: "Tema completado",
+      contenido: "Listo",
+      estudiado: true,
+    }]);
+
+    context.document.querySelector('[data-topic-filter="pending"]').click();
+
+    expect(context.document.querySelectorAll("#subject-detail .topic-item"))
+      .toHaveLength(0);
+    expect(context.document.querySelector("#topic-empty-state").hidden).toBe(false);
+  });
+
+  it("pliega y despliega los apuntes desde la flecha del título", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 7141,
+      asignatura_id: subject.id,
+      titulo: "Mecánica",
+      contenido: "Leyes de Newton",
+      estudiado: false,
+    }]);
+    const item = topicItem(context);
+    const heading = item.querySelector(".topic-heading");
+
+    expect(item.tagName).toBe("DETAILS");
+    expect(item.open).toBe(true);
+    heading.click();
+    expect(item.open).toBe(false);
+    heading.click();
+    expect(item.open).toBe(true);
+  });
+
+  it("sale del tema con Backspace cuando la primera línea está vacía", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 7142,
+      asignatura_id: subject.id,
+      titulo: "Óptica",
+      contenido: "",
+      estudiado: false,
+    }]);
+    const item = topicItem(context);
+    const content = item.querySelector(".topic-content");
+    content.focus();
+    content.setSelectionRange(0, 0);
+    const backspace = new context.window.KeyboardEvent("keydown", {
+      key: "Backspace",
+      bubbles: true,
+      cancelable: true,
+    });
+
+    content.dispatchEvent(backspace);
+
+    expect(backspace.defaultPrevented).toBe(true);
+    expect(item.open).toBe(false);
+    expect(context.document.activeElement).toBe(
+      context.document.querySelector("#topic-title"),
+    );
+    expect(content.value).toBe("");
+    expect(topicItem(context).querySelector(".topic-title").textContent)
+      .toBe("Óptica");
+    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("elimina una línea vacía intermedia con Backspace sin cerrar el tema", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 7144,
+      asignatura_id: subject.id,
+      titulo: "Óptica",
+      contenido: "Primera línea\n\nTercera línea",
+      estudiado: false,
+    }]);
+    const item = topicItem(context);
+    const content = item.querySelector(".topic-content");
+    content.focus();
+    content.setSelectionRange(14, 14);
+    const backspace = new context.window.KeyboardEvent("keydown", {
+      key: "Backspace",
+      bubbles: true,
+      cancelable: true,
+    });
+
+    content.dispatchEvent(backspace);
+
+    expect(backspace.defaultPrevented).toBe(true);
+    expect(item.open).toBe(true);
+    expect(content.value).toBe("Primera línea\nTercera línea");
+    expect(content.rows).toBe(2);
+    expect(content.selectionStart).toBe(13);
+    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("reduce las filas del editor al eliminar líneas de apuntes", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 7145,
+      asignatura_id: subject.id,
+      titulo: "Óptica",
+      contenido: "Primera línea\nSegunda línea\nTercera línea",
+      estudiado: false,
+    }]);
+    const content = topicItem(context).querySelector(".topic-content");
+
+    content.value = "";
+    content.dispatchEvent(new context.window.Event("input", { bubbles: true }));
+
+    expect(content.rows).toBe(1);
+    expect(content.style.height).toBe("34px");
+  });
+
+  it("no sale del tema si Backspace se pulsa en una línea que contiene texto", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 7143,
+      asignatura_id: subject.id,
+      titulo: "Álgebra",
+      contenido: "Una nota",
+      estudiado: false,
+    }]);
+    const item = topicItem(context);
+    const content = item.querySelector(".topic-content");
+    content.setSelectionRange(0, 0);
+    const backspace = new context.window.KeyboardEvent("keydown", {
+      key: "Backspace",
+      bubbles: true,
+      cancelable: true,
+    });
+
+    content.dispatchEvent(backspace);
+
+    expect(backspace.defaultPrevented).toBe(false);
+    expect(item.open).toBe(true);
+    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("conserva los apuntes escritos directamente si falla el autoguardado", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 7144,
+      asignatura_id: subject.id,
+      titulo: "Química",
+      contenido: "Versión guardada",
+      estudiado: false,
+    }]);
+    const content = topicItem(context).querySelector(".topic-content");
+    content.value = "Borrador nuevo\ncon otra línea";
+    queueApiError(context, "No se pudieron guardar los apuntes.", 500);
+
+    content.dispatchEvent(new context.window.Event("change", { bubbles: true }));
+    await settlePromises();
+
+    expect(context.fetchMock.mock.calls[2][0]).toBe("/api/temas/7144");
+    expect(JSON.parse(context.fetchMock.mock.calls[2][1].body)).toEqual({
+      contenido: "Borrador nuevo\ncon otra línea",
+    });
+    expect(content.value).toBe("Borrador nuevo\ncon otra línea");
+    expect(context.document.querySelector("#topic-feedback").textContent)
+      .toBe("No se pudieron guardar los apuntes.");
+  });
+
+  it("marca un tema como estudiado y actualiza la lista del apartado", async () => {
+    const context = createContext();
+    setupInterface(context);
+    const topic = {
+      id: 715,
+      asignatura_id: subject.id,
+      titulo: "Termodinámica",
+      contenido: "Calor y trabajo",
+      estudiado: false,
+    };
+    await openSubjectWithTopics(context, subject, [topic]);
+    queueResponse(context, { ...topic, estudiado: true });
+    queueResponse(context, [{ ...topic, estudiado: true }]);
+
+    topicItem(context).querySelector(".topic-studied-toggle").click();
+    await settlePromises();
+
+    expect(context.fetchMock.mock.calls[2][0]).toBe("/api/temas/715");
+    expect(context.fetchMock.mock.calls[2][1].method).toBe("PATCH");
+    expect(JSON.parse(context.fetchMock.mock.calls[2][1].body)).toEqual({
+      estudiado: true,
+    });
+    expect(topicItem(context).querySelector(".topic-studied-toggle").checked)
+      .toBe(true);
+  });
+
+  it("permite cancelar la edición de un tema sin petición ni cambios visibles", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 716,
+      asignatura_id: subject.id,
+      titulo: "Mecánica",
+      contenido: "Apuntes originales",
+      estudiado: false,
+    }]);
+
+    topicItem(context).querySelector(".topic-edit").click();
+    expect(topicItem(context).querySelector(".topic-edit-title").value)
+      .toBe("Mecánica");
+    expect(topicItem(context).querySelector(".topic-edit-content")).toBeNull();
+    topicItem(context).querySelector(".topic-edit-cancel").click();
+
+    expect(topicItem(context).querySelector(".topic-title").textContent)
+      .toBe("Mecánica");
+    expect(topicItem(context).querySelector(".topic-content").value)
+      .toBe("Apuntes originales");
+    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("edita únicamente el título y conserva el contenido del tema", async () => {
+    const context = createContext();
+    setupInterface(context);
+    const original = {
+      id: 717,
+      asignatura_id: subject.id,
+      titulo: "Genética",
+      contenido: "ADN",
+      estudiado: false,
+    };
+    await openSubjectWithTopics(context, subject, [original]);
+    const updated = { ...original, titulo: "Genética molecular" };
+    queueResponse(context, updated);
+    queueResponse(context, [updated]);
+
+    topicItem(context).querySelector(".topic-edit").click();
+    topicItem(context).querySelector(".topic-edit-title").value =
+      "  Genética molecular  ";
+    topicItem(context).querySelector(".topic-edit-form").dispatchEvent(
+      new context.window.Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await settlePromises();
+
+    expect(context.fetchMock.mock.calls[2][0]).toBe("/api/temas/717");
+    expect(context.fetchMock.mock.calls[2][1].method).toBe("PATCH");
+    expect(JSON.parse(context.fetchMock.mock.calls[2][1].body))
+      .toEqual({ titulo: "Genética molecular" });
+    expect(topicItem(context).querySelector(".topic-title").textContent)
+      .toBe("Genética molecular");
+    expect(topicItem(context).querySelector(".topic-content").value)
+      .toBe("ADN");
+  });
+
+  it("rechaza una edición sin título y mantiene los cambios sin guardar", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 718,
+      asignatura_id: subject.id,
+      titulo: "Astronomía",
+      contenido: "Estrellas",
+      estudiado: false,
+    }]);
+
+    topicItem(context).querySelector(".topic-edit").click();
+    topicItem(context).querySelector(".topic-edit-title").value = "   ";
+    topicItem(context).querySelector(".topic-edit-form").dispatchEvent(
+      new context.window.Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await settlePromises();
+
+    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+    expect(context.document.querySelector("#topic-feedback").textContent)
+      .toMatch(/título/i);
+    expect(topicItem(context).querySelector(".topic-edit-title").value).toBe("   ");
+  });
+
+  it("cancela el borrado si el usuario no confirma", async () => {
+    const context = createContext();
+    setupInterface(context);
+    context.confirmMock.mockReturnValue(false);
+    await openSubjectWithTopics(context, subject, [{
+      id: 719,
+      asignatura_id: subject.id,
+      titulo: "Conservar",
+      contenido: "Apunte",
+      estudiado: false,
+    }]);
+
+    topicItem(context).querySelector(".topic-delete").click();
+    await settlePromises();
+
+    expect(context.fetchMock).toHaveBeenCalledTimes(2);
+    expect(topicItem(context).querySelector(".topic-title").textContent)
+      .toBe("Conservar");
+  });
+
+  it("borra el tema confirmado y recarga únicamente los temas de la asignatura", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [
+      {
+        id: 720,
+        asignatura_id: subject.id,
+        titulo: "Eliminar",
+        contenido: "",
+        estudiado: false,
+      },
+      {
+        id: 721,
+        asignatura_id: subject.id,
+        titulo: "Mantener",
+        contenido: "",
+        estudiado: false,
+      },
+    ]);
+    queueResponse(context, { mensaje: "Tema eliminado." });
+    queueResponse(context, [{
+      id: 721,
+      asignatura_id: subject.id,
+      titulo: "Mantener",
+      contenido: "",
+      estudiado: false,
+    }]);
+
+    topicItem(context).querySelector(".topic-delete").click();
+    await settlePromises();
+
+    expect(context.fetchMock.mock.calls[2][0]).toBe("/api/temas/720");
+    expect(context.fetchMock.mock.calls[2][1].method).toBe("DELETE");
+    expect(context.document.querySelectorAll("#subject-detail .topic-item"))
+      .toHaveLength(1);
+    expect(topicItem(context).querySelector(".topic-title").textContent)
+      .toBe("Mantener");
+  });
+
+  it("muestra errores al editar el título sin editar los apuntes", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 722,
+      asignatura_id: subject.id,
+      titulo: "Relatividad",
+      contenido: "Apunte persistido",
+      estudiado: false,
+    }]);
+    queueApiError(context, "No se pudo actualizar el tema.", 500);
+
+    topicItem(context).querySelector(".topic-edit").click();
+    topicItem(context).querySelector(".topic-edit-title").value = "Relatividad especial";
+    topicItem(context).querySelector(".topic-edit-form").dispatchEvent(
+      new context.window.Event("submit", { bubbles: true, cancelable: true }),
+    );
+    await settlePromises();
+
+    expect(context.document.querySelector("#topic-feedback").textContent)
+      .toBe("No se pudo actualizar el tema.");
+    expect(topicItem(context).querySelector(".topic-edit-title").value)
+      .toBe("Relatividad especial");
+    expect(topicItem(context).querySelector(".topic-edit-content")).toBeNull();
+    expect(context.fetchMock.mock.calls[2][0]).toBe("/api/temas/722");
+  });
+
+  it("muestra el error de guardado del estado y restaura el valor previo", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 723,
+      asignatura_id: subject.id,
+      titulo: "Electromagnetismo",
+      contenido: "Campos",
+      estudiado: false,
+    }]);
+    queueApiError(context, "No se pudo actualizar el estado.", 500);
+
+    topicItem(context).querySelector(".topic-studied-toggle").click();
+    await settlePromises();
+
+    expect(context.fetchMock.mock.calls[2][0]).toBe("/api/temas/723");
+    expect(JSON.parse(context.fetchMock.mock.calls[2][1].body)).toEqual({
+      estudiado: true,
+    });
+    expect(context.document.querySelector("#topic-feedback").textContent)
+      .toBe("No se pudo actualizar el estado.");
+    expect(topicItem(context).querySelector(".topic-studied-toggle").checked)
+      .toBe(false);
+    expect(topicItem(context).querySelector(".topic-content").value)
+      .toBe("Campos");
+  });
+
+  it("muestra el error del servidor si falla el borrado y conserva el tema", async () => {
+    const context = createContext();
+    setupInterface(context);
+    await openSubjectWithTopics(context, subject, [{
+      id: 724,
+      asignatura_id: subject.id,
+      titulo: "Acústica",
+      contenido: "Ondas sonoras",
+      estudiado: false,
+    }]);
+    queueApiError(context, "No se pudo borrar el tema.", 500);
+
+    topicItem(context).querySelector(".topic-delete").click();
+    await settlePromises();
+
+    expect(context.fetchMock.mock.calls[2][0]).toBe("/api/temas/724");
+    expect(context.document.querySelector("#topic-feedback").textContent)
+      .toBe("No se pudo borrar el tema.");
+    expect(topicItem(context).querySelector(".topic-title").textContent)
+      .toBe("Acústica");
+    expect(topicItem(context).querySelector(".topic-content").value)
+      .toBe("Ondas sonoras");
+  });
+
+  it("descarta una respuesta de temas tardía al cambiar de asignatura", async () => {
+    const context = createContext();
+    setupInterface(context);
+    const requests = new Map();
+    context.fetchMock.mockImplementation(url => new Promise(resolve => {
+      requests.set(url, resolve);
+    }));
+
+    context.window.openAsignatura(725, context.document.createElement("button"));
+    requests.get("/api/asignaturas/725")(
+      response({ id: 725, nombre: "Química" }),
+    );
+    await settlePromises();
+    context.window.openAsignatura(726, context.document.createElement("button"));
+    requests.get("/api/asignaturas/726")(
+      response({ id: 726, nombre: "Biología" }),
+    );
+    await settlePromises();
+
+    requests.get("/api/asignaturas/725/temas")(
+      response([{
+        id: 7251,
+        asignatura_id: 725,
+        titulo: "No mostrar",
+        contenido: "",
+        estudiado: false,
+      }]),
+    );
+    await settlePromises();
+    expect(context.document.querySelector("#subject-dialog-title").textContent)
+      .toBe("Biología");
+    expect(context.document.querySelector("#subject-detail").textContent)
+      .not.toContain("No mostrar");
+
+    requests.get("/api/asignaturas/726/temas")(
+      response([{
+        id: 7261,
+        asignatura_id: 726,
+        titulo: "Tema de biología",
+        contenido: "",
+        estudiado: false,
+      }]),
+    );
+    await settlePromises();
+    expect(topicItem(context).querySelector(".topic-title").textContent)
+      .toBe("Tema de biología");
   });
 });
 

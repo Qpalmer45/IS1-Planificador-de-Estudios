@@ -65,6 +65,26 @@ class TestStudyPlannerApp(unittest.TestCase):
         active_client = client or self.client
         return active_client.post("/api/asignaturas", json={"nombre": nombre})
 
+    def crear_tema(
+        self,
+        asignatura_id,
+        titulo="Tema 1",
+        contenido="",
+        client=None,
+    ):
+        """Crea un tema en una asignatura mediante la API."""
+        active_client = client or self.client
+        response = active_client.post(
+            f"/api/asignaturas/{asignatura_id}/temas",
+            json={"titulo": titulo, "contenido": contenido},
+        )
+        self.assertEqual(
+            response.status_code,
+            201,
+            response.get_data(as_text=True),
+        )
+        return response
+
     # ------------------------------------------------------------------
     # get_db devuelve y configura la conexión SQLite del contexto actual;
     # close_db la cierra al terminar; initialize_database crea las tablas
@@ -944,6 +964,342 @@ class TestStudyPlannerApp(unittest.TestCase):
         ]
 
         self.assertEqual([response.status_code for response in responses], [401] * 5)
+
+    # ------------------------------------------------------------------
+    # Los temas y apuntes están aislados por asignatura y propietario.
+    # Cada tema guarda un título, contenido libre y un estado estudiado.
+    # Casos: esquema, creación/listado, filtros, edición, borrado,
+    # validación, autenticación, aislamiento y borrado en cascada.
+    # ------------------------------------------------------------------
+    def test_initialize_database_crea_tabla_temas_y_es_idempotente(self):
+        """La tabla temas existe con sus campos y puede inicializarse varias veces."""
+        main_app.initialize_database()
+        main_app.initialize_database()
+
+        connection = sqlite3.connect(main_app.DATABASE)
+        try:
+            columns = {
+                row[1] for row in connection.execute("PRAGMA table_info(temas)")
+            }
+            foreign_keys = connection.execute(
+                "PRAGMA foreign_key_list(temas)"
+            ).fetchall()
+        finally:
+            connection.close()
+
+        self.assertTrue(
+            {
+                "id",
+                "usuario_id",
+                "asignatura_id",
+                "titulo",
+                "contenido",
+                "estudiado",
+            }.issubset(columns)
+        )
+        self.assertTrue(any(row[2] == "asignaturas" for row in foreign_keys))
+
+    def test_crear_tema_crea_bloque_vacio_con_titulo_normalizado(self):
+        """El botón de nuevo tema crea un bloque vacío pendiente de apuntes."""
+        self.registrar()
+        asignatura = self.crear_asignatura().get_json()
+
+        response = self.crear_tema(
+            asignatura["id"],
+            "  Límites  ",
+        )
+
+        self.assertEqual(response.status_code, 201)
+        tema = response.get_json()
+        self.assertEqual(tema["asignatura_id"], asignatura["id"])
+        self.assertEqual(tema["usuario_id"], asignatura["usuario_id"])
+        self.assertEqual(tema["titulo"], "Límites")
+        self.assertEqual(tema["contenido"], "")
+        self.assertIs(tema["estudiado"], False)
+
+    def test_editor_guarda_apuntes_multilinea_sin_normalizar_su_contenido(self):
+        """PATCH conserva exactamente las líneas y espacios escritos en el tema."""
+        self.registrar()
+        asignatura = self.crear_asignatura().get_json()
+        tema = self.crear_tema(
+            asignatura["id"],
+            "Tema sin apuntes",
+        ).get_json()
+        contenido = "  Primera línea\n\nSegunda línea\n  "
+        response = self.client.patch(
+            f"/api/temas/{tema['id']}",
+            json={"contenido": contenido},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["contenido"], contenido)
+        listed = self.client.get(
+            f"/api/asignaturas/{asignatura['id']}/temas"
+        ).get_json()
+        self.assertEqual(listed[0]["contenido"], contenido)
+
+    def test_crear_tema_rechaza_titulo_o_contenido_invalidos_sin_guardar(self):
+        """Los títulos deben ser texto no vacío y el contenido debe ser texto."""
+        self.registrar()
+        asignatura = self.crear_asignatura().get_json()
+        url = f"/api/asignaturas/{asignatura['id']}/temas"
+        invalid_payloads = [
+            {},
+            {"titulo": ""},
+            {"titulo": "   "},
+            {"titulo": None},
+            {"titulo": 123},
+            {"titulo": "Válido", "contenido": None},
+            {"titulo": "Válido", "contenido": 123},
+        ]
+
+        responses = [
+            self.client.post(url, json=payload) for payload in invalid_payloads
+        ]
+        responses.append(self.client.post(url))
+
+        self.assertEqual([response.status_code for response in responses], [400] * 8)
+        self.assertTrue(all(response.is_json for response in responses))
+        self.assertEqual(self.client.get(url).get_json(), [])
+
+    def test_listar_temas_separa_asignaturas_y_filtra_pendientes(self):
+        """Cada asignatura lista solo sus temas y el filtro pendiente es exacto."""
+        self.registrar()
+        matematicas = self.crear_asignatura("Matemáticas").get_json()
+        historia = self.crear_asignatura("Historia").get_json()
+        pendiente = self.crear_tema(matematicas["id"], "Integrales").get_json()
+        estudiado = self.crear_tema(matematicas["id"], "Derivadas").get_json()
+        historia_tema = self.crear_tema(historia["id"], "Edad Media").get_json()
+        self.client.patch(
+            f"/api/temas/{estudiado['id']}",
+            json={"estudiado": True},
+        )
+
+        all_math = self.client.get(
+            f"/api/asignaturas/{matematicas['id']}/temas"
+        )
+        pending_math = self.client.get(
+            f"/api/asignaturas/{matematicas['id']}/temas?estado=pendiente"
+        )
+        studied_math = self.client.get(
+            f"/api/asignaturas/{matematicas['id']}/temas?estado=estudiado"
+        )
+        history_list = self.client.get(
+            f"/api/asignaturas/{historia['id']}/temas"
+        )
+
+        self.assertEqual(all_math.status_code, 200)
+        self.assertEqual(
+            {tema["id"] for tema in all_math.get_json()},
+            {pendiente["id"], estudiado["id"]},
+        )
+        self.assertEqual(
+            [tema["id"] for tema in pending_math.get_json()],
+            [pendiente["id"]],
+        )
+        self.assertEqual(
+            [tema["id"] for tema in studied_math.get_json()],
+            [estudiado["id"]],
+        )
+        self.assertEqual(
+            [tema["id"] for tema in history_list.get_json()],
+            [historia_tema["id"]],
+        )
+
+    def test_listar_temas_devuelve_404_para_asignatura_inexistente_o_ajena(self):
+        """No es posible consultar temas desde una asignatura no accesible."""
+        owner = main_app.app.test_client()
+        other = main_app.app.test_client()
+        self.registrar("temas1@ucm.es", client=owner)
+        asignatura = self.crear_asignatura("Privada", client=owner).get_json()
+        self.registrar("temas2@ucm.es", client=other)
+
+        missing = other.get("/api/asignaturas/9999/temas")
+        foreign = other.get(f"/api/asignaturas/{asignatura['id']}/temas")
+        create_foreign = other.post(
+            f"/api/asignaturas/{asignatura['id']}/temas",
+            json={"titulo": "Intruso", "contenido": ""},
+        )
+
+        self.assertEqual(
+            [missing.status_code, foreign.status_code, create_foreign.status_code],
+            [404, 404, 404],
+        )
+        self.assertTrue(all(response.is_json for response in (missing, foreign, create_foreign)))
+        self.assertEqual(
+            owner.get(f"/api/asignaturas/{asignatura['id']}/temas").get_json(),
+            [],
+        )
+
+    def test_editar_tema_actualiza_campos_parciales_sin_alterar_otros(self):
+        """PATCH permite cambiar título, contenido o estado de un tema concreto."""
+        self.registrar()
+        asignatura = self.crear_asignatura().get_json()
+        tema = self.crear_tema(
+            asignatura["id"],
+            "Tema original",
+            "Apuntes iniciales",
+        ).get_json()
+        otro = self.crear_tema(asignatura["id"], "Otro tema", "Sin cambios").get_json()
+
+        title_update = self.client.patch(
+            f"/api/temas/{tema['id']}",
+            json={"titulo": "  Tema editado  "},
+        )
+        self.assertEqual(
+            title_update.get_json()["contenido"],
+            "Apuntes iniciales",
+        )
+        inline_content = "  Primera línea\n\nsegunda línea\n  "
+        content_update = self.client.patch(
+            f"/api/temas/{tema['id']}",
+            json={"contenido": inline_content},
+        )
+        status_update = self.client.patch(
+            f"/api/temas/{tema['id']}",
+            json={"estudiado": True},
+        )
+        temas = self.client.get(
+            f"/api/asignaturas/{asignatura['id']}/temas"
+        ).get_json()
+        updated = next(item for item in temas if item["id"] == tema["id"])
+        unchanged = next(item for item in temas if item["id"] == otro["id"])
+
+        self.assertEqual(
+            [title_update.status_code, content_update.status_code, status_update.status_code],
+            [200, 200, 200],
+        )
+        self.assertEqual(updated["titulo"], "Tema editado")
+        self.assertEqual(updated["contenido"], inline_content)
+        self.assertIs(updated["estudiado"], True)
+        self.assertEqual(unchanged["titulo"], "Otro tema")
+        self.assertEqual(unchanged["contenido"], "Sin cambios")
+        self.assertIs(unchanged["estudiado"], False)
+
+    def test_editar_tema_rechaza_campos_invalidos_sin_mutacion_parcial(self):
+        """Un PATCH inválido devuelve 400 y conserva todos los datos del tema."""
+        self.registrar()
+        asignatura = self.crear_asignatura().get_json()
+        tema = self.crear_tema(
+            asignatura["id"],
+            "Tema original",
+            "Contenido original",
+        ).get_json()
+        url = f"/api/temas/{tema['id']}"
+        invalid_payloads = [
+            {},
+            {"titulo": ""},
+            {"titulo": "   "},
+            {"titulo": 12},
+            {"contenido": None},
+            {"contenido": []},
+            {"estudiado": 2},
+            {"estudiado": "true"},
+            {"estudiado": None},
+            {"titulo": "Cambio parcial", "estudiado": 2},
+        ]
+
+        responses = [
+            self.client.patch(url, json=payload) for payload in invalid_payloads
+        ]
+        responses.append(self.client.patch(url))
+        unchanged = self.client.get(
+            f"/api/asignaturas/{asignatura['id']}/temas"
+        ).get_json()[0]
+
+        self.assertEqual([response.status_code for response in responses], [400] * 11)
+        self.assertTrue(all(response.is_json for response in responses))
+        self.assertEqual(unchanged["titulo"], "Tema original")
+        self.assertEqual(unchanged["contenido"], "Contenido original")
+        self.assertIs(unchanged["estudiado"], False)
+
+    def test_editar_y_borrar_tema_inexistente_o_ajeno_devuelve_404(self):
+        """Las operaciones de tema no revelan ni modifican temas ajenos."""
+        owner = main_app.app.test_client()
+        other = main_app.app.test_client()
+        self.registrar("dueno@ucm.es", client=owner)
+        asignatura = self.crear_asignatura(client=owner).get_json()
+        tema = self.crear_tema(
+            asignatura["id"],
+            client=owner,
+        ).get_json()
+        self.registrar("otro@ucm.es", client=other)
+
+        responses = [
+            other.patch("/api/temas/9999", json={"titulo": "No existe"}),
+            other.delete("/api/temas/9999"),
+            other.patch(
+                f"/api/temas/{tema['id']}",
+                json={"titulo": "Cambio ajeno"},
+            ),
+            other.delete(f"/api/temas/{tema['id']}"),
+        ]
+        owner_topics = owner.get(
+            f"/api/asignaturas/{asignatura['id']}/temas"
+        ).get_json()
+
+        self.assertEqual([response.status_code for response in responses], [404] * 4)
+        self.assertTrue(all(response.is_json for response in responses))
+        self.assertEqual([item["id"] for item in owner_topics], [tema["id"]])
+        self.assertEqual(owner_topics[0]["titulo"], "Tema 1")
+
+    def test_borrar_tema_conserva_los_demas_de_la_asignatura(self):
+        """DELETE elimina únicamente el tema solicitado."""
+        self.registrar()
+        asignatura = self.crear_asignatura().get_json()
+        borrar = self.crear_tema(asignatura["id"], "Borrar").get_json()
+        conservar = self.crear_tema(asignatura["id"], "Conservar").get_json()
+
+        response = self.client.delete(f"/api/temas/{borrar['id']}")
+        second_delete = self.client.delete(f"/api/temas/{borrar['id']}")
+        remaining = self.client.get(
+            f"/api/asignaturas/{asignatura['id']}/temas"
+        ).get_json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(second_delete.status_code, 404)
+        self.assertEqual([tema["id"] for tema in remaining], [conservar["id"]])
+
+    def test_borrar_asignatura_elimina_tambien_sus_temas(self):
+        """La eliminación de una asignatura no deja temas huérfanos."""
+        self.registrar()
+        asignatura = self.crear_asignatura().get_json()
+        self.crear_tema(asignatura["id"], "Tema dependiente")
+        self.assertEqual(
+            self.client.get(
+                f"/api/asignaturas/{asignatura['id']}/temas"
+            ).status_code,
+            200,
+        )
+
+        response = self.client.delete(f"/api/asignaturas/{asignatura['id']}")
+
+        self.assertEqual(response.status_code, 200)
+        connection = sqlite3.connect(main_app.DATABASE)
+        try:
+            topic_count = connection.execute(
+                "SELECT COUNT(*) FROM temas WHERE asignatura_id = ?",
+                (asignatura["id"],),
+            ).fetchone()[0]
+        finally:
+            connection.close()
+        self.assertEqual(topic_count, 0)
+
+    def test_api_temas_requiere_autenticacion(self):
+        """Listar, crear, editar y borrar temas requieren sesión."""
+        responses = [
+            self.client.get("/api/asignaturas/1/temas"),
+            self.client.get("/api/asignaturas/1/temas?estado=pendiente"),
+            self.client.post(
+                "/api/asignaturas/1/temas",
+                json={"titulo": "Tema", "contenido": ""},
+            ),
+            self.client.patch("/api/temas/1", json={"estudiado": True}),
+            self.client.delete("/api/temas/1"),
+        ]
+
+        self.assertEqual([response.status_code for response in responses], [401] * 5)
+        self.assertTrue(all(response.is_json for response in responses))
 
 
 if __name__ == "__main__":
