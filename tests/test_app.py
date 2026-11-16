@@ -11,6 +11,7 @@ import os
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 import app as main_app
@@ -1748,15 +1749,16 @@ class TestStudyPlannerApp(unittest.TestCase):
         self.assertEqual(respuesta.status_code, 201, respuesta.get_json())
         return respuesta.get_json()
 
-    def test_hu04_ciclo_completo_de_ambos_tipos(self):
+    def test_hu04_ciclo_completo_de_los_tres_tipos(self):
         self.registrar()
-        for tipo in ("tarea", "entrega"):
+        for tipo in ("tarea", "entrega", "examen"):
             with self.subTest(tipo=tipo):
                 creada = self.crear_actividad(tipo=tipo)
                 ruta = f"/api/tareas/{creada['id']}"
                 self.assertEqual(self.client.get("/api/tareas").get_json(), [creada])
                 cambios = dict(titulo="Nuevo título", tipo="entrega" if tipo == "tarea" else "tarea",
-                               fecha_limite="2028-04-02", minutos_estimados=120)
+                               fecha_limite=(main_app.hoy_planificador() + timedelta(days=2)).isoformat(),
+                               minutos_estimados=120)
                 editada = self.client.patch(ruta, json=cambios)
                 self.assertEqual(editada.status_code, 200)
                 self.assertEqual(editada.get_json(), {**creada, **cambios})
@@ -1786,7 +1788,7 @@ class TestStudyPlannerApp(unittest.TestCase):
 
     def test_hu04_aislamiento_de_cuentas_en_crud_plan_y_avisos(self):
         self.registrar()
-        creada = self.crear_actividad(fecha_limite=date.today().isoformat())
+        creada = self.crear_actividad(fecha_limite=main_app.hoy_planificador().isoformat())
         ruta = f"/api/tareas/{creada['id']}"
         otra = main_app.app.test_client()
         self.registrar(email="otra@ucm.es", client=otra)
@@ -1800,9 +1802,10 @@ class TestStudyPlannerApp(unittest.TestCase):
     def test_hu04_plazos_ordenados_y_separados_de_todos(self):
         self.registrar()
         self.crear_todo("Nota rápida")
-        tarde = self.crear_actividad(fecha_limite="2028-03-03")
-        pronto = self.crear_actividad(fecha_limite="2028-02-29")
-        empate = self.crear_actividad(fecha_limite="2028-02-29")
+        hoy = main_app.hoy_planificador()
+        tarde = self.crear_actividad(fecha_limite=(hoy + timedelta(days=1)).isoformat())
+        pronto = self.crear_actividad(fecha_limite=hoy.isoformat())
+        empate = self.crear_actividad(fecha_limite=hoy.isoformat())
         esperadas = [pronto, empate, tarde]
         self.assertEqual(self.client.get("/api/tareas").get_json(), esperadas)
         plan = self.client.get("/api/plan/datos").get_json()
@@ -1812,8 +1815,10 @@ class TestStudyPlannerApp(unittest.TestCase):
 
     def test_hu04_recordatorios_reflejan_altas_ediciones_y_bajas(self):
         self.registrar()
-        hoy = date.today()
-        for dias, tipo in ((-1, "tarea"), (0, "tarea"), (7, "entrega"), (8, "entrega")):
+        hoy = main_app.hoy_planificador()
+        with patch.object(main_app, "hoy_planificador", return_value=hoy - timedelta(days=1)):
+            self.crear_actividad(tipo="tarea", fecha_limite=(hoy - timedelta(days=1)).isoformat())
+        for dias, tipo in ((0, "tarea"), (7, "entrega"), (8, "entrega")):
             self.crear_actividad(titulo=f"Plazo {dias}", tipo=tipo,
                                  fecha_limite=(hoy + timedelta(days=dias)).isoformat())
         avisos = self.client.get("/api/recordatorios").get_json()["recordatorios"]
@@ -1825,6 +1830,71 @@ class TestStudyPlannerApp(unittest.TestCase):
         self.client.delete(f"/api/tareas/{actividades[2]['id']}")
         self.assertEqual(self.client.get("/api/recordatorios").get_json()["total"], 0)
 
+    def test_hu04_fechas_ayer_hoy_y_manana_en_alta_y_edicion(self):
+        self.registrar()
+        hoy = main_app.hoy_planificador()
+        ayer = (hoy - timedelta(days=1)).isoformat()
+        manana = (hoy + timedelta(days=1)).isoformat()
+        for tipo in ("tarea", "entrega", "examen"):
+            with self.subTest(tipo=tipo):
+                datos = {**ACTIVIDAD_HU04, "tipo": tipo, "fecha_limite": ayer}
+                rechazo = self.client.post("/api/tareas", json=datos)
+                self.assertEqual(rechazo.status_code, 400)
+                self.assertIn("hoy", rechazo.get_json()["error"])
+                self.crear_actividad(tipo=tipo, fecha_limite=hoy.isoformat())
+                creada = self.crear_actividad(tipo=tipo, fecha_limite=manana)
+                ruta = f"/api/tareas/{creada['id']}"
+                for fecha, estado in ((ayer, 400), (hoy.isoformat(), 200), (manana, 200)):
+                    self.assertEqual(self.client.patch(ruta, json={"fecha_limite": fecha}).status_code, estado)
+
+    def test_hu04_editar_vencida_conservando_fecha(self):
+        self.registrar()
+        hoy = main_app.hoy_planificador()
+        ayer = (hoy - timedelta(days=1)).isoformat()
+        with patch.object(main_app, "hoy_planificador", return_value=date.fromisoformat(ayer)):
+            creada = self.crear_actividad(fecha_limite=ayer)
+        ruta = f"/api/tareas/{creada['id']}"
+        self.assertEqual(self.client.get("/api/tareas").get_json(), [creada])
+        for cambios in ({"titulo": "Corregido"}, {"fecha_limite": ayer, "minutos_estimados": 20}):
+            respuesta = self.client.patch(ruta, json=cambios)
+            self.assertEqual(respuesta.status_code, 200)
+            self.assertEqual(respuesta.get_json()["fecha_limite"], ayer)
+        rechazo = self.client.patch(ruta, json={"fecha_limite": (hoy - timedelta(days=2)).isoformat()})
+        self.assertEqual(rechazo.status_code, 400)
+        self.assertEqual(self.client.get("/api/tareas").get_json()[0]["fecha_limite"], ayer)
+        self.assertEqual(self.client.patch(ruta, json={"fecha_limite": hoy.isoformat()}).status_code, 200)
+
+    def test_hu04_examen_en_plan_y_recordatorios(self):
+        self.registrar()
+        examen = self.crear_actividad(tipo="examen", fecha_limite=main_app.hoy_planificador().isoformat())
+        plan = self.client.get("/api/plan/datos").get_json()
+        self.assertEqual(plan["tareas_planificadas"], [examen])
+        avisos = self.client.get("/api/recordatorios").get_json()["recordatorios"]
+        self.assertEqual([(a["tipo"], a["fecha"], a["dias_restantes"]) for a in avisos],
+                         [("Examen", examen["fecha_limite"], 0)])
+
+    def test_hu04_migracion_conserva_actividades_y_admite_examenes(self):
+        self.registrar()
+        with sqlite3.connect(main_app.DATABASE) as db:
+            db.execute("DROP TABLE tareas_planificadas")
+            db.execute("""CREATE TABLE tareas_planificadas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                titulo TEXT NOT NULL, tipo TEXT NOT NULL CHECK (tipo IN ('tarea','entrega')),
+                fecha_limite TEXT NOT NULL, minutos_estimados INTEGER NOT NULL CHECK (minutos_estimados > 0)
+            )""")
+            db.execute("CREATE INDEX idx_tareas_planificadas_plazo ON tareas_planificadas(usuario_id, fecha_limite, id)")
+            for id_anterior in (5, 12):
+                db.execute("INSERT INTO tareas_planificadas VALUES (?, 1, 'Antigua', 'entrega', '2020-01-01', 40)",
+                           (id_anterior,))
+            db.execute("DELETE FROM tareas_planificadas WHERE id = 12")
+        main_app.initialize_database()
+        main_app.initialize_database()
+        antiguas = self.client.get("/api/tareas").get_json()
+        self.assertEqual(antiguas, [dict(id=5, titulo="Antigua", tipo="entrega",
+                                         fecha_limite="2020-01-01", minutos_estimados=40)])
+        self.assertGreater(self.crear_actividad(tipo="examen")["id"], 12)
+
     def test_hu04_rechaza_peticiones_invalidas_sin_escribir(self):
         self.registrar()
         for cuerpo in ("{", "null", "[]", "{}", '{"usuario_id": 42}'):
@@ -1835,15 +1905,17 @@ class TestStudyPlannerApp(unittest.TestCase):
 
 
 ACTIVIDAD_HU04 = dict(titulo="Práctica de IS1", tipo="entrega",
-                      fecha_limite="2028-02-29", minutos_estimados=90)
+                      fecha_limite=(main_app.hoy_planificador() + timedelta(days=30)).isoformat(), minutos_estimados=90)
 
 
 class TestValidacionHU04(unittest.TestCase):
     """Reglas de dominio de la HU04, sin servidor ni conexión a SQLite."""
 
     def test_normaliza_titulo_y_acepta_fecha_bisiesta(self):
-        datos = {**ACTIVIDAD_HU04, "titulo": "  Práctica de IS1  "}
-        self.assertEqual(main_app.validar_tarea(datos), ACTIVIDAD_HU04)
+        esperados = {**ACTIVIDAD_HU04, "fecha_limite": "2028-02-29"}
+        datos = {**esperados, "titulo": "  Práctica de IS1  "}
+        with patch.object(main_app, "hoy_planificador", return_value=date(2028, 2, 28)):
+            self.assertEqual(main_app.validar_tarea(datos), esperados)
         self.assertEqual(datos["titulo"], "  Práctica de IS1  ")
 
     def test_alta_exige_cada_campo_y_edicion_admite_uno(self):
@@ -1858,7 +1930,7 @@ class TestValidacionHU04(unittest.TestCase):
     def test_valores_invalidos(self):
         invalidos = {
             "titulo": [None, [], "   ", "x" * 201],
-            "tipo": [None, [], "examen"],
+            "tipo": [None, [], "reunión"],
             "fecha_limite": [None, 20280229, "2026-02-29", "2028-13-01", "20280229", "2028-W01-1"],
             "minutos_estimados": [None, True, 0, -1, "15", 1.5, 2**63],
         }

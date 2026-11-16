@@ -12,6 +12,7 @@ from datetime import date, datetime, timedelta
 from flask import jsonify, session
 from functools import wraps
 from pathlib import Path
+from zoneinfo import ZoneInfo
 import re
 import sqlite3
 
@@ -56,6 +57,45 @@ def close_db(exception=None):
         db.close()
 
 
+def preparar_tabla_actividades(conn):
+    """Amplía el CHECK de tipos de las instalaciones previas conservando sus datos."""
+    esquema = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'tareas_planificadas'"
+    ).fetchone()
+    migrar = esquema is not None and "'examen'" not in esquema[0]
+    if migrar:
+        conn.execute("ALTER TABLE tareas_planificadas RENAME TO actividades_anteriores")
+    # HU04: actividades con plazo, independientes de las notas rápidas.
+    conn.execute(
+        """CREATE TABLE IF NOT EXISTS tareas_planificadas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+            titulo TEXT NOT NULL,
+            tipo TEXT NOT NULL CHECK (tipo IN ('tarea', 'entrega', 'examen')),
+            fecha_limite TEXT NOT NULL,
+            minutos_estimados INTEGER NOT NULL CHECK (minutos_estimados > 0)
+        )"""
+    )
+    if migrar:
+        conn.execute(
+            """INSERT INTO tareas_planificadas
+               (id, usuario_id, titulo, tipo, fecha_limite, minutos_estimados)
+               SELECT id, usuario_id, titulo, tipo, fecha_limite, minutos_estimados
+               FROM actividades_anteriores"""
+        )
+        # Los identificadores borrados antes de la migración tampoco se reutilizan.
+        conn.execute(
+            """UPDATE sqlite_sequence SET seq = max(seq, coalesce(
+                   (SELECT seq FROM sqlite_sequence WHERE name = 'actividades_anteriores'), 0))
+               WHERE name = 'tareas_planificadas'"""
+        )
+        conn.execute("DROP TABLE actividades_anteriores")
+    conn.execute(
+        """CREATE INDEX IF NOT EXISTS idx_tareas_planificadas_plazo
+           ON tareas_planificadas(usuario_id, fecha_limite, id)"""
+    )
+
+
 def initialize_database():
     """Crea las tablas si no existen y aplica migraciones necesarias."""
     # Esta conexión es independiente de la conexión de petición: se utiliza
@@ -67,6 +107,7 @@ def initialize_database():
         # Agrupa la creación y migración del esquema en una transacción para
         # confirmar los cambios juntos o revertirlos si ocurre un error.
         with conn:
+            conn.execute("BEGIN IMMEDIATE")
             # Tabla de usuarios (HU20 y HU21)
             conn.execute(
                 """CREATE TABLE IF NOT EXISTS usuarios (
@@ -107,21 +148,7 @@ def initialize_database():
             if "prioridad" not in cols_todos:
                 conn.execute("ALTER TABLE todos ADD COLUMN prioridad TEXT NOT NULL DEFAULT 'media'")
 
-            # HU04: actividades con plazo, independientes de las notas rápidas.
-            conn.execute(
-                """CREATE TABLE IF NOT EXISTS tareas_planificadas (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
-                    titulo TEXT NOT NULL,
-                    tipo TEXT NOT NULL CHECK (tipo IN ('tarea', 'entrega')),
-                    fecha_limite TEXT NOT NULL,
-                    minutos_estimados INTEGER NOT NULL CHECK (minutos_estimados > 0)
-                )"""
-            )
-            conn.execute(
-                """CREATE INDEX IF NOT EXISTS idx_tareas_planificadas_plazo
-                   ON tareas_planificadas(usuario_id, fecha_limite, id)"""
-            )
+            preparar_tabla_actividades(conn)
 
             # Cada asignatura pertenece a un usuario y puede consultarse de forma
             # independiente (HU01, HU12).
@@ -249,6 +276,7 @@ def home():
     # sesión antigua no contiene todavía nombre o correo.
     return render_template(
         "index.html",
+        zona_planificador=ZONA_PLANIFICADOR.key,
         usuario_nombre=session.get("nombre", "Estudiante"),
         usuario_email=session.get("email", ""),
     )
@@ -855,7 +883,14 @@ def delete_tema(tema_id):
 CAMPOS_TAREA = ("titulo", "tipo", "fecha_limite", "minutos_estimados")
 
 
-def validar_tarea(datos, parcial=False):
+ZONA_PLANIFICADOR = ZoneInfo("Europe/Madrid")
+
+
+def hoy_planificador():
+    return datetime.now(ZONA_PLANIFICADOR).date()
+
+
+def validar_tarea(datos, parcial=False, fecha_anterior=None):
     """Valida y normaliza los campos editables antes de escribir en SQLite."""
     if not isinstance(datos, dict) or not datos:
         raise ValueError("Envía los datos de la tarea o entrega.")
@@ -870,8 +905,8 @@ def validar_tarea(datos, parcial=False):
         if not isinstance(titulo, str) or not 1 <= len(titulo.strip()) <= 200:
             raise ValueError("El título debe tener entre 1 y 200 caracteres.")
         campos["titulo"] = titulo.strip()
-    if "tipo" in campos and campos["tipo"] not in ("tarea", "entrega"):
-        raise ValueError("Elige tarea o entrega.")
+    if "tipo" in campos and campos["tipo"] not in ("tarea", "entrega", "examen"):
+        raise ValueError("Elige tarea, entrega o examen.")
     if "fecha_limite" in campos:
         fecha = campos["fecha_limite"]
         try:
@@ -879,6 +914,8 @@ def validar_tarea(datos, parcial=False):
                 raise ValueError
         except ValueError:
             raise ValueError("Indica una fecha límite válida en formato AAAA-MM-DD.") from None
+        if fecha != fecha_anterior and fecha < hoy_planificador().isoformat():
+            raise ValueError("La fecha debe ser hoy o posterior.")
     if "minutos_estimados" in campos:
         minutos = campos["minutos_estimados"]
         if type(minutos) is not int or not 1 <= minutos <= 2**53 - 1:
@@ -923,27 +960,31 @@ def crear_tarea():
 @app.patch("/api/tareas/<int:tarea_id>")
 @login_required
 def editar_tarea(tarea_id):
-    try:
-        cambios = validar_tarea(request.get_json(silent=True), parcial=True)
-    except ValueError as error:
-        return jsonify(error=str(error)), 400
-
-    # Solo nombres de la lista fija entran en el SQL. Cada PATCH escribe
-    # únicamente los campos pedidos, incluso si hay ediciones concurrentes.
-    asignaciones = ", ".join(f"{campo} = :{campo}" for campo in CAMPOS_TAREA if campo in cambios)
-    parametros = {**cambios, "id": str(tarea_id), "usuario_id": session["usuario_id"]}
     db = get_db()
+    identidad = {"id": str(tarea_id), "usuario_id": session["usuario_id"]}
     with db:
-        cursor = db.execute(
+        # Comparamos con la fecha guardada y escribimos en la misma transacción.
+        db.execute("BEGIN IMMEDIATE")
+        original = db.execute(
+            "SELECT fecha_limite FROM tareas_planificadas WHERE id = :id AND usuario_id = :usuario_id",
+            identidad,
+        ).fetchone()
+        if original is None:
+            return jsonify(error="Actividad no encontrada."), 404
+        try:
+            cambios = validar_tarea(request.get_json(silent=True), parcial=True,
+                                   fecha_anterior=original["fecha_limite"])
+        except ValueError as error:
+            return jsonify(error=str(error)), 400
+        asignaciones = ", ".join(f"{campo} = :{campo}" for campo in CAMPOS_TAREA if campo in cambios)
+        db.execute(
             f"""UPDATE tareas_planificadas SET {asignaciones}
-                WHERE id = :id AND usuario_id = :usuario_id""", parametros,
+                WHERE id = :id AND usuario_id = :usuario_id""", {**identidad, **cambios},
         )
-        if not cursor.rowcount:
-            return jsonify(error="Tarea o entrega no encontrada."), 404
         fila = db.execute(
             """SELECT id, titulo, tipo, fecha_limite, minutos_estimados
                FROM tareas_planificadas WHERE id = :id AND usuario_id = :usuario_id""",
-            parametros,
+            identidad,
         ).fetchone()
     return jsonify(dict(fila))
 
@@ -1016,8 +1057,8 @@ def obtener_recordatorios():
             'mensaje': 'No autorizado',
         }), 401
 
-    ahora = datetime.now()
-    limite_dias = ahora + timedelta(days=7)
+    hoy = hoy_planificador()
+    limite_dias = hoy + timedelta(days=7)
     recordatorios = []
 
     try:
@@ -1028,17 +1069,21 @@ def obtener_recordatorios():
             """SELECT id, tipo, titulo, fecha_limite FROM tareas_planificadas
                WHERE usuario_id = ? AND fecha_limite BETWEEN ? AND ?
                ORDER BY fecha_limite, id""",
-            (user_id, ahora.date().isoformat(), limite_dias.date().isoformat()),
+            (user_id, hoy.isoformat(), limite_dias.isoformat()),
         )
         for fila in proximas:
-            dias = (date.fromisoformat(fila["fecha_limite"]) - ahora.date()).days
+            dias = (date.fromisoformat(fila["fecha_limite"]) - hoy).days
+            if fila["tipo"] == "examen":
+                mensaje = "El examen es hoy" if dias == 0 else f"Examen en {dias} día(s)"
+            else:
+                mensaje = "Vence hoy" if dias == 0 else f"Vence en {dias} día(s)"
             recordatorios.append({
                 "id": f"hu04-{fila['id']}",
                 "tipo": fila["tipo"].capitalize(),
                 "titulo": fila["titulo"],
                 "fecha": fila["fecha_limite"],
                 "dias_restantes": dias,
-                "mensaje": "Vence hoy" if dias == 0 else f"Vence en {dias} día(s)",
+                "mensaje": mensaje,
                 "urgencia": "alta" if dias <= 1 else ("media" if dias <= 3 else "baja"),
             })
 
@@ -1063,8 +1108,8 @@ def obtener_recordatorios():
                     except ValueError:
                         continue
 
-                if ahora.date() <= fecha_obj.date() <= limite_dias.date():
-                    dias = (fecha_obj.date() - ahora.date()).days
+                if hoy <= fecha_obj.date() <= limite_dias:
+                    dias = (fecha_obj.date() - hoy).days
                     recordatorios.append({
                         'id': f"tarea-{row['id']}",
                         'tipo': 'Entrega',
@@ -1098,8 +1143,8 @@ def obtener_recordatorios():
                     except ValueError:
                         continue
 
-                if ahora.date() <= fecha_obj.date() <= limite_dias.date():
-                    dias = (fecha_obj.date() - ahora.date()).days
+                if hoy <= fecha_obj.date() <= limite_dias:
+                    dias = (fecha_obj.date() - hoy).days
                     recordatorios.append({
                         'id': f"examen-{row['id']}",
                         'tipo': 'Examen',

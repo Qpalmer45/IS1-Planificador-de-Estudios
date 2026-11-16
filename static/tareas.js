@@ -12,6 +12,23 @@ document.addEventListener("DOMContentLoaded", () => {
   let actividades = [];
   let editando = null;
 
+  const fecha = form.elements.fecha_limite;
+  const formatoLocal = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: form.dataset.zona, year: "numeric", month: "2-digit", day: "2-digit",
+  });
+
+  function actualizarFecha() {
+    const hoy = formatoLocal.format(new Date());
+    const conservaFecha = editando && fecha.value === editando.fecha_limite && fecha.value < hoy;
+    fecha.min = conservaFecha ? editando.fecha_limite : hoy;
+    fecha.setCustomValidity(fecha.validity.rangeUnderflow ? "La fecha debe ser hoy o posterior." : "");
+  }
+
+  function actualizarEtiqueta() {
+    document.getElementById("tarea-etiqueta-fecha").textContent =
+      form.elements.tipo.value === "examen" ? "Día del examen" : "Fecha límite";
+  }
+
   function bloquear(ocupado) {
     campos.disabled = ocupado;
     guardar.disabled = ocupado;
@@ -28,6 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
         campo.value = actividad[campo.name];
       }
     }
+    actualizarEtiqueta();
+    actualizarFecha();
     encabezado.textContent = actividad ? "Editar actividad" : "Nueva actividad";
     guardar.textContent = actividad ? "Guardar cambios" : "Crear actividad";
     cancelar.hidden = !actividad;
@@ -47,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
       titulo.textContent = actividad.titulo;
       const resumen = document.createElement("small");
       const [anio, mes, dia] = actividad.fecha_limite.split("-");
-      const tipo = actividad.tipo === "entrega" ? "Entrega" : "Tarea";
+      const tipo = actividad.tipo.charAt(0).toUpperCase() + actividad.tipo.slice(1);
       resumen.textContent = tipo + " · " + dia + "/" + mes + "/" + anio + " · " + actividad.minutos_estimados + " min";
       detalle.append(titulo, resumen);
 
@@ -111,6 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
   form.addEventListener("submit", async evento => {
     evento.preventDefault();
     if (guardar.disabled) return;
+    actualizarFecha();
+    if (!form.reportValidity()) return;
     const datos = Object.fromEntries(new FormData(form));
     datos.titulo = datos.titulo.trim();
     datos.minutos_estimados = Number(datos.minutos_estimados);
@@ -148,6 +169,12 @@ document.addEventListener("DOMContentLoaded", () => {
     prepararFormulario(null);
     estado.textContent = "";
   });
+  form.elements.tipo.addEventListener("change", actualizarEtiqueta);
+  fecha.addEventListener("input", actualizarFecha);
+  fecha.addEventListener("change", actualizarFecha);
+  fecha.addEventListener("focus", actualizarFecha);
+  window.addEventListener("focus", actualizarFecha);
+  actualizarFecha();
   reintentar.addEventListener("click", cargar);
   cargar();
 });
