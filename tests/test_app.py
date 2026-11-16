@@ -6,6 +6,7 @@ Ejecución desde la raíz del proyecto:
 Cada prueba usa una base SQLite temporal para no modificar todos.db.
 Los comentarios de cada bloque indican la función cubierta y los casos probados.
 """
+from datetime import date, timedelta
 import os
 import sqlite3
 import tempfile
@@ -1738,6 +1739,138 @@ class TestStudyPlannerApp(unittest.TestCase):
         self.assertEqual(dict_todo["prioridad"], "alta")
         self.assertEqual(dict_asig["dificultad"], "alta")
         self.assertEqual(dict_asig["prioridad"], "baja")
+
+
+    # HU04: pruebas de API y persistencia sobre la base temporal de cada caso.
+    def crear_actividad(self, **cambios):
+        datos = {**ACTIVIDAD_HU04, **cambios}
+        respuesta = self.client.post("/api/tareas", json=datos)
+        self.assertEqual(respuesta.status_code, 201, respuesta.get_json())
+        return respuesta.get_json()
+
+    def test_hu04_ciclo_completo_de_ambos_tipos(self):
+        self.registrar()
+        for tipo in ("tarea", "entrega"):
+            with self.subTest(tipo=tipo):
+                creada = self.crear_actividad(tipo=tipo)
+                ruta = f"/api/tareas/{creada['id']}"
+                self.assertEqual(self.client.get("/api/tareas").get_json(), [creada])
+                cambios = dict(titulo="Nuevo título", tipo="entrega" if tipo == "tarea" else "tarea",
+                               fecha_limite="2028-04-02", minutos_estimados=120)
+                editada = self.client.patch(ruta, json=cambios)
+                self.assertEqual(editada.status_code, 200)
+                self.assertEqual(editada.get_json(), {**creada, **cambios})
+                main_app.initialize_database()
+                self.assertEqual(self.client.get("/api/tareas").get_json(), [editada.get_json()])
+                self.assertEqual(self.client.delete(ruta).status_code, 204)
+                self.assertEqual(self.client.get("/api/tareas").get_json(), [])
+                self.assertEqual(self.client.delete(ruta).status_code, 404)
+                self.assertEqual(self.client.patch(ruta, json={"titulo": "Otra"}).status_code, 404)
+
+    def test_hu04_edicion_parcial_y_rechazo_atomico(self):
+        self.registrar()
+        creada = self.crear_actividad()
+        ruta = f"/api/tareas/{creada['id']}"
+        respuesta = self.client.patch(ruta, json={"minutos_estimados": 1})
+        self.assertEqual(respuesta.get_json(), {**creada, "minutos_estimados": 1})
+        invalida = self.client.patch(ruta, json={"titulo": "Descartar", "fecha_limite": "2027-02-29"})
+        self.assertEqual(invalida.status_code, 400)
+        self.assertEqual(self.client.get("/api/tareas").get_json(), [respuesta.get_json()])
+
+    def test_hu04_requiere_sesion_en_todas_las_operaciones(self):
+        for metodo, ruta in (("GET", "/api/tareas"), ("POST", "/api/tareas"),
+                            ("PATCH", "/api/tareas/1"), ("DELETE", "/api/tareas/1")):
+            with self.subTest(metodo=metodo):
+                respuesta = self.client.open(ruta, method=metodo, json=ACTIVIDAD_HU04)
+                self.assertEqual(respuesta.status_code, 401)
+
+    def test_hu04_aislamiento_de_cuentas_en_crud_plan_y_avisos(self):
+        self.registrar()
+        creada = self.crear_actividad(fecha_limite=date.today().isoformat())
+        ruta = f"/api/tareas/{creada['id']}"
+        otra = main_app.app.test_client()
+        self.registrar(email="otra@ucm.es", client=otra)
+        self.assertEqual(otra.get("/api/tareas").get_json(), [])
+        self.assertEqual(otra.get("/api/plan/datos").get_json()["tareas_planificadas"], [])
+        self.assertEqual(otra.get("/api/recordatorios").get_json()["recordatorios"], [])
+        self.assertEqual(otra.patch(ruta, json={"titulo": "Otra"}).status_code, 404)
+        self.assertEqual(otra.delete(ruta).status_code, 404)
+        self.assertEqual(self.client.get("/api/tareas").get_json(), [creada])
+
+    def test_hu04_plazos_ordenados_y_separados_de_todos(self):
+        self.registrar()
+        self.crear_todo("Nota rápida")
+        tarde = self.crear_actividad(fecha_limite="2028-03-03")
+        pronto = self.crear_actividad(fecha_limite="2028-02-29")
+        empate = self.crear_actividad(fecha_limite="2028-02-29")
+        esperadas = [pronto, empate, tarde]
+        self.assertEqual(self.client.get("/api/tareas").get_json(), esperadas)
+        plan = self.client.get("/api/plan/datos").get_json()
+        self.assertEqual(plan["tareas_planificadas"], esperadas)
+        self.assertEqual([t["titulo"] for t in plan["tareas"]], ["Nota rápida"])
+        self.assertEqual(len(self.client.get("/api/todos").get_json()), 1)
+
+    def test_hu04_recordatorios_reflejan_altas_ediciones_y_bajas(self):
+        self.registrar()
+        hoy = date.today()
+        for dias, tipo in ((-1, "tarea"), (0, "tarea"), (7, "entrega"), (8, "entrega")):
+            self.crear_actividad(titulo=f"Plazo {dias}", tipo=tipo,
+                                 fecha_limite=(hoy + timedelta(days=dias)).isoformat())
+        avisos = self.client.get("/api/recordatorios").get_json()["recordatorios"]
+        self.assertEqual([(a["tipo"], a["dias_restantes"]) for a in avisos],
+                         [("Tarea", 0), ("Entrega", 7)])
+        actividades = self.client.get("/api/tareas").get_json()
+        self.client.patch(f"/api/tareas/{actividades[1]['id']}",
+                          json={"fecha_limite": (hoy + timedelta(days=9)).isoformat()})
+        self.client.delete(f"/api/tareas/{actividades[2]['id']}")
+        self.assertEqual(self.client.get("/api/recordatorios").get_json()["total"], 0)
+
+    def test_hu04_rechaza_peticiones_invalidas_sin_escribir(self):
+        self.registrar()
+        for cuerpo in ("{", "null", "[]", "{}", '{"usuario_id": 42}'):
+            with self.subTest(cuerpo=cuerpo):
+                respuesta = self.client.post("/api/tareas", data=cuerpo, content_type="application/json")
+                self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(self.client.get("/api/tareas").get_json(), [])
+
+
+ACTIVIDAD_HU04 = dict(titulo="Práctica de IS1", tipo="entrega",
+                      fecha_limite="2028-02-29", minutos_estimados=90)
+
+
+class TestValidacionHU04(unittest.TestCase):
+    """Reglas de dominio de la HU04, sin servidor ni conexión a SQLite."""
+
+    def test_normaliza_titulo_y_acepta_fecha_bisiesta(self):
+        datos = {**ACTIVIDAD_HU04, "titulo": "  Práctica de IS1  "}
+        self.assertEqual(main_app.validar_tarea(datos), ACTIVIDAD_HU04)
+        self.assertEqual(datos["titulo"], "  Práctica de IS1  ")
+
+    def test_alta_exige_cada_campo_y_edicion_admite_uno(self):
+        for campo in ACTIVIDAD_HU04:
+            with self.subTest(campo=campo):
+                parcial = ACTIVIDAD_HU04.copy()
+                parcial.pop(campo)
+                with self.assertRaises(ValueError):
+                    main_app.validar_tarea(parcial)
+                self.assertEqual(main_app.validar_tarea(parcial, parcial=True), parcial)
+
+    def test_valores_invalidos(self):
+        invalidos = {
+            "titulo": [None, [], "   ", "x" * 201],
+            "tipo": [None, [], "examen"],
+            "fecha_limite": [None, 20280229, "2026-02-29", "2028-13-01", "20280229", "2028-W01-1"],
+            "minutos_estimados": [None, True, 0, -1, "15", 1.5, 2**63],
+        }
+        for campo, valores in invalidos.items():
+            for valor in valores:
+                with self.subTest(campo=campo, valor=valor), self.assertRaises(ValueError):
+                    main_app.validar_tarea({**ACTIVIDAD_HU04, campo: valor})
+
+    def test_rechaza_campos_protegidos_y_edicion_vacia(self):
+        for datos in ({"id": 1}, {"usuario_id": 2}, {}, None, []):
+            with self.subTest(datos=datos), self.assertRaises(ValueError):
+                main_app.validar_tarea(datos, parcial=True)
 
 
 if __name__ == "__main__":

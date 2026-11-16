@@ -1826,3 +1826,28 @@ body.subject-modal-open {
 .subject-dialog-meta {
   margin-bottom: 1.25rem;
 }
+
+/* HU04 */
+#tarea-campos {
+  border: 0;
+  margin: 16px 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 12px;
+}
+#tarea-campos label { display: grid; gap: 6px; font-weight: 600; }
+#tarea-campos input, #tarea-campos select {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-main);
+  font: inherit;
+}
+#tab-tareas [hidden] { display: none; }
+#tab-tareas .subject-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+#tarea-estado { min-height: 1.5em; margin: 12px 0; }
+#tarea-lista, #tarea-vacia { margin-top: 12px; }
+#tarea-lista small { display: block; color: var(--text-muted); }

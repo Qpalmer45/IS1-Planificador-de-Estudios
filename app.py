@@ -8,7 +8,7 @@ se crea la aplicación Flask y se configura cómo se guardan las sesiones del us
 """
 # Herramientas de Python para decoradores, rutas de archivos, expresiones regulares
 # y acceso a SQLite.
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from flask import jsonify, session
 from functools import wraps
 from pathlib import Path
@@ -106,6 +106,22 @@ def initialize_database():
                 conn.execute("ALTER TABLE todos ADD COLUMN fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP")
             if "prioridad" not in cols_todos:
                 conn.execute("ALTER TABLE todos ADD COLUMN prioridad TEXT NOT NULL DEFAULT 'media'")
+
+            # HU04: actividades con plazo, independientes de las notas rápidas.
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS tareas_planificadas (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+                    titulo TEXT NOT NULL,
+                    tipo TEXT NOT NULL CHECK (tipo IN ('tarea', 'entrega')),
+                    fecha_limite TEXT NOT NULL,
+                    minutos_estimados INTEGER NOT NULL CHECK (minutos_estimados > 0)
+                )"""
+            )
+            conn.execute(
+                """CREATE INDEX IF NOT EXISTS idx_tareas_planificadas_plazo
+                   ON tareas_planificadas(usuario_id, fecha_limite, id)"""
+            )
 
             # Cada asignatura pertenece a un usuario y puede consultarse de forma
             # independiente (HU01, HU12).
@@ -834,6 +850,118 @@ def delete_tema(tema_id):
 
 
 
+# --- HU04: TAREAS Y ENTREGAS ---
+
+CAMPOS_TAREA = ("titulo", "tipo", "fecha_limite", "minutos_estimados")
+
+
+def validar_tarea(datos, parcial=False):
+    """Valida y normaliza los campos editables antes de escribir en SQLite."""
+    if not isinstance(datos, dict) or not datos:
+        raise ValueError("Envía los datos de la tarea o entrega.")
+    if datos.keys() - set(CAMPOS_TAREA):
+        raise ValueError("La petición incluye campos que no se pueden modificar.")
+    if not parcial and not all(campo in datos for campo in CAMPOS_TAREA):
+        raise ValueError("Indica el título, el tipo, la fecha límite y el tiempo estimado.")
+
+    campos = datos.copy()
+    if "titulo" in campos:
+        titulo = campos["titulo"]
+        if not isinstance(titulo, str) or not 1 <= len(titulo.strip()) <= 200:
+            raise ValueError("El título debe tener entre 1 y 200 caracteres.")
+        campos["titulo"] = titulo.strip()
+    if "tipo" in campos and campos["tipo"] not in ("tarea", "entrega"):
+        raise ValueError("Elige tarea o entrega.")
+    if "fecha_limite" in campos:
+        fecha = campos["fecha_limite"]
+        try:
+            if not isinstance(fecha, str) or date.fromisoformat(fecha).isoformat() != fecha:
+                raise ValueError
+        except ValueError:
+            raise ValueError("Indica una fecha límite válida en formato AAAA-MM-DD.") from None
+    if "minutos_estimados" in campos:
+        minutos = campos["minutos_estimados"]
+        if type(minutos) is not int or not 1 <= minutos <= 2**53 - 1:
+            raise ValueError("El tiempo estimado debe ser un número entero positivo de minutos.")
+    return campos
+
+
+def listar_tareas_planificadas(usuario_id):
+    filas = get_db().execute(
+        """SELECT id, titulo, tipo, fecha_limite, minutos_estimados
+           FROM tareas_planificadas WHERE usuario_id = ? ORDER BY fecha_limite, id""",
+        (usuario_id,),
+    )
+    return [dict(fila) for fila in filas]
+
+
+@app.get("/api/tareas")
+@login_required
+def listar_tareas():
+    return jsonify(listar_tareas_planificadas(session["usuario_id"]))
+
+
+@app.post("/api/tareas")
+@login_required
+def crear_tarea():
+    try:
+        campos = validar_tarea(request.get_json(silent=True))
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
+
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            """INSERT INTO tareas_planificadas
+               (usuario_id, titulo, tipo, fecha_limite, minutos_estimados)
+               VALUES (:usuario_id, :titulo, :tipo, :fecha_limite, :minutos_estimados)""",
+            {**campos, "usuario_id": session["usuario_id"]},
+        )
+    return jsonify(id=cursor.lastrowid, **campos), 201
+
+
+@app.patch("/api/tareas/<int:tarea_id>")
+@login_required
+def editar_tarea(tarea_id):
+    try:
+        cambios = validar_tarea(request.get_json(silent=True), parcial=True)
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
+
+    # Solo nombres de la lista fija entran en el SQL. Cada PATCH escribe
+    # únicamente los campos pedidos, incluso si hay ediciones concurrentes.
+    asignaciones = ", ".join(f"{campo} = :{campo}" for campo in CAMPOS_TAREA if campo in cambios)
+    parametros = {**cambios, "id": str(tarea_id), "usuario_id": session["usuario_id"]}
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            f"""UPDATE tareas_planificadas SET {asignaciones}
+                WHERE id = :id AND usuario_id = :usuario_id""", parametros,
+        )
+        if not cursor.rowcount:
+            return jsonify(error="Tarea o entrega no encontrada."), 404
+        fila = db.execute(
+            """SELECT id, titulo, tipo, fecha_limite, minutos_estimados
+               FROM tareas_planificadas WHERE id = :id AND usuario_id = :usuario_id""",
+            parametros,
+        ).fetchone()
+    return jsonify(dict(fila))
+
+
+@app.delete("/api/tareas/<int:tarea_id>")
+@login_required
+def eliminar_tarea(tarea_id):
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            "DELETE FROM tareas_planificadas WHERE id = ? AND usuario_id = ?",
+            (str(tarea_id), session["usuario_id"]),
+        )
+    if not cursor.rowcount:
+        return jsonify(error="Tarea o entrega no encontrada."), 404
+    return "", 204
+
+
 # --- MODELO / API PARA GENERADOR DE PLANES DE ESTUDIO (HU12, HU06) ---
 
 def obtener_datos_planificacion(usuario_id):
@@ -856,6 +984,7 @@ def obtener_datos_planificacion(usuario_id):
     return {
         "asignaturas": [asignatura_to_dict(row) for row in asignaturas_rows],
         "tareas": [todo_to_dict(row) for row in todos_rows],
+        "tareas_planificadas": listar_tareas_planificadas(usuario_id),
     }
 
 
@@ -894,6 +1023,24 @@ def obtener_recordatorios():
     try:
         db = get_db()
         cursor = db.cursor()
+
+        proximas = db.execute(
+            """SELECT id, tipo, titulo, fecha_limite FROM tareas_planificadas
+               WHERE usuario_id = ? AND fecha_limite BETWEEN ? AND ?
+               ORDER BY fecha_limite, id""",
+            (user_id, ahora.date().isoformat(), limite_dias.date().isoformat()),
+        )
+        for fila in proximas:
+            dias = (date.fromisoformat(fila["fecha_limite"]) - ahora.date()).days
+            recordatorios.append({
+                "id": f"hu04-{fila['id']}",
+                "tipo": fila["tipo"].capitalize(),
+                "titulo": fila["titulo"],
+                "fecha": fila["fecha_limite"],
+                "dias_restantes": dias,
+                "mensaje": "Vence hoy" if dias == 0 else f"Vence en {dias} día(s)",
+                "urgencia": "alta" if dias <= 1 else ("media" if dias <= 3 else "baja"),
+            })
 
         # 1. Tareas / Entregas próximas
         try:
