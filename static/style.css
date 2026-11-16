@@ -1851,3 +1851,375 @@ body.subject-modal-open {
 #tarea-estado { min-height: 1.5em; margin: 12px 0; }
 #tarea-lista, #tarea-vacia { margin-top: 12px; }
 #tarea-lista small { display: block; color: var(--text-muted); }
+
+/* ==========================================================================
+   Módulo de Horarios y Disponibilidad Semanal (HU02, HU05)
+   ========================================================================== */
+
+.schedule-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.schedule-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.schedule-panel {
+  padding: 24px;
+}
+
+.schedule-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.schedule-view-toggles {
+  display: inline-flex;
+  gap: 6px;
+  background: var(--bg-page);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-card);
+}
+
+.schedule-grid-hint {
+  margin-bottom: 16px;
+  color: var(--text-muted);
+}
+
+.schedule-grid-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+}
+
+.schedule-grid {
+  display: grid;
+  min-width: 680px;
+  background: #ffffff;
+  user-select: none;
+}
+
+.grid-time-column {
+  border-right: 1px solid var(--border-card);
+  background: #f8fafc;
+}
+
+.grid-day-column {
+  border-right: 1px solid var(--border-card);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.grid-day-column:last-child {
+  border-right: none;
+}
+
+.grid-day-slots {
+  position: relative;
+  width: 100%;
+}
+
+.grid-header-cell {
+  background: #f8fafc;
+  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-align: center;
+  padding: 12px 8px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid var(--border-card);
+  box-sizing: border-box;
+}
+
+.grid-time-cell {
+  height: 60px;
+  color: var(--text-muted);
+  font-size: 0.775rem;
+  font-weight: 600;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 6px;
+  border-bottom: 1px solid #f1f5f9;
+  box-sizing: border-box;
+}
+
+.grid-slot-cell {
+  height: 60px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  box-sizing: border-box;
+}
+
+.grid-slot-cell:hover,
+.grid-slot-cell:focus {
+  background: #f8fafc;
+  outline: 1px dashed var(--primary-border);
+}
+
+/* Tarjeta / Bloque de clase dentro del horario */
+.schedule-class-block {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  width: calc(100% - 8px);
+  max-width: calc(100% - 8px);
+  border-radius: 8px;
+  padding: 6px 10px;
+  z-index: 5;
+  border-left-width: 4px;
+  border-left-style: solid;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.schedule-class-block:hover,
+.schedule-class-block:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.12);
+  outline: 2px solid var(--primary);
+}
+
+.class-block-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.class-block-time {
+  font-size: 0.75rem;
+  font-weight: 500;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.class-block-room {
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Panel de Días Libres */
+.free-days-panel {
+  padding: 24px;
+}
+
+.free-days-form {
+  margin-bottom: 20px;
+}
+
+.free-days-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.form-group-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group-inline.flex-grow {
+  flex: 1 1 240px;
+}
+
+.form-group-inline label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.form-group-inline.btn-align {
+  padding-bottom: 1px;
+}
+
+.free-days-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.free-day-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  background: #f8fafc;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+}
+
+.free-day-item:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: var(--shadow-sm);
+}
+
+.free-day-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.free-day-badge {
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  border: 1px solid #a7f3d0;
+  text-transform: uppercase;
+}
+
+.free-day-reason {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.free-day-dates {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.btn-delete-free {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  color: var(--danger);
+  border-color: var(--danger-border);
+}
+
+.btn-delete-free:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+}
+
+/* Modal de clase */
+.schedule-modal-dialog {
+  width: min(540px, 94vw);
+  height: auto;
+  max-height: 90vh;
+}
+
+.schedule-modal-content {
+  padding: 24px 28px 28px;
+  overflow-y: auto;
+}
+
+.modal-form-group {
+  margin-bottom: 18px;
+}
+
+.modal-form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.modal-form-group .select-wrapper,
+.modal-form-group .input-wrapper {
+  width: 100%;
+}
+
+.modal-form-group select,
+.modal-form-group input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.modal-form-group select:focus,
+.modal-form-group input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-light);
+}
+
+.modal-form-row {
+  display: flex;
+  gap: 14px;
+}
+
+.modal-form-row .flex-1 {
+  flex: 1;
+}
+
+.field-hint {
+  display: block;
+  font-size: 0.775rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.schedule-dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.danger-btn {
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.danger-btn:hover {
+  background: var(--danger);
+  color: #ffffff;
+  border-color: var(--danger);
+}

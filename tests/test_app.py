@@ -41,7 +41,10 @@ class TestStudyPlannerApp(unittest.TestCase):
         main_app.DATABASE = self.original_database
         main_app.app.config["TESTING"] = self.original_testing
         main_app.app.config["SECRET_KEY"] = self.original_secret_key
-        self.temp_dir.cleanup()
+        try:
+            self.temp_dir.cleanup()
+        except Exception:
+            pass
 
     def registrar(
         self,

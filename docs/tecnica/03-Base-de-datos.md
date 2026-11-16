@@ -39,19 +39,47 @@ La columna `completada` tiene una restricción `CHECK (completada IN (0, 1))`. L
 | `id` | INTEGER PRIMARY KEY AUTOINCREMENT | Identificador |
 | `usuario_id` | INTEGER NOT NULL | Propietario, referencia a `usuarios.id` |
 | `nombre` | TEXT NOT NULL | Nombre de la asignatura |
+| `dificultad` | TEXT NOT NULL DEFAULT 'media' | Dificultad ('baja', 'media', 'alta') |
+| `prioridad` | TEXT NOT NULL DEFAULT 'media' | Prioridad ('baja', 'media', 'alta') |
 | `fecha_creacion` | DATETIME DEFAULT CURRENT_TIMESTAMP | Momento de creación |
 
-Por ahora solo se guarda el nombre de cada asignatura. Las futuras notas de temario, fechas de examen u horas objetivo no tienen todavía su propia tabla implementada.
+### horarios_clases (HU05)
+
+| Columna | Tipo | Para qué sirve |
+|---|---|---|
+| `id` | INTEGER PRIMARY KEY AUTOINCREMENT | Identificador del bloque de horario |
+| `usuario_id` | INTEGER NOT NULL | Propietario, referencia a `usuarios.id` (ON DELETE CASCADE) |
+| `asignatura_id` | INTEGER NOT NULL | Asignatura asociada, referencia a `asignaturas.id` (ON DELETE CASCADE) |
+| `dia_semana` | TEXT NOT NULL | Día de la semana ('lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo') |
+| `hora_inicio` | TEXT NOT NULL | Hora de inicio formato 'HH:MM' (24h) |
+| `hora_fin` | TEXT NOT NULL | Hora de fin formato 'HH:MM' (24h) |
+| `aula` | TEXT NOT NULL DEFAULT '' | Aula o ubicación de la clase (opcional) |
+| `fecha_creacion` | DATETIME DEFAULT CURRENT_TIMESTAMP | Momento de registro |
+
+### periodos_libres (HU02)
+
+| Columna | Tipo | Para qué sirve |
+|---|---|---|
+| `id` | INTEGER PRIMARY KEY AUTOINCREMENT | Identificador del período libre |
+| `usuario_id` | INTEGER NOT NULL | Propietario, referencia a `usuarios.id` (ON DELETE CASCADE) |
+| `fecha_inicio` | TEXT NOT NULL | Fecha de inicio en formato 'AAAA-MM-DD' |
+| `fecha_fin` | TEXT NOT NULL | Fecha de fin en formato 'AAAA-MM-DD' |
+| `motivo` | TEXT NOT NULL DEFAULT 'Día libre' | Motivo o etiqueta (ej. Festivo, Vacaciones) |
+| `fecha_creacion` | DATETIME DEFAULT CURRENT_TIMESTAMP | Momento de registro |
 
 ## 3. Relaciones
 
 ```text
 usuarios (1)
    ├──────── (N) todos
-   └──────── (N) asignaturas
+   ├──────── (N) asignaturas
+   │                └──────── (N) horarios_clases
+   ├──────── (N) horarios_clases
+   ├──────── (N) periodos_libres
+   └──────── (N) tareas_planificadas
 ```
 
-Cada To-Do y cada asignatura pertenece exactamente a un usuario. Las dos claves foráneas llevan `ON DELETE CASCADE`, por lo que si se elimina un usuario a nivel de base de datos también se eliminan sus registros relacionados. En las conexiones normales se activa `PRAGMA foreign_keys = ON`.
+Cada To-Do, asignatura, clase de horario y período libre pertenece exactamente a un usuario. Las claves foráneas llevan `ON DELETE CASCADE`, por lo que si se elimina un usuario o una asignatura a nivel de base de datos también se eliminan sus registros relacionados. En las conexiones normales se activa `PRAGMA foreign_keys = ON`.
 
 ## 4. Acceso a los datos
 

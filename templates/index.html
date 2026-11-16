@@ -46,10 +46,10 @@
           <span>Asignaturas</span>
           <span class="badge-count" id="nav-asignaturas-count">0</span>
         </button>
-        <button type="button" class="tab-btn" data-tab="horarios">
+        <button type="button" class="tab-btn" data-tab="horarios" id="tab-nav-horarios">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-          <span>Horario y Calendario</span>
-          <span class="tab-badge muted">Próximamente</span>
+          <span>Horario</span>
+          <span class="badge-count" id="nav-horarios-count" style="display: none;">0</span>
         </button>
         <button type="button" class="tab-btn" data-tab="planificador">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -212,16 +212,16 @@
             </div>
           </article>
 
-          <!-- Módulo futuro: HU02 y HU05 -->
-          <article class="module-card">
+          <!-- Módulo activo: Horario y Disponibilidad -->
+          <article class="module-card card-active">
             <div class="module-header">
-              <span class="status-pill status-pending">Próximamente</span>
-              <h4>Disponibilidad y Horarios de Clases (HU02, HU05)</h4>
+              <span class="status-pill status-ready">✓ Disponible</span>
+              <h4>Horario de Clases y Días Libres (HU02, HU05)</h4>
             </div>
-            <p>Define tus horas lectivas y franjas semanales libres para asegurar que las sesiones de estudio nunca se solapen.</p>
+            <p>Introduce tu horario semanal de clases y gestiona días libres o festivos para organizar tu disponibilidad académica.</p>
             <div class="module-footer">
               <span class="module-tag">Disponibilidad semanal</span>
-              <button type="button" class="btn-text" data-open-tab="horarios">Conocer más →</button>
+              <button type="button" class="btn-text" data-open-tab="horarios">Gestionar horario →</button>
             </div>
           </article>
 
@@ -456,33 +456,215 @@
       </section>
     </div>
 
-    <!-- Información de planificación futura sobre disponibilidad, clases y calendario. -->
+    <!-- Módulo de Horario de Clases y Disponibilidad (HU02, HU05) -->
     <section id="tab-horarios" class="tab-content">
-      <div class="roadmap-card">
-        <div class="roadmap-header">
-          <div class="roadmap-badge">Próximo Sprint</div>
-          <h2>Horario de Clases y Calendario (HU02, HU05, HU07)</h2>
-          <p>Organiza tu disponibilidad semanal y consulta tu calendario para que el planificador sepa exactamente en qué franjas puedes estudiar.</p>
-        </div>
-        <div class="roadmap-features">
-          <div class="feature-item">
-            <span class="feature-icon">🗓️</span>
-            <strong>HU02 - Disponibilidad semanal:</strong> Franjas horarias configurables para el estudio.
+      <div class="subjects-container schedule-container">
+        <header class="section-header">
+          <div class="header-titles">
+            <h2>Horario de Clases y Días Libres</h2>
+            <p>Configura tus clases semanales y marca días libres para organizar tu disponibilidad académica.</p>
           </div>
-          <div class="feature-item">
-            <span class="feature-icon">🏫</span>
-            <strong>HU05 - Horario de clases:</strong> Bloqueo de horas lectivas para evitar solapamientos.
+          <div class="schedule-top-actions">
+            <button type="button" class="primary-btn" id="btn-add-schedule-class">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              <span>Añadir clase</span>
+            </button>
           </div>
-          <div class="feature-item">
-            <span class="feature-icon">📅</span>
-            <strong>HU07 - Calendario semanal:</strong> Vista visual de sesiones de estudio, descansos y entregas.
+        </header>
+
+        <!-- Feedback general de horarios -->
+        <div id="schedule-feedback" class="feedback-alert" role="status" aria-live="polite"></div>
+
+        <!-- Tarjeta de la cuadrícula semanal -->
+        <div class="card schedule-panel">
+          <div class="schedule-toolbar">
+            <div class="schedule-view-toggles" role="group" aria-label="Visualización de días de la semana">
+              <button type="button" class="filter-btn active" id="btn-view-weekdays" aria-pressed="true">
+                Lunes a Viernes
+              </button>
+              <button type="button" class="filter-btn" id="btn-view-all-days" aria-pressed="false">
+                Semana Completa (L - D)
+              </button>
+            </div>
+            <div class="toolbar-stats">
+              <span id="schedule-class-counter" class="status-counter">Cargando horario...</span>
+            </div>
+          </div>
+
+          <div class="schedule-grid-hint">
+            <small>💡 Haz clic en una celda vacía para añadir una clase o en una clase existente para editarla o eliminarla.</small>
+          </div>
+
+          <!-- Contenedor scrollable de la cuadrícula semanal -->
+          <div class="schedule-grid-wrapper" id="schedule-grid-wrapper">
+            <div class="schedule-grid" id="schedule-grid">
+              <!-- Renderizado dinámico vía static/horario.js -->
+            </div>
           </div>
         </div>
-        <div class="roadmap-action">
-          <button type="button" class="secondary-btn" data-open-tab="inicio">← Volver al Inicio</button>
+
+        <!-- Panel de Días / Períodos Libres (Festivos y Vacaciones) -->
+        <div class="card free-days-panel" style="margin-top: 2rem;">
+          <header class="section-header" style="margin-bottom: 1rem;">
+            <div class="header-titles">
+              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">Días y Períodos Libres</h3>
+              <p style="margin: 4px 0 0; font-size: 0.9rem; color: var(--text-muted);">Registra festivos o vacaciones para que no se consideren días lectivos.</p>
+            </div>
+          </header>
+
+          <form id="free-days-form" class="free-days-form">
+            <div class="free-days-inputs">
+              <div class="form-group-inline">
+                <label for="free-start-date">Fecha de inicio</label>
+                <input type="date" id="free-start-date" required class="form-input">
+              </div>
+              <div class="form-group-inline">
+                <label for="free-end-date">Fecha de fin (opcional)</label>
+                <input type="date" id="free-end-date" class="form-input" placeholder="Mismo día si se omite">
+              </div>
+              <div class="form-group-inline flex-grow">
+                <label for="free-reason">Motivo / Etiqueta</label>
+                <input type="text" id="free-reason" placeholder="Ej. Festivo local, Vacaciones de Navidad..." maxlength="200" class="form-input">
+              </div>
+              <div class="form-group-inline btn-align">
+                <button type="submit" class="primary-btn" id="btn-add-free-day">
+                  <span>Guardar período libre</span>
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <div id="free-days-feedback" class="feedback-alert" role="status" aria-live="polite"></div>
+
+          <div id="free-days-empty" class="empty-state" hidden>
+            <div class="empty-icon">🏖️</div>
+            <h4>No hay días libres registrados</h4>
+            <p>Añade festivos o períodos no lectivos con el formulario de arriba.</p>
+          </div>
+
+          <ul id="free-days-list" class="free-days-list" aria-label="Lista de días y períodos libres"></ul>
         </div>
+
       </div>
     </section>
+
+    <!-- Modal para Añadir o Editar Clase -->
+    <div
+      id="class-modal"
+      class="subject-modal"
+      role="presentation"
+      aria-hidden="true"
+      hidden
+    >
+      <section
+        class="subject-dialog schedule-modal-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="class-modal-title"
+        tabindex="-1"
+      >
+        <header class="subject-dialog-header">
+          <h2 id="class-modal-title">Añadir Clase</h2>
+          <button
+            id="class-modal-close"
+            class="subject-dialog-close"
+            type="button"
+            aria-label="Cerrar ventana de clase"
+          >
+            Cerrar
+          </button>
+        </header>
+
+        <div class="schedule-modal-content">
+          <div id="class-modal-feedback" class="feedback-alert" role="status" aria-live="polite"></div>
+
+          <form id="class-form" class="schedule-form">
+            <input type="hidden" id="class-edit-id" value="">
+
+            <div class="modal-form-group">
+              <label for="class-subject-select">Asignatura *</label>
+              <div class="select-wrapper">
+                <select id="class-subject-select" required>
+                  <option value="" disabled selected>-- Elige una asignatura --</option>
+                  <!-- Opciones cargadas dinámicamente -->
+                  <option value="__nueva__">+ Escribir nueva asignatura...</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="modal-form-group" id="group-new-subject" style="display: none;">
+              <label for="class-new-subject-name">Nombre de la nueva asignatura *</label>
+              <div class="input-wrapper">
+                <input
+                  type="text"
+                  id="class-new-subject-name"
+                  placeholder="Ej. Arquitectura de Computadores"
+                  autocomplete="off"
+                >
+              </div>
+              <small class="field-hint">Se creará automáticamente en tu listado de asignaturas.</small>
+            </div>
+
+            <div class="modal-form-row">
+              <div class="modal-form-group flex-1">
+                <label for="class-day-select">Día de la semana *</label>
+                <div class="select-wrapper">
+                  <select id="class-day-select" required>
+                    <option value="lunes">Lunes</option>
+                    <option value="martes">Martes</option>
+                    <option value="miercoles">Miércoles</option>
+                    <option value="jueves">Jueves</option>
+                    <option value="viernes">Viernes</option>
+                    <option value="sabado">Sábado</option>
+                    <option value="domingo">Domingo</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="modal-form-group flex-1">
+                <label for="class-room-input">Aula / Ubicación (opcional)</label>
+                <div class="input-wrapper">
+                  <input
+                    type="text"
+                    id="class-room-input"
+                    placeholder="Ej. Aula 102, Lab 3"
+                    autocomplete="off"
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="modal-form-row">
+              <div class="modal-form-group flex-1">
+                <label for="class-start-input">Hora de inicio *</label>
+                <div class="input-wrapper">
+                  <input type="time" id="class-start-input" required>
+                </div>
+              </div>
+
+              <div class="modal-form-group flex-1">
+                <label for="class-end-input">Hora de fin *</label>
+                <div class="input-wrapper">
+                  <input type="time" id="class-end-input" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="schedule-dialog-actions">
+              <button type="submit" class="primary-btn" id="btn-save-class">
+                <span>Guardar clase</span>
+              </button>
+              <button type="button" class="danger-btn" id="btn-delete-class" style="display: none;">
+                <span>Eliminar clase</span>
+              </button>
+              <button type="button" class="secondary-btn" id="btn-cancel-class">
+                <span>Cancelar</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
 
     <!-- Información de la futura generación automática y replanificación del estudio. -->
     <section id="tab-planificador" class="tab-content">
@@ -515,5 +697,6 @@
   </main>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
   <script src="{{ url_for('static', filename='tareas.js') }}"></script>
+  <script src="{{ url_for('static', filename='horario.js') }}"></script>
 </body>
 </html>

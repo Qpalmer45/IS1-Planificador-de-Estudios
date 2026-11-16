@@ -79,7 +79,67 @@ Una asignatura se devuelve con `id`, `usuario_id` y `nombre`:
 
 Para crear y modificar se exige un objeto JSON con `nombre` de tipo texto no vacío. Las asignaturas inexistentes o ajenas dan 404.
 
-## 6. Errores y convenciones
+## 6. Horarios de Clases (HU05 - Requieren sesión)
+
+| Método y ruta | Acción | Respuesta normal |
+|---|---|---|
+| `GET /api/horarios` | Listar bloques del horario semanal ordenados por día y hora | 200, lista JSON de bloques de clase |
+| `POST /api/horarios` | Registrar nueva clase (soporta `asignatura_id` o `asignatura_nombre`) | 201, bloque creado |
+| `GET /api/horarios/<id>` | Detalle de un bloque de horario propio | 200, bloque |
+| `PATCH /api/horarios/<id>` | Actualizar día, hora, asignatura o aula | 200, bloque actualizado |
+| `DELETE /api/horarios/<id>` | Eliminar bloque del horario | 200, mensaje |
+
+Validaciones aplicadas:
+- `hora_inicio < hora_fin` en formato `HH:MM`.
+- Prevención de solapamientos horarios en el mismo día.
+- Sincronización automática: si se especifica `asignatura_nombre` y no existe, se crea automáticamente en `asignaturas` con dificultad y prioridad `media`.
+
+Ejemplo de bloque de clase:
+```json
+{
+  "id": 1,
+  "usuario_id": 1,
+  "asignatura_id": 4,
+  "asignatura_nombre": "Estructuras de Datos",
+  "dia_semana": "lunes",
+  "hora_inicio": "09:00",
+  "hora_fin": "11:00",
+  "aula": "Aula 201"
+}
+```
+
+## 7. Días y Períodos Libres (HU02 - Requieren sesión)
+
+| Método y ruta | Acción | Respuesta normal |
+|---|---|---|
+| `GET /api/periodos-libres` | Listar días y rangos libres ordenados por fecha | 200, lista JSON |
+| `POST /api/periodos-libres` | Crear período (`fecha_inicio`, `fecha_fin`, `motivo`) | 201, período creado |
+| `GET /api/periodos-libres/<id>` | Detalle de un período libre propio | 200, período |
+| `PATCH /api/periodos-libres/<id>` | Modificar fechas o motivo | 200, período modificado |
+| `DELETE /api/periodos-libres/<id>` | Eliminar día o período libre | 200, mensaje |
+
+Validaciones aplicadas:
+- Fechas en formato `AAAA-MM-DD`.
+- `fecha_inicio <= fecha_fin`.
+
+Ejemplo de período libre:
+```json
+{
+  "id": 2,
+  "usuario_id": 1,
+  "fecha_inicio": "2026-12-23",
+  "fecha_fin": "2027-01-07",
+  "motivo": "Vacaciones de Navidad"
+}
+```
+
+## 8. Funciones de Arquitectura y Disponibilidad
+
+Disponibles en el backend para el futuro motor de planificación automática de estudio:
+- `obtener_intervalos_ocupados(usuario_id, fecha_objetivo)`: Determina si una fecha es festivo/día libre y calcula las clases lectivas de esa jornada.
+- `is_time_slot_available(usuario_id, target_datetime, duration_minutes)`: Evalúa si una franja candidata no se solapa con clases ni períodos no lectivos.
+
+## 9. Errores y convenciones
 
 - **200**: petición realizada.
 - **201**: recurso creado.
@@ -90,8 +150,8 @@ Para crear y modificar se exige un objeto JSON con `nombre` de tipo texto no vac
 
 Las respuestas de error suelen utilizar `{"error":"mensaje" }`. No todos los casos mal formados se gestionan todavía con la misma precisión; la validación de tipos de entrada sigue siendo un punto de mejora.
 
-## 7. Lo que todavía no tiene API
+## 10. Lo que todavía no tiene API
 
-No existen en el backend actual rutas para disponibilidad semanal, clases, calendario, generación automática, exámenes, estadísticas o recordatorios. Las añadiremos cuando implementemos las historias correspondientes. Hasta entonces no se deben publicar ejemplos de llamadas a esas rutas como si funcionaran.
+No existen en el backend actual rutas para calendario de sesiones de estudio, algoritmo de generación automática ni replanificación. Las añadiremos cuando implementemos las historias correspondientes (HU06, HU08, HU15). Hasta entonces no se deben publicar ejemplos de llamadas a esas rutas como si funcionaran.
 
 Documentación relacionada: [Arquitectura](02-Arquitectura-y-diseno.md), [Base de datos](03-Base-de-datos.md) y [Pruebas](../../tests/README.md).

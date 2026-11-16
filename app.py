@@ -191,6 +191,43 @@ def initialize_database():
                     FOREIGN KEY (asignatura_id) REFERENCES asignaturas (id) ON DELETE CASCADE
                 )"""
             )
+
+            # Horario de clases semanal recurrente por asignatura
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS horarios_clases (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL,
+                    asignatura_id INTEGER NOT NULL,
+                    dia_semana TEXT NOT NULL CHECK (dia_semana IN ('lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo')),
+                    hora_inicio TEXT NOT NULL,
+                    hora_fin TEXT NOT NULL,
+                    aula TEXT NOT NULL DEFAULT '',
+                    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE,
+                    FOREIGN KEY (asignatura_id) REFERENCES asignaturas (id) ON DELETE CASCADE
+                )"""
+            )
+            conn.execute(
+                """CREATE INDEX IF NOT EXISTS idx_horarios_usuario_dia
+                   ON horarios_clases(usuario_id, dia_semana)"""
+            )
+
+            # Días y períodos libres (festivos, vacaciones o días no lectivos)
+            conn.execute(
+                """CREATE TABLE IF NOT EXISTS periodos_libres (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario_id INTEGER NOT NULL,
+                    fecha_inicio TEXT NOT NULL,
+                    fecha_fin TEXT NOT NULL,
+                    motivo TEXT NOT NULL DEFAULT '',
+                    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (usuario_id) REFERENCES usuarios (id) ON DELETE CASCADE
+                )"""
+            )
+            conn.execute(
+                """CREATE INDEX IF NOT EXISTS idx_periodos_libres_usuario
+                   ON periodos_libres(usuario_id, fecha_inicio, fecha_fin)"""
+            )
     finally:
         # La inicialización no mantiene una conexión abierta durante el uso normal.
         conn.close()
@@ -883,7 +920,20 @@ def delete_tema(tema_id):
 CAMPOS_TAREA = ("titulo", "tipo", "fecha_limite", "minutos_estimados")
 
 
-ZONA_PLANIFICADOR = ZoneInfo("Europe/Madrid")
+try:
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+    ZONA_PLANIFICADOR = ZoneInfo("Europe/Madrid")
+except (ZoneInfoNotFoundError, Exception):
+    from datetime import tzinfo
+    class _FallbackMadrid(tzinfo):
+        key = "Europe/Madrid"
+        def utcoffset(self, dt):
+            return timedelta(hours=1)
+        def dst(self, dt):
+            return timedelta(0)
+        def tzname(self, dt):
+            return "CET"
+    ZONA_PLANIFICADOR = _FallbackMadrid()
 
 
 def hoy_planificador():
@@ -1035,6 +1085,603 @@ def api_datos_planificacion():
     """Expone dificultad y prioridad de asignaturas y tareas al generador (HU06)."""
     usuario_id = session["usuario_id"]
     return jsonify(obtener_datos_planificacion(usuario_id)), 200
+
+
+# ==============================================================================
+# HORARIOS DE CLASES Y PERÍODOS LIBRES (DISPONIBILIDAD ACADÉMICA)
+# ==============================================================================
+
+DIAS_SEMANA_VALIDOS = ("lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo")
+HORA_REGEX = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+
+
+def normalizar_dia_semana(dia):
+    """Normaliza el día de la semana eliminando tildes y espacios."""
+    if not isinstance(dia, str):
+        return None
+    d = dia.strip().lower()
+    tildes = {"miércoles": "miercoles", "sábado": "sabado"}
+    return tildes.get(d, d)
+
+
+def es_hora_valida(hora_str):
+    """Valida que una cadena tenga el formato de hora HH:MM (24 horas)."""
+    return isinstance(hora_str, str) and bool(HORA_REGEX.match(hora_str.strip()))
+
+
+def es_fecha_iso_valida(fecha_str):
+    """Valida que una cadena tenga formato AAAA-MM-DD y sea fecha válida."""
+    if not isinstance(fecha_str, str):
+        return False
+    try:
+        f = date.fromisoformat(fecha_str.strip())
+        return f.isoformat() == fecha_str.strip()
+    except (ValueError, TypeError):
+        return False
+
+
+def horario_to_dict(row):
+    """Serializa un registro de horario de clase a diccionario."""
+    keys = row.keys()
+    data = {
+        "id": row["id"],
+        "usuario_id": row["usuario_id"],
+        "asignatura_id": row["asignatura_id"],
+        "dia_semana": row["dia_semana"],
+        "hora_inicio": row["hora_inicio"],
+        "hora_fin": row["hora_fin"],
+        "aula": row["aula"] if "aula" in keys and row["aula"] is not None else "",
+    }
+    if "asignatura_nombre" in keys:
+        data["asignatura_nombre"] = row["asignatura_nombre"]
+    if "asignatura_dificultad" in keys:
+        data["asignatura_dificultad"] = row["asignatura_dificultad"]
+    if "asignatura_prioridad" in keys:
+        data["asignatura_prioridad"] = row["asignatura_prioridad"]
+    return data
+
+
+def periodo_libre_to_dict(row):
+    """Serializa un registro de día/período libre a diccionario."""
+    return {
+        "id": row["id"],
+        "usuario_id": row["usuario_id"],
+        "fecha_inicio": row["fecha_inicio"],
+        "fecha_fin": row["fecha_fin"],
+        "motivo": row["motivo"] if "motivo" in row.keys() and row["motivo"] is not None else "Día libre",
+    }
+
+
+def buscar_solapamiento_horario(db, usuario_id, dia_semana, hora_inicio, hora_fin, exclude_id=None):
+    """
+    Busca si existe algún bloque de clase que se solape con el intervalo horario propuesto
+    para el mismo usuario y día de la semana.
+    """
+    query = """
+        SELECT h.id, a.nombre AS asignatura_nombre, h.hora_inicio, h.hora_fin
+        FROM horarios_clases h
+        JOIN asignaturas a ON h.asignatura_id = a.id
+        WHERE h.usuario_id = ? AND h.dia_semana = ?
+          AND h.hora_inicio < ? AND h.hora_fin > ?
+    """
+    params = [usuario_id, dia_semana, hora_fin, hora_inicio]
+    if exclude_id is not None:
+        query += " AND h.id != ?"
+        params.append(exclude_id)
+    return db.execute(query, params).fetchone()
+
+
+def resolver_o_crear_asignatura(db, usuario_id, data):
+    """
+    Obtiene el ID de la asignatura seleccionada o crea una nueva si se introduce
+    el nombre de una asignatura inexistente para este usuario.
+    """
+    asignatura_id = data.get("asignatura_id")
+    asignatura_nombre = data.get("asignatura_nombre") or data.get("nombre_asignatura")
+
+    # Caso 1: ID explícito enviado
+    if asignatura_id is not None and str(asignatura_id).strip() != "" and str(asignatura_id) != "__nueva__":
+        try:
+            asig_id_int = int(asignatura_id)
+        except (ValueError, TypeError):
+            raise ValueError("El identificador de la asignatura debe ser un número entero.")
+        asig = db.execute(
+            "SELECT id, nombre FROM asignaturas WHERE id = ? AND usuario_id = ?",
+            (asig_id_int, usuario_id),
+        ).fetchone()
+        if asig is None:
+            raise ValueError("La asignatura seleccionada no existe o no pertenece a tu usuario.")
+        return asig["id"]
+
+    # Caso 2: Nombre de asignatura proporcionado (nueva o existente por nombre)
+    if isinstance(asignatura_nombre, str) and asignatura_nombre.strip():
+        nombre_limpio = asignatura_nombre.strip()
+        # Buscar en las asignaturas del usuario con casefold (soporta tildes en español)
+        asigs_usuario = db.execute(
+            "SELECT id, nombre FROM asignaturas WHERE usuario_id = ?",
+            (usuario_id,),
+        ).fetchall()
+        for asig in asigs_usuario:
+            if asig["nombre"].strip().casefold() == nombre_limpio.casefold():
+                return asig["id"]
+
+        # Si no existe, se crea automáticamente con valores por defecto
+        cursor = db.execute(
+            "INSERT INTO asignaturas (usuario_id, nombre, dificultad, prioridad) VALUES (?, ?, 'media', 'media')",
+            (usuario_id, nombre_limpio),
+        )
+        return cursor.lastrowid
+
+    raise ValueError("Debes seleccionar una asignatura existente o escribir el nombre de una nueva.")
+
+
+# --- ENDPOINTS HORARIOS DE CLASES ---
+
+@app.get("/api/horarios")
+@login_required
+def listar_horarios():
+    """Devuelve todos los bloques de clases semanales del usuario autenticado."""
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    rows = db.execute(
+        """SELECT h.id, h.usuario_id, h.asignatura_id, h.dia_semana,
+                  h.hora_inicio, h.hora_fin, h.aula,
+                  a.nombre AS asignatura_nombre, a.dificultad AS asignatura_dificultad,
+                  a.prioridad AS asignatura_prioridad
+           FROM horarios_clases h
+           JOIN asignaturas a ON h.asignatura_id = a.id
+           WHERE h.usuario_id = ?
+           ORDER BY
+             CASE h.dia_semana
+               WHEN 'lunes' THEN 1
+               WHEN 'martes' THEN 2
+               WHEN 'miercoles' THEN 3
+               WHEN 'jueves' THEN 4
+               WHEN 'viernes' THEN 5
+               WHEN 'sabado' THEN 6
+               WHEN 'domingo' THEN 7
+             END,
+             h.hora_inicio ASC,
+             h.id ASC""",
+        (usuario_id,),
+    ).fetchall()
+    return jsonify([horario_to_dict(row) for row in rows]), 200
+
+
+@app.post("/api/horarios")
+@login_required
+def crear_horario():
+    """Crea un nuevo bloque de clase en el horario semanal."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Debes enviar un objeto JSON con los datos del horario."}), 400
+
+    dia_semana = normalizar_dia_semana(data.get("dia_semana"))
+    if dia_semana not in DIAS_SEMANA_VALIDOS:
+        return jsonify({"error": "El día de la semana debe ser lunes, martes, miercoles, jueves, viernes, sabado o domingo."}), 400
+
+    hora_inicio = str(data.get("hora_inicio", "")).strip()
+    hora_fin = str(data.get("hora_fin", "")).strip()
+
+    if not es_hora_valida(hora_inicio) or not es_hora_valida(hora_fin):
+        return jsonify({"error": "Las horas de inicio y fin deben tener formato válido HH:MM."}), 400
+
+    if hora_inicio >= hora_fin:
+        return jsonify({"error": "La hora de inicio debe ser anterior a la hora de fin."}), 400
+
+    aula = str(data.get("aula", "")).strip() if data.get("aula") is not None else ""
+
+    usuario_id = session["usuario_id"]
+    db = get_db()
+
+    with db:
+        try:
+            asignatura_id = resolver_o_crear_asignatura(db, usuario_id, data)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
+
+        solapado = buscar_solapamiento_horario(db, usuario_id, dia_semana, hora_inicio, hora_fin)
+        if solapado is not None:
+            return jsonify({
+                "error": f"El horario se solapa con la clase existente '{solapado['asignatura_nombre']}' ({solapado['hora_inicio']} - {solapado['hora_fin']})."
+            }), 400
+
+        cursor = db.execute(
+            """INSERT INTO horarios_clases
+               (usuario_id, asignatura_id, dia_semana, hora_inicio, hora_fin, aula)
+               VALUES (?, ?, ?, ?, ?, ?)""",
+            (usuario_id, asignatura_id, dia_semana, hora_inicio, hora_fin, aula),
+        )
+        row = db.execute(
+            """SELECT h.id, h.usuario_id, h.asignatura_id, h.dia_semana,
+                      h.hora_inicio, h.hora_fin, h.aula,
+                      a.nombre AS asignatura_nombre, a.dificultad AS asignatura_dificultad,
+                      a.prioridad AS asignatura_prioridad
+               FROM horarios_clases h
+               JOIN asignaturas a ON h.asignatura_id = a.id
+               WHERE h.id = ? AND h.usuario_id = ?""",
+            (cursor.lastrowid, usuario_id),
+        ).fetchone()
+
+    return jsonify(horario_to_dict(row)), 201
+
+
+@app.get("/api/horarios/<int:horario_id>")
+@login_required
+def obtener_horario(horario_id):
+    """Devuelve los detalles de un bloque de clase del usuario actual."""
+    usuario_id = session["usuario_id"]
+    row = get_db().execute(
+        """SELECT h.id, h.usuario_id, h.asignatura_id, h.dia_semana,
+                  h.hora_inicio, h.hora_fin, h.aula,
+                  a.nombre AS asignatura_nombre, a.dificultad AS asignatura_dificultad,
+                  a.prioridad AS asignatura_prioridad
+           FROM horarios_clases h
+           JOIN asignaturas a ON h.asignatura_id = a.id
+           WHERE h.id = ? AND h.usuario_id = ?""",
+        (horario_id, usuario_id),
+    ).fetchone()
+    if row is None:
+        return jsonify({"error": "Bloque de horario no encontrado."}), 404
+    return jsonify(horario_to_dict(row)), 200
+
+
+@app.route("/api/horarios/<int:horario_id>", methods=["PATCH", "PUT"])
+@login_required
+def actualizar_horario(horario_id):
+    """Actualiza un bloque de clase existente."""
+    usuario_id = session["usuario_id"]
+    db = get_db()
+
+    actual = db.execute(
+        "SELECT * FROM horarios_clases WHERE id = ? AND usuario_id = ?",
+        (horario_id, usuario_id),
+    ).fetchone()
+    if actual is None:
+        return jsonify({"error": "Bloque de horario no encontrado."}), 404
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not data:
+        return jsonify({"error": "Debes enviar los campos que deseas actualizar."}), 400
+
+    dia_semana = actual["dia_semana"]
+    if "dia_semana" in data:
+        dia_norm = normalizar_dia_semana(data["dia_semana"])
+        if dia_norm not in DIAS_SEMANA_VALIDOS:
+            return jsonify({"error": "El día de la semana no es válido."}), 400
+        dia_semana = dia_norm
+
+    hora_inicio = str(data["hora_inicio"]).strip() if "hora_inicio" in data else actual["hora_inicio"]
+    hora_fin = str(data["hora_fin"]).strip() if "hora_fin" in data else actual["hora_fin"]
+
+    if not es_hora_valida(hora_inicio) or not es_hora_valida(hora_fin):
+        return jsonify({"error": "Las horas deben tener formato válido HH:MM."}), 400
+
+    if hora_inicio >= hora_fin:
+        return jsonify({"error": "La hora de inicio debe ser anterior a la hora de fin."}), 400
+
+    aula = str(data["aula"]).strip() if "aula" in data else actual["aula"]
+
+    with db:
+        asignatura_id = actual["asignatura_id"]
+        if "asignatura_id" in data or "asignatura_nombre" in data or "nombre_asignatura" in data:
+            try:
+                asignatura_id = resolver_o_crear_asignatura(db, usuario_id, data)
+            except ValueError as e:
+                return jsonify({"error": str(e)}), 400
+
+        solapado = buscar_solapamiento_horario(db, usuario_id, dia_semana, hora_inicio, hora_fin, exclude_id=horario_id)
+        if solapado is not None:
+            return jsonify({
+                "error": f"El horario modificado se solapa con '{solapado['asignatura_nombre']}' ({solapado['hora_inicio']} - {solapado['hora_fin']})."
+            }), 400
+
+        db.execute(
+            """UPDATE horarios_clases
+               SET asignatura_id = ?, dia_semana = ?, hora_inicio = ?, hora_fin = ?, aula = ?
+               WHERE id = ? AND usuario_id = ?""",
+            (asignatura_id, dia_semana, hora_inicio, hora_fin, aula, horario_id, usuario_id),
+        )
+        row = db.execute(
+            """SELECT h.id, h.usuario_id, h.asignatura_id, h.dia_semana,
+                      h.hora_inicio, h.hora_fin, h.aula,
+                      a.nombre AS asignatura_nombre, a.dificultad AS asignatura_dificultad,
+                      a.prioridad AS asignatura_prioridad
+               FROM horarios_clases h
+               JOIN asignaturas a ON h.asignatura_id = a.id
+               WHERE h.id = ? AND h.usuario_id = ?""",
+            (horario_id, usuario_id),
+        ).fetchone()
+
+    return jsonify(horario_to_dict(row)), 200
+
+
+@app.delete("/api/horarios/<int:horario_id>")
+@login_required
+def eliminar_horario(horario_id):
+    """Elimina un bloque de clase del horario."""
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            "DELETE FROM horarios_clases WHERE id = ? AND usuario_id = ?",
+            (horario_id, usuario_id),
+        )
+    if cursor.rowcount == 0:
+        return jsonify({"error": "Bloque de horario no encontrado."}), 404
+    return jsonify({"mensaje": "Clase eliminada del horario con éxito."}), 200
+
+
+# --- ENDPOINTS DÍAS Y PERÍODOS LIBRES ---
+
+@app.get("/api/periodos-libres")
+@login_required
+def listar_periodos_libres():
+    """Devuelve los períodos y días libres registrados por el usuario."""
+    usuario_id = session["usuario_id"]
+    rows = get_db().execute(
+        """SELECT id, usuario_id, fecha_inicio, fecha_fin, motivo
+           FROM periodos_libres
+           WHERE usuario_id = ?
+           ORDER BY fecha_inicio ASC, fecha_fin ASC, id ASC""",
+        (usuario_id,),
+    ).fetchall()
+    return jsonify([periodo_libre_to_dict(row) for row in rows]), 200
+
+
+@app.post("/api/periodos-libres")
+@login_required
+def crear_periodo_libre():
+    """Registra un nuevo día o rango de fechas libres/festivas."""
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Debes enviar un objeto JSON con las fechas del período libre."}), 400
+
+    fecha_inicio = str(data.get("fecha_inicio", "")).strip()
+    if not es_fecha_iso_valida(fecha_inicio):
+        return jsonify({"error": "La fecha de inicio debe tener formato válido AAAA-MM-DD."}), 400
+
+    fecha_fin = str(data.get("fecha_fin", "")).strip() if data.get("fecha_fin") else fecha_inicio
+    if not es_fecha_iso_valida(fecha_fin):
+        return jsonify({"error": "La fecha de fin debe tener formato válido AAAA-MM-DD."}), 400
+
+    if fecha_inicio > fecha_fin:
+        return jsonify({"error": "La fecha de inicio no puede ser posterior a la fecha de fin."}), 400
+
+    motivo = str(data.get("motivo", "")).strip()
+    if not motivo:
+        motivo = "Día libre"
+    elif len(motivo) > 200:
+        return jsonify({"error": "El motivo no puede superar los 200 caracteres."}), 400
+
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            """INSERT INTO periodos_libres (usuario_id, fecha_inicio, fecha_fin, motivo)
+               VALUES (?, ?, ?, ?)""",
+            (usuario_id, fecha_inicio, fecha_fin, motivo),
+        )
+        row = db.execute(
+            "SELECT id, usuario_id, fecha_inicio, fecha_fin, motivo FROM periodos_libres WHERE id = ?",
+            (cursor.lastrowid,),
+        ).fetchone()
+
+    return jsonify(periodo_libre_to_dict(row)), 201
+
+
+@app.get("/api/periodos-libres/<int:periodo_id>")
+@login_required
+def obtener_periodo_libre(periodo_id):
+    """Obtiene los detalles de un período libre propio."""
+    usuario_id = session["usuario_id"]
+    row = get_db().execute(
+        "SELECT id, usuario_id, fecha_inicio, fecha_fin, motivo FROM periodos_libres WHERE id = ? AND usuario_id = ?",
+        (periodo_id, usuario_id),
+    ).fetchone()
+    if row is None:
+        return jsonify({"error": "Período libre no encontrado."}), 404
+    return jsonify(periodo_libre_to_dict(row)), 200
+
+
+@app.route("/api/periodos-libres/<int:periodo_id>", methods=["PATCH", "PUT"])
+@login_required
+def actualizar_periodo_libre(periodo_id):
+    """Actualiza las fechas o motivo de un período libre existente."""
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    actual = db.execute(
+        "SELECT * FROM periodos_libres WHERE id = ? AND usuario_id = ?",
+        (periodo_id, usuario_id),
+    ).fetchone()
+    if actual is None:
+        return jsonify({"error": "Período libre no encontrado."}), 404
+
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not data:
+        return jsonify({"error": "Debes enviar los campos a actualizar."}), 400
+
+    fecha_inicio = str(data["fecha_inicio"]).strip() if "fecha_inicio" in data else actual["fecha_inicio"]
+    fecha_fin = str(data["fecha_fin"]).strip() if "fecha_fin" in data else actual["fecha_fin"]
+
+    if not es_fecha_iso_valida(fecha_inicio) or not es_fecha_iso_valida(fecha_fin):
+        return jsonify({"error": "Las fechas deben tener formato válido AAAA-MM-DD."}), 400
+
+    if fecha_inicio > fecha_fin:
+        return jsonify({"error": "La fecha de inicio no puede ser posterior a la fecha de fin."}), 400
+
+    motivo = actual["motivo"]
+    if "motivo" in data:
+        m = str(data["motivo"]).strip()
+        motivo = m if m else "Día libre"
+        if len(motivo) > 200:
+            return jsonify({"error": "El motivo no puede superar los 200 caracteres."}), 400
+
+    with db:
+        db.execute(
+            """UPDATE periodos_libres SET fecha_inicio = ?, fecha_fin = ?, motivo = ?
+               WHERE id = ? AND usuario_id = ?""",
+            (fecha_inicio, fecha_fin, motivo, periodo_id, usuario_id),
+        )
+        row = db.execute(
+            "SELECT id, usuario_id, fecha_inicio, fecha_fin, motivo FROM periodos_libres WHERE id = ?",
+            (periodo_id,),
+        ).fetchone()
+
+    return jsonify(periodo_libre_to_dict(row)), 200
+
+
+@app.delete("/api/periodos-libres/<int:periodo_id>")
+@login_required
+def eliminar_periodo_libre(periodo_id):
+    """Elimina un día o período libre."""
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    with db:
+        cursor = db.execute(
+            "DELETE FROM periodos_libres WHERE id = ? AND usuario_id = ?",
+            (periodo_id, usuario_id),
+        )
+    if cursor.rowcount == 0:
+        return jsonify({"error": "Período libre no encontrado."}), 404
+    return jsonify({"mensaje": "Período libre eliminado con éxito."}), 200
+
+
+# ==============================================================================
+# ARQUITECTURA / PREPARACIÓN PARA FUTURA PLANIFICACIÓN (HU02, HU05, HU06)
+# ==============================================================================
+
+MAPA_DIAS_SEMANA_PYTHON = {
+    0: "lunes",
+    1: "martes",
+    2: "miercoles",
+    3: "jueves",
+    4: "viernes",
+    5: "sabado",
+    6: "domingo",
+}
+
+
+def obtener_intervalos_ocupados(usuario_id, fecha_objetivo):
+    """
+    Consulta el horario de clases y los períodos libres de un usuario para una fecha determinada.
+
+    Determina si la fecha coincide con un día libre o festivo registrado y extrae las clases
+    semanales que se imparten ese día con sus respectivos intervalos horarios.
+
+    Esta función sirve como punto de partida arquitectónico para que el motor de planificación
+    automática (HU06, HU08) conozca la disponibilidad real del estudiante y evite agendar sesiones
+    durante horas lectivas o en períodos no lectivos.
+
+    Parámetros:
+        usuario_id (int): Identificador del estudiante.
+        fecha_objetivo (date | str): Fecha en formato 'AAAA-MM-DD' o instancia de date.
+
+    Retorna:
+        dict con:
+            - 'fecha': str 'AAAA-MM-DD'.
+            - 'dia_semana': str ('lunes', 'martes', etc.).
+            - 'es_dia_libre': bool (True si la fecha está dentro de algún período libre o festivo).
+            - 'motivo_dia_libre': str | None (etiqueta del período libre, si aplica).
+            - 'clases': list de dicts con las clases de ese día (vacío si no hay clases o es festivo).
+            - 'intervalos_ocupados': list de tuplas (hora_inicio, hora_fin, descripcion).
+    """
+    if isinstance(fecha_objetivo, str):
+        fecha_date = date.fromisoformat(fecha_objetivo.strip())
+        fecha_str = fecha_date.isoformat()
+    elif isinstance(fecha_objetivo, (date, datetime)):
+        fecha_date = fecha_objetivo if isinstance(fecha_objetivo, date) and not isinstance(fecha_objetivo, datetime) else fecha_objetivo.date()
+        fecha_str = fecha_date.isoformat()
+    else:
+        raise ValueError("fecha_objetivo debe ser un objeto date, datetime o una cadena 'AAAA-MM-DD'.")
+
+    dia_semana = MAPA_DIAS_SEMANA_PYTHON[fecha_date.weekday()]
+    db = get_db()
+
+    # 1. Comprobar si coincide con un período libre
+    periodo_libre = db.execute(
+        """SELECT id, fecha_inicio, fecha_fin, motivo
+           FROM periodos_libres
+           WHERE usuario_id = ? AND ? BETWEEN fecha_inicio AND fecha_fin
+           LIMIT 1""",
+        (usuario_id, fecha_str),
+    ).fetchone()
+
+    es_dia_libre = periodo_libre is not None
+    motivo_dia_libre = periodo_libre["motivo"] if es_dia_libre else None
+
+    # 2. Obtener clases del día de la semana correspondiente
+    filas_clases = db.execute(
+        """SELECT h.id, h.asignatura_id, h.dia_semana, h.hora_inicio, h.hora_fin, h.aula,
+                  a.nombre AS asignatura_nombre
+           FROM horarios_clases h
+           JOIN asignaturas a ON h.asignatura_id = a.id
+           WHERE h.usuario_id = ? AND h.dia_semana = ?
+           ORDER BY h.hora_inicio ASC""",
+        (usuario_id, dia_semana),
+    ).fetchall()
+
+    clases = [dict(f) for f in filas_clases]
+    intervalos_ocupados = []
+
+    if es_dia_libre:
+        # En día libre o festivo, se marca el día completo o se anota el período
+        intervalos_ocupados.append(("00:00", "23:59", f"Período libre: {motivo_dia_libre}"))
+    else:
+        for c in clases:
+            intervalos_ocupados.append((c["hora_inicio"], c["hora_fin"], f"Clase: {c['asignatura_nombre']}"))
+
+    return {
+        "fecha": fecha_str,
+        "dia_semana": dia_semana,
+        "es_dia_libre": es_dia_libre,
+        "motivo_dia_libre": motivo_dia_libre,
+        "clases": clases if not es_dia_libre else [],
+        "intervalos_ocupados": intervalos_ocupados,
+    }
+
+
+def is_time_slot_available(usuario_id, target_datetime, duration_minutes=60):
+    """
+    Verifica si una franja de estudio propuesta está libre de clases lectivas y no cae en festivo.
+
+    Parámetros:
+        usuario_id (int): Identificador del estudiante.
+        target_datetime (datetime | str): Fecha y hora de inicio de la franja.
+        duration_minutes (int): Duración en minutos de la franja requerida (por defecto 60).
+
+    Retorna:
+        bool: True si la franja horaria no se solapa con ninguna clase lectiva programada
+              para ese día ni coincide con un día festivo/libre completo.
+    """
+    if isinstance(target_datetime, str):
+        target_dt = datetime.fromisoformat(target_datetime.strip())
+    elif isinstance(target_datetime, datetime):
+        target_dt = target_datetime
+    else:
+        raise ValueError("target_datetime debe ser una instancia de datetime o cadena ISO.")
+
+    fecha_target = target_dt.date()
+    info_dia = obtener_intervalos_ocupados(usuario_id, fecha_target)
+
+    # Si es día libre, depende de si se permite estudiar en festivos;
+    # arquitecturalmente no hay clases, pero el día está bloqueado por descanso/festivo.
+    if info_dia["es_dia_libre"]:
+        return False
+
+    inicio_slot_str = target_dt.strftime("%H:%M")
+    fin_slot_dt = target_dt + timedelta(minutes=duration_minutes)
+    fin_slot_str = fin_slot_dt.strftime("%H:%M")
+
+    # Comprobar solapamiento con las clases de ese día
+    for clase in info_dia["clases"]:
+        c_inicio = clase["hora_inicio"]
+        c_fin = clase["hora_fin"]
+        # Solapamiento [inicio_slot, fin_slot) con [c_inicio, c_fin)
+        if inicio_slot_str < c_fin and fin_slot_str > c_inicio:
+            return False
+
+    return True
 
 # Prepara o actualiza el esquema al importar el módulo, antes de atender rutas.
 initialize_database()

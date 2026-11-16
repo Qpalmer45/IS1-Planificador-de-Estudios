@@ -150,6 +150,10 @@ function switchTab(tabId) {
 
   // Conserva la pestaña en el hash para permitir enlaces directos sin recargar.
   history.replaceState(null, "", `#${tabId}`);
+
+  if ((tabId === "horarios" || tabId === "horario") && typeof window.recargarHorarios === "function") {
+    window.recargarHorarios();
+  }
 }
 
 /** Conecta los botones de navegación y restaura la pestaña indicada por la URL. */
@@ -1043,6 +1047,7 @@ async function loadAsignaturas(selectedId = selectedAsignaturaId) {
     showSubjectFeedback(err.message);
   }
 }
+window.loadAsignaturas = loadAsignaturas;
 
 /** Sustituye una fila por un formulario y guarda el nombre actualizado. */
 function editAsignatura(asignatura, item) {
