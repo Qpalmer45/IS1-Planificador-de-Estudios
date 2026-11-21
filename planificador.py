@@ -73,22 +73,20 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
                 # Plazos más cercanos primero; empate por fecha e identificador.
                 tarea = min(candidatos, key=lambda a: (a["_fecha"], a["id"]))
                 materia = next((a for a in materias if a["id"] == tarea.get("asignatura_id")), None)
-                if materia is None:
-                    # Las actividades HU04 pueden no tener asignatura: se asigna
-                    # la sesión a una materia existente y se conserva el título.
-                    materia = min(materias, key=lambda a: (
-                        minutos_materia[a["id"]] / PESO.get(a.get("prioridad"), 2),
-                        -PESO.get(a.get("dificultad"), 2), a["id"]))
+                # HU04 no tiene campo asignatura_id: no inventamos esa relación.
+                # Las actividades independientes se muestran como tal.
                 tarea["_restante"] = max(0, tarea["_restante"] - duracion)
             else:
                 tarea = None
                 materia = min(materias, key=lambda a: (
                     minutos_materia[a["id"]] / PESO.get(a.get("prioridad"), 2),
                     -PESO.get(a.get("dificultad"), 2), a["id"]))
-            minutos_materia[materia["id"]] += duracion
+            if materia is not None:
+                minutos_materia[materia["id"]] += duracion
             sesiones.append({
                 "fecha": fecha, "inicio": formato(cursor), "fin": formato(final),
-                "asignatura_id": materia["id"], "asignatura": materia["nombre"],
+                "asignatura_id": materia["id"] if materia else None,
+                "asignatura": materia["nombre"] if materia else "Actividad pendiente",
                 "actividad": tarea["titulo"] if tarea else None,
                 "tipo": tarea["tipo"] if tarea else None,
             })
