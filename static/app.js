@@ -900,6 +900,15 @@ function startEditingTopic(tema, item) {
   titleInput.value = tema.titulo;
   titleInput.setAttribute("aria-label", `Título de ${tema.titulo}`);
 
+  const weeklyInput = document.createElement("input");
+  weeklyInput.type = "number";
+  weeklyInput.min = "0";
+  weeklyInput.max = "10080";
+  weeklyInput.step = "1";
+  weeklyInput.required = true;
+  weeklyInput.value = String(asignatura.minutos_semanales ?? 0);
+  weeklyInput.setAttribute("aria-label", `Minutos semanales para ${asignatura.nombre}`);
+
   const saveButton = document.createElement("button");
   saveButton.type = "submit";
   saveButton.className = "action-btn save";
@@ -1111,7 +1120,7 @@ function editAsignatura(asignatura, item) {
       const newDiff = diffSelect.value;
       const currentPriority = asignatura.prioridad || "media";
       const newPriority = prioritySelect.value;
-      const patchBody = { nombre: input.value };
+      const patchBody = { nombre: input.value, minutos_semanales: Number(weeklyInput.value) };
       if (newDiff !== currentDiff) {
         patchBody.dificultad = newDiff;
       }
@@ -1128,7 +1137,7 @@ function editAsignatura(asignatura, item) {
     }
   });
 
-  form.append(input, diffSelect, prioritySelect, saveButton, cancelButton);
+  form.append(input, diffSelect, prioritySelect, weeklyInput, saveButton, cancelButton);
   item.replaceChildren(form);
   input.focus();
 }
@@ -1283,7 +1292,8 @@ function setupSubjectEvents() {
 
     const diffInput = document.querySelector("#subject-difficulty");
     const priorityInput = document.querySelector("#subject-priority");
-    const payload = { nombre };
+    const weeklyInput = document.getElementById("subject-weekly-minutes");
+    const payload = { nombre, minutos_semanales: weeklyInput ? Number(weeklyInput.value) : 0 };
     if (diffInput && diffInput.value) {
       payload.dificultad = diffInput.value;
     }
@@ -1301,6 +1311,7 @@ function setupSubjectEvents() {
       subjectNameInput.value = "";
       if (diffInput) diffInput.value = "media";
       if (priorityInput) priorityInput.value = "media";
+      if (weeklyInput) weeklyInput.value = "0";
       await loadAsignaturas(null);
       subjectNameInput.focus();
     } catch (err) {
