@@ -2223,3 +2223,18 @@ body.subject-modal-open {
   color: #ffffff;
   border-color: var(--danger);
 }
+
+
+/* Renovación visual: base y superficies */
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --primary-light: #eef2ff;
+  --primary-border: #c7d2fe;
+  --bg-page: #f4f6fb;
+  --border-card: #e4e9f3;
+  --radius-lg: 20px;
+  --shadow-card: 0 16px 42px -20px rgba(30, 41, 85, .25);
+}
+body { background: radial-gradient(circle at 92% 4%, #e9edff 0, transparent 34%), var(--bg-page); }
+.main-content { position: relative; }
