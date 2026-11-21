@@ -2308,3 +2308,38 @@ body { background: radial-gradient(circle at 92% 4%, #e9edff 0, transparent 34%)
   .module-card, .todo-item, .subject-list-item, .tab-btn, .grid-slot-cell { transition: none; }
   .module-card:hover { transform: none; }
 }
+
+
+/* Horario semanal: más anchura para que las clases no queden comprimidas. */
+.schedule-container { max-width: 1480px; width: 100%; }
+.schedule-panel { padding: clamp(16px, 2.2vw, 30px); }
+.schedule-grid-wrapper {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-gutter: stable;
+}
+.schedule-grid { min-width: max-content; width: 100%; }
+.grid-header-cell { min-height: 52px; height: 52px; font-size: .92rem; letter-spacing: -.01em; }
+.grid-day-column { min-width: 0; }
+.schedule-class-block { padding: 8px 10px; gap: 3px; }
+.class-block-title {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  line-height: 1.25;
+  font-size: .86rem;
+}
+.class-block-time { font-size: .76rem; font-weight: 650; }
+.class-block-room { font-size: .72rem; }
+.schedule-grid-hint { line-height: 1.55; }
+@media (max-width: 900px) {
+  .schedule-container { max-width: 100%; }
+  .schedule-toolbar { align-items: flex-start; }
+  .schedule-view-toggles { flex-wrap: wrap; }
+  .schedule-grid-wrapper { scrollbar-width: thin; }
+}
