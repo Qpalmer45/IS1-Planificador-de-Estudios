@@ -7,8 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Iniciar Sesión | Planificador de Estudios</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
 </head>
 <body class="auth-body">
+  <div class="auth-theme-control"><button type="button" class="theme-toggle" data-theme-toggle aria-label="Activar modo oscuro" aria-pressed="false">🌙 <span data-theme-label>Modo oscuro</span></button></div>
   <!-- Tarjeta centrada de autenticación: identidad, formulario, avisos y enlace
        para cambiar a la pantalla de registro. -->
   <div class="auth-container">
