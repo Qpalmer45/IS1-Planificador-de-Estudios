@@ -353,8 +353,7 @@
               <label id="tarea-tiempo-total">Tiempo estimado total (min)<input type="number" name="minutos_estimados" min="1" max="9007199254740991" step="1" required placeholder="90"></label>
               <label id="tarea-tiempo-semanal">Objetivo semanal (min; 0 = automático)<input type="number" name="minutos_semanales" min="0" max="10080" step="1" value="0" required></label>
             </fieldset>
-            <div class="subject-actions">
-              <button type="submit" id="tarea-guardar" class="primary-btn">Crear actividad</button>
+            <p id="tarea-aviso-examen" class="exam-study-notice" role="note" hidden>\n              <strong>Tiempo de estudio del examen:</strong> no necesitas introducir horas aquí, porque se utilizan las horas semanales de la asignatura seleccionada. Para modificarlas, ve a <strong>Mis asignaturas</strong> y edita esa asignatura.\n            </p>\n            <div class="subject-actions">\n              <button type="submit" id="tarea-guardar" class="primary-btn">Crear actividad</button>
               <button type="button" id="tarea-cancelar" class="secondary-btn" hidden>Cancelar edición</button>
             </div>
           </form>
