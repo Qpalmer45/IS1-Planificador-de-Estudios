@@ -63,31 +63,39 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
         ocupados.sort()
         sesiones = []
         cursor = desde
-        while materias and not libre and cursor + duracion <= hasta:
-            final = cursor + duracion
-            choque = next(((a, b) for a, b in ocupados if cursor < b and final > a), None)
-            if choque:
-                cursor = max(cursor, choque[1])
-                continue
-            candidatos = [a for a in pendientes if a["_restante"] > 0 and a["_fecha"] >= actual and (not a.get("minutos_semanales") or minutos_actividad[a["id"]] < a["minutos_semanales"])]
+        while (materias or pendientes) and not libre and cursor < hasta:
+            candidatos = [a for a in pendientes if a["_restante"] > 0 and a["_fecha"] >= actual
+                          and (not a.get("minutos_semanales") or minutos_actividad[a["id"]] < a["minutos_semanales"])]
             if candidatos:
-                # Plazos más cercanos primero; empate por fecha e identificador.
                 tarea = min(candidatos, key=lambda a: (a["_fecha"], a["id"]))
                 materia = next((a for a in materias if a["id"] == tarea.get("asignatura_id")), None)
-                # HU04 no tiene campo asignatura_id: no inventamos esa relación.
-                # Las actividades independientes se muestran como tal.
-                tarea["_restante"] = max(0, tarea["_restante"] - duracion)
-                minutos_actividad[tarea["id"]] += duracion
+                restante = tarea["_restante"]
+                if tarea.get("minutos_semanales"):
+                    restante = min(restante, tarea["minutos_semanales"] - minutos_actividad[tarea["id"]])
             else:
                 tarea = None
-                elegibles = [a for a in materias if not a.get("minutos_semanales") or minutos_materia[a["id"]] < a["minutos_semanales"]]
+                elegibles = [a for a in materias if not a.get("minutos_semanales")
+                             or minutos_materia[a["id"]] < a["minutos_semanales"]]
                 if not elegibles:
                     break
                 materia = min(elegibles, key=lambda a: (
                     minutos_materia[a["id"]] / PESO.get(a.get("prioridad"), 2),
                     -PESO.get(a.get("dificultad"), 2), a["id"]))
+                restante = (materia["minutos_semanales"] - minutos_materia[materia["id"]]
+                            if materia.get("minutos_semanales") else duracion)
+            bloque = min(duracion, restante, hasta - cursor)
+            if bloque <= 0:
+                break
+            final = cursor + bloque
+            choque = next(((a, b) for a, b in ocupados if cursor < b and final > a), None)
+            if choque:
+                cursor = max(cursor, choque[1])
+                continue
+            if tarea is not None:
+                tarea["_restante"] -= bloque
+                minutos_actividad[tarea["id"]] += bloque
             if materia is not None:
-                minutos_materia[materia["id"]] += duracion
+                minutos_materia[materia["id"]] += bloque
             sesiones.append({
                 "fecha": fecha, "inicio": formato(cursor), "fin": formato(final),
                 "asignatura_id": materia["id"] if materia else None,
