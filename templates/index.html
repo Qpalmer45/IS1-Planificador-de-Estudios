@@ -668,37 +668,29 @@
       </section>
     </div>
 
-    <!-- Información de la futura generación automática y replanificación del estudio. -->
     <section id="tab-planificador" class="tab-content">
-      <div class="roadmap-card">
-        <div class="roadmap-header">
-          <div class="roadmap-badge">En preparación</div>
-          <h2>Plan de estudio automático</h2>
-          <p>El núcleo inteligente del proyecto que optimiza tus horas de estudio antes de cada examen.</p>
-        </div>
-        <div class="roadmap-features">
-          <div class="feature-item">
-            <span class="feature-icon">🤖</span>
-            <strong>Planificación personalizada:</strong> Distribución automática según cercanía de exámenes y dificultad.
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon">☕</span>
-            <strong>Descansos:</strong> Sesiones personalizables con técnicas de estudio (Pomodoro / descansos periódicos).
-          </div>
-          <div class="feature-item">
-            <span class="feature-icon">🔄</span>
-            <strong>Cambios de planes:</strong> Recuperación automática de sesiones no realizadas.
-          </div>
-        </div>
-        <div class="roadmap-action">
-          <button type="button" class="secondary-btn" data-open-tab="inicio">← Volver al Inicio</button>
-        </div>
-      </div>
+      <div class="section-header"><div class="section-title-wrap">
+        <h2>Mi plan de estudio</h2>
+        <p>Organiza automáticamente tus sesiones de la semana sin solaparlas con las clases.</p>
+      </div></div>
+      <form id="plan-form" class="plan-form">
+        <label>Primer día <input id="plan-fecha" type="date" required></label>
+        <label>Desde <input id="plan-desde" type="time" value="16:00" required></label>
+        <label>Hasta <input id="plan-hasta" type="time" value="21:00" required></label>
+        <label>Sesión (min) <input id="plan-duracion" type="number" min="25" max="180" value="60" required></label>
+        <label>Descanso (min) <input id="plan-descanso" type="number" min="0" max="60" value="15" required></label>
+        <button class="primary-btn" type="submit">Generar horario</button>
+      </form>
+      <p class="plan-notice">Vista previa: puedes cambiar los parámetros y volver a generar el horario. Las sesiones todavía no se guardan.</p>
+      <div id="plan-feedback" class="feedback-alert" role="status" aria-live="polite"></div>
+      <div id="plan-summary" class="plan-summary"></div>
+      <div id="plan-week" class="plan-week" aria-label="Horario de estudio semanal"></div>
     </section>
 
   </main>
   <script src="{{ url_for('static', filename='app.js') }}"></script>
   <script src="{{ url_for('static', filename='tareas.js') }}"></script>
   <script src="{{ url_for('static', filename='horario.js') }}"></script>
+  <script src="{{ url_for('static', filename='plan.js') }}"></script>
 </body>
 </html>
