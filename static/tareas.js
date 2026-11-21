@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const resumen = document.createElement("small");
       const [anio, mes, dia] = actividad.fecha_limite.split("-");
       const tipo = actividad.tipo.charAt(0).toUpperCase() + actividad.tipo.slice(1);
-      resumen.textContent = tipo + " · " + dia + "/" + mes + "/" + anio + " · " + actividad.minutos_estimados + " min";
+      resumen.textContent = tipo + " · " + dia + "/" + mes + "/" + anio + " · " + actividad.minutos_estimados + " min · " + (actividad.minutos_semanales || 0) + " min/semana";
       detalle.append(titulo, resumen);
 
       const acciones = document.createElement("div");
@@ -135,6 +135,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const datos = Object.fromEntries(new FormData(form));
     datos.titulo = datos.titulo.trim();
     datos.minutos_estimados = Number(datos.minutos_estimados);
+    datos.minutos_semanales = Number(datos.minutos_semanales);
     const ruta = editando ? "/api/tareas/" + editando.id : "/api/tareas";
     if (editando) {
       for (const campo of Object.keys(datos)) {
