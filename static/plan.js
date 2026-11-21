@@ -11,6 +11,36 @@
   const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
   dateInput.value = localDate.toISOString().slice(0, 10);
 
+  // Persistencia por usuario en este navegador.
+  const userEmail = document.getElementById("user-email-display")?.textContent?.trim();
+  const storageKey = userEmail ? "studyplan:plan-semanal:v1:" + userEmail : null;
+  const fields = ["plan-fecha", "plan-desde", "plan-hasta", "plan-duracion", "plan-descanso"];
+
+  function guardarPlan(plan) {
+    if (!storageKey) return;
+    try {
+      const parametros = Object.fromEntries(fields.map(id => [id, document.getElementById(id).value]));
+      localStorage.setItem(storageKey, JSON.stringify({ parametros, plan }));
+    } catch (_) {
+      feedback.textContent = "Horario generado, pero el navegador no permite guardarlo.";
+    }
+  }
+
+  function restaurarPlan() {
+    if (!storageKey) return;
+    try {
+      const guardado = JSON.parse(localStorage.getItem(storageKey) || "null");
+      if (!guardado || !guardado.plan || !Array.isArray(guardado.plan.dias)) return;
+      for (const id of fields) {
+        if (typeof guardado.parametros?.[id] === "string") document.getElementById(id).value = guardado.parametros[id];
+      }
+      render(guardado.plan);
+      feedback.textContent = "Último horario recuperado. Si cambiaste asignaturas u objetivos, vuelve a generarlo.";
+    } catch (_) {
+      // Un almacenamiento vacío o dañado no impide generar un horario nuevo.
+    }
+  }
+
   function text(tag, value, className) {
     const node = document.createElement(tag);
     node.textContent = value;
@@ -44,11 +74,11 @@
     }
   }
 
+  restaurarPlan();
+
   form.addEventListener("submit", async event => {
     event.preventDefault();
     feedback.textContent = "Generando horario…";
-    week.replaceChildren();
-    summary.textContent = "";
     const params = new URLSearchParams({
       inicio: dateInput.value,
       desde: document.getElementById("plan-desde").value,
@@ -63,7 +93,8 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo generar el plan.");
       render(data);
-      feedback.textContent = "Horario generado. Puedes cambiar los parámetros y volver a generarlo.";
+      feedback.textContent = "Horario generado y conservado en este navegador.";
+      guardarPlan(data);
     } catch (error) {
       feedback.textContent = error.message || "No se pudo conectar con el servidor.";
     } finally {
