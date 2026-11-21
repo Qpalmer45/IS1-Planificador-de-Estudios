@@ -39,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function actualizarCamposExamen() {
     const examen = form.elements.tipo.value === "examen";
+    document.getElementById("tarea-aviso-examen").hidden = !examen;
     const total = document.getElementById("tarea-tiempo-total");
     const semanal = document.getElementById("tarea-tiempo-semanal");
     total.hidden = examen;
