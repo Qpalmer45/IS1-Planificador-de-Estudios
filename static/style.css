@@ -2252,3 +2252,13 @@ body { background: radial-gradient(circle at 92% 4%, #e9edff 0, transparent 34%)
 .tab-btn { border-radius: 11px; padding: 10px 13px; }
 .tab-btn:hover { background: #f1f3fc; }
 .tab-btn.active { box-shadow: inset 0 0 0 1px #d9dfff; }
+
+
+/* Panel de inicio: ritmo, profundidad y jerarquía */
+.welcome-card { border-radius: 24px; box-shadow: var(--shadow-card); }
+.welcome-text h2 { letter-spacing: -.035em; line-height: 1.15; }
+.metric-card, .module-card, .callout-card { border-radius: 19px; box-shadow: 0 8px 28px -20px rgba(30,41,85,.25); }
+.module-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.module-card:hover { transform: translateY(-3px); box-shadow: 0 18px 36px -22px rgba(30,41,85,.3); }
+.metric-value { letter-spacing: -.045em; }
+.section-title-wrap h3, .header-titles h2 { letter-spacing: -.025em; }
