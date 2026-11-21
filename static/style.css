@@ -2529,3 +2529,26 @@ html[data-theme="dark"] .app-body .nav-tabs .tab-btn.active {
   .app-body .metrics-grid,
   .app-body .modules-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+
+/* Plan semanal automático */
+.plan-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; align-items:end; margin:22px 0 12px; padding:20px; border:1px solid var(--border-card); border-radius:16px; background:var(--bg-card); }
+.plan-form label { display:flex; flex-direction:column; gap:7px; font-size:.85rem; font-weight:650; color:var(--text-main); }
+.plan-form input { width:100%; min-width:0; box-sizing:border-box; border:1px solid var(--border-card); border-radius:9px; background:var(--bg-page); color:var(--text-main); padding:11px; font:inherit; }
+.plan-form button { min-height:44px; }
+.plan-notice { color:var(--text-muted); font-size:.88rem; }
+.plan-summary { margin:16px 0; font-weight:700; color:var(--text-main); }
+.plan-week { display:grid; grid-template-columns:repeat(7,minmax(170px,1fr)); gap:12px; overflow-x:auto; padding-bottom:10px; }
+.plan-day { min-width:0; min-height:190px; padding:14px 10px; border:1px solid var(--border-card); border-radius:14px; background:var(--bg-card); }
+.plan-day h3 { margin:0 0 14px; font-size:.88rem; text-transform:capitalize; color:var(--text-main); }
+.plan-session { display:flex; flex-direction:column; gap:4px; margin-bottom:9px; padding:10px; border-radius:10px; border-left:3px solid var(--primary); background:var(--primary-light); color:var(--text-main); overflow-wrap:anywhere; }
+.plan-session-time { font-size:.78rem; font-weight:650; color:var(--text-body); }
+.plan-session strong { font-size:.88rem; }
+.plan-session small { font-size:.78rem; color:var(--text-body); }
+.plan-empty { color:var(--text-muted); font-size:.83rem; }
+html[data-theme="dark"] .plan-form,html[data-theme="dark"] .plan-day { background:#172235; border-color:#35445b; }
+html[data-theme="dark"] .plan-session { background:#263651; border-color:#a5b4fc; color:#f1f5f9; }
+html[data-theme="dark"] .plan-form input { background:#202e45; color:#f1f5f9; border-color:#42516a; }
+@media(max-width:1450px){ .plan-week { grid-template-columns:repeat(4,minmax(190px,1fr)); } }
+@media(max-width:900px){ .plan-week { grid-template-columns:repeat(2,minmax(160px,1fr)); } }
+@media(max-width:550px){ .plan-week { grid-template-columns:minmax(0,1fr); } }
