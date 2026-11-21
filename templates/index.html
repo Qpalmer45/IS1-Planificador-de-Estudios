@@ -8,6 +8,7 @@
   <title>Planificador de Estudios | Dashboard</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   
+<script src="{{ url_for('static', filename='theme.js') }}"></script>
 </head>
 <body class="app-body">
   <!-- Marco principal de la aplicación: navegación, perfil y acceso a las vistas. -->
@@ -59,6 +60,7 @@
       </nav>
 
       <!-- Datos del usuario insertados desde Flask y botón para cerrar sesión. -->
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Activar modo oscuro" aria-pressed="false">🌙 <span data-theme-label>Modo oscuro</span></button>
       <div class="nav-user">
         <div class="user-info">
           <div class="user-avatar" id="user-avatar">
@@ -146,7 +148,7 @@
             <span class="metric-label">Horas de Estudio</span>
             <span class="metric-value">0 h</span>
           </div>
-          <span class="metric-sub">Próximamente (HU22)</span>
+          <span class="metric-sub">Estadísticas disponibles próximamente</span>
         </div>
       </div>
 
@@ -179,7 +181,7 @@
     <div class="dashboard-modules">
       <div class="section-title-wrap">
         <h3>Módulos de la Aplicación</h3>
-        <p>Evolución del sistema planificado por historias de usuario en Scrum</p>
+        <p>Accede rápidamente a las herramientas para organizar tus estudios</p>
       </div>
 
       
@@ -189,12 +191,12 @@
           <!-- Módulo activo: HU27 -->
           <article class="module-card card-active">
             <div class="module-header">
-              <span class="status-pill status-ready">✓ Implementado en Sprint 1</span>
-              <h4>Lista de To-Dos Rápidos (HU27)</h4>
+              <span class="status-pill status-ready">✓ Disponible</span>
+              <h4>Notas y tareas rápidas</h4>
             </div>
             <p>Bloc de notas ligeras y recordatorios personales inmediatos sin horarios ni fechas límite fijas.</p>
             <div class="module-footer">
-              <span class="module-tag">Independiente del algoritmo de estudio</span>
+              <span class="module-tag">Tus notas personales</span>
               <button type="button" class="btn-text" id="btn-module-todos">Abrir panel →</button>
             </div>
           </article>
@@ -203,7 +205,7 @@
           <article class="module-card">
             <div class="module-header">
               <span class="status-pill status-ready">✓ Disponible</span>
-              <h4>Gestión de Asignaturas (HU01, HU23)</h4>
+              <h4>Mis asignaturas</h4>
             </div>
             <p>Crea y organiza tus materias; cada asignatura tiene su propio apartado independiente.</p>
             <div class="module-footer">
@@ -216,7 +218,7 @@
           <article class="module-card card-active">
             <div class="module-header">
               <span class="status-pill status-ready">✓ Disponible</span>
-              <h4>Horario de Clases y Días Libres (HU02, HU05)</h4>
+              <h4>Horario de clases y días libres</h4>
             </div>
             <p>Introduce tu horario semanal de clases y gestiona días libres o festivos para organizar tu disponibilidad académica.</p>
             <div class="module-footer">
@@ -229,7 +231,7 @@
           <article class="module-card">
             <div class="module-header">
               <span class="status-pill status-pending">Próximamente</span>
-              <h4>Generación Automática del Plan (HU06, HU08)</h4>
+              <h4>Plan de estudio automático</h4>
             </div>
             <p>Algoritmo que calcula y distribuye las sesiones de estudio óptimas según proximidad de exámenes y descansos.</p>
             <div class="module-footer">
@@ -242,8 +244,8 @@
         <div class="callout-card">
           <div class="callout-icon">ℹ️</div>
           <div class="callout-body">
-            <strong>Desconexión del To-Do respecto al núcleo del proyecto (HU27):</strong>
-            <span>La lista de To-Dos rápidos funciona como un panel de notas personales desvinculado del algoritmo de planificación y del horario de clases, reservando la planificación formal con fecha límite y tiempos estimados para la Gestión de Tareas y Entregas (HU04).</span>
+            <strong>¿Para qué sirven las notas rápidas?</strong>
+            <span>Úsalas para apuntar ideas y pequeños pendientes. Para trabajos y entregas con fecha límite, utiliza el apartado de tareas académicas.</span>
           </div>
         </div>
       </div>
@@ -259,7 +261,7 @@
             <p>Anota recordatorios, ideas o tareas rápidas para organizar tu día.</p>
           </div>
           <div class="scope-badge" title="Funcionalidad independiente del calendario de exámenes">
-            <span>📌 Panel rápido personal (HU27)</span>
+            <span>📌 Notas personales</span>
           </div>
         </header>
 
@@ -670,22 +672,22 @@
     <section id="tab-planificador" class="tab-content">
       <div class="roadmap-card">
         <div class="roadmap-header">
-          <div class="roadmap-badge">Próximo Sprint</div>
-          <h2>Generación Automática del Plan de Estudio (HU06, HU08, HU11, HU15)</h2>
+          <div class="roadmap-badge">En preparación</div>
+          <h2>Plan de estudio automático</h2>
           <p>El núcleo inteligente del proyecto que optimiza tus horas de estudio antes de cada examen.</p>
         </div>
         <div class="roadmap-features">
           <div class="feature-item">
             <span class="feature-icon">🤖</span>
-            <strong>HU06 & HU08 - Generación y Priorización:</strong> Distribución automática según cercanía de exámenes y dificultad.
+            <strong>Planificación personalizada:</strong> Distribución automática según cercanía de exámenes y dificultad.
           </div>
           <div class="feature-item">
             <span class="feature-icon">☕</span>
-            <strong>HU11 - Descansos inteligentes:</strong> Sesiones personalizables con técnicas de estudio (Pomodoro / descansos periódicos).
+            <strong>Descansos:</strong> Sesiones personalizables con técnicas de estudio (Pomodoro / descansos periódicos).
           </div>
           <div class="feature-item">
             <span class="feature-icon">🔄</span>
-            <strong>HU15 - Replanificación:</strong> Recuperación automática de sesiones no realizadas.
+            <strong>Cambios de planes:</strong> Recuperación automática de sesiones no realizadas.
           </div>
         </div>
         <div class="roadmap-action">
