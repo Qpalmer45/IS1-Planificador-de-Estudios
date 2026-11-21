@@ -54,7 +54,8 @@ class GeneradorSemanalTests(unittest.TestCase):
             {"id": 1, "titulo": "Entrega", "tipo": "entrega", "fecha_limite": "2026-11-27", "minutos_estimados": 60},
             {"id": 2, "titulo": "Examen", "tipo": "examen", "fecha_limite": "2026-11-24", "minutos_estimados": 60, "asignatura_id": 1},
         ]
-        plan = generar_semana("2026-11-23", ASIGNATURAS, actividades, [], [],
+        materias = [{**ASIGNATURAS[0], "minutos_semanales": 60}, ASIGNATURAS[1]]
+        plan = generar_semana("2026-11-23", materias, actividades, [], [],
                              hora_inicio="16:00", hora_fin="18:00", duracion=60, descanso=0)
         self.assertEqual(plan["dias"][0]["sesiones"][0]["actividad"], "Examen")
 
