@@ -1087,6 +1087,46 @@ def api_datos_planificacion():
     return jsonify(obtener_datos_planificacion(usuario_id)), 200
 
 
+# --- Vista previa del plan semanal: no persiste sesiones (HU42). ---
+@app.get("/api/plan/semana")
+@login_required
+def api_plan_semana():
+    from planificador import generar_semana
+    usuario_id = session["usuario_id"]
+    inicio = request.args.get("inicio", hoy_planificador().isoformat())
+    try:
+        # Validación estricta y límites para evitar cargas excesivas.
+        duracion = int(request.args.get("duracion", "60"))
+        descanso = int(request.args.get("descanso", "15"))
+        if not (25 <= duracion <= 180 and 0 <= descanso <= 60):
+            raise ValueError("Duración o descanso fuera de rango.")
+        fecha_inicio = date.fromisoformat(inicio)
+        if not (hoy_planificador() - timedelta(days=7) <= fecha_inicio <= hoy_planificador() + timedelta(days=365)):
+            raise ValueError("La fecha debe estar entre hace siete días y dentro de un año.")
+        db = get_db()
+        materias = [dict(row) for row in db.execute(
+            "SELECT id, nombre, dificultad, prioridad FROM asignaturas WHERE usuario_id = ? ORDER BY id",
+            (usuario_id,)).fetchall()]
+        actividades = [dict(row) for row in db.execute(
+            """SELECT id, titulo, tipo, fecha_limite, minutos_estimados
+               FROM tareas_planificadas WHERE usuario_id = ? AND fecha_limite >= ?
+               ORDER BY fecha_limite, id""", (usuario_id, inicio)).fetchall()]
+        clases = [dict(row) for row in db.execute(
+            """SELECT dia_semana, hora_inicio, hora_fin FROM horarios_clases
+               WHERE usuario_id = ?""", (usuario_id,)).fetchall()]
+        periodos = [dict(row) for row in db.execute(
+            """SELECT fecha_inicio, fecha_fin FROM periodos_libres
+               WHERE usuario_id = ? AND fecha_fin >= ?""", (usuario_id, inicio)).fetchall()]
+        plan = generar_semana(
+            fecha_inicio, materias, actividades, clases, periodos,
+            hora_inicio=request.args.get("desde", "16:00"),
+            hora_fin=request.args.get("hasta", "21:00"),
+            duracion=duracion, descanso=descanso)
+    except (ValueError, TypeError, OverflowError) as exc:
+        return jsonify(error=str(exc)), 400
+    return jsonify(plan), 200
+
+
 # ==============================================================================
 # HORARIOS DE CLASES Y PERÍODOS LIBRES (DISPONIBILIDAD ACADÉMICA)
 # ==============================================================================
