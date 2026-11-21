@@ -228,7 +228,7 @@
     const alturaFilaPx = 60; // 60px por hora
 
     // Configurar columnas de la cuadrícula: 1 columna de horas (70px) + numDias columnas de día
-    gridContainer.style.gridTemplateColumns = `70px repeat(${numDias}, minmax(130px, 1fr))`;
+    gridContainer.style.gridTemplateColumns = `76px repeat(${numDias}, minmax(185px, 1fr))`;
 
     // 1. Columna de Horas a la izquierda
     const timeCol = document.createElement("div");
