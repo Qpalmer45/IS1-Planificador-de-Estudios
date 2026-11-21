@@ -2273,3 +2273,18 @@ body { background: radial-gradient(circle at 92% 4%, #e9edff 0, transparent 34%)
 .secondary-btn, .filter-btn { transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
 :where(button, a, input, select, textarea):focus-visible { outline: 3px solid #818cf8; outline-offset: 3px; }
 :where(input, select, textarea) { accent-color: var(--primary); }
+
+
+/* Calendario: cuadrícula y sesiones */
+.schedule-grid-wrapper { border: 1px solid #dfe5f1; border-radius: 16px; overflow: auto; box-shadow: inset 0 1px 0 #fff; }
+.schedule-grid { background: #fff; }
+.grid-header-cell { background: #f1f4ff; color: #312e81; font-weight: 750; border-bottom: 1px solid #dce3fa; }
+.grid-time-cell { background: #f8faff; color: #64748b; font-variant-numeric: tabular-nums; }
+.grid-slot-cell { transition: background-color .15s ease; }
+.grid-slot-cell:hover { background: #eef2ff; }
+.schedule-class-block { border-radius: 10px; box-shadow: 0 4px 12px rgba(30,41,85,.12); overflow: hidden; }
+.schedule-class-block:focus-visible, .grid-slot-cell:focus-visible { outline: 3px solid #4f46e5; outline-offset: -3px; }
+.class-block-title { font-weight: 750; }
+.class-block-time { font-variant-numeric: tabular-nums; }
+.schedule-toolbar { gap: 12px; }
+.schedule-grid-hint { color: #64748b; }
