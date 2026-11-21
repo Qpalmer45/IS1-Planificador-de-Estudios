@@ -23,6 +23,9 @@
     summary.textContent = plan.total_sesiones
       ? plan.total_sesiones + " sesiones · " + plan.total_sesiones * Number(document.getElementById("plan-duracion").value) / 60 + " horas planificadas"
       : "No se han encontrado sesiones. Añade asignaturas o amplía la franja horaria.";
+    const faltan = Object.values(plan.deficit_minutos_por_asignatura || {}).reduce((a, b) => a + b, 0)
+      + Object.values(plan.deficit_minutos_por_actividad || {}).reduce((a, b) => a + b, 0);
+    if (faltan) summary.textContent += " · No han cabido " + faltan + " minutos de los objetivos semanales.";
     for (const day of plan.dias) {
       const card = document.createElement("section");
       card.className = "plan-day";
