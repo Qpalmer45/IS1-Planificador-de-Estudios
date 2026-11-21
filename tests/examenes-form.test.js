@@ -22,3 +22,14 @@ test("los formularios de asignaturas y tareas son adaptables", () => {
   expect(css).toContain("#tarea-form fieldset label[hidden] { display:none !important; }");
   expect(css).toContain("@media(max-width:650px)");
 });
+
+test("el aviso de horas aparece solo en exámenes y explica dónde cambiarlas", () => {
+  const document = new JSDOM(html).window.document;
+  const aviso = document.getElementById("tarea-aviso-examen");
+  expect(aviso).not.toBeNull();
+  expect(aviso.hidden).toBe(true);
+  expect(aviso.textContent).toContain("Mis asignaturas");
+  expect(aviso.textContent).toContain("horas semanales");
+  expect(tareas).toContain('document.getElementById("tarea-aviso-examen").hidden = !examen');
+  expect(css).toContain(".exam-study-notice[hidden]");
+});
