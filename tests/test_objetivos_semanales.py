@@ -72,6 +72,24 @@ class ObjetivosSemanalesTests(unittest.TestCase):
         self.assertEqual(plan["minutos_por_asignatura"][1], 120)
         self.assertEqual(plan["total_sesiones"], 2)
 
+    def test_objetivo_no_multiplo_de_sesion_es_exacto(self):
+        materias = [{"id": 1, "nombre": "Álgebra", "prioridad": "media",
+                     "dificultad": "media", "minutos_semanales": 95}]
+        plan = generar_semana("2026-11-23", materias, [], [], [],
+                             hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15)
+        self.assertEqual(plan["minutos_por_asignatura"][1], 95)
+        self.assertEqual(plan["total_sesiones"], 2)
+        self.assertEqual(plan["dias"][0]["sesiones"][1]["fin"], "18:50")
+
+    def test_actividad_sin_asignatura_puede_planificarse(self):
+        tareas = [{"id": 3, "titulo": "Preparar examen", "tipo": "examen",
+                   "fecha_limite": "2026-11-27", "minutos_estimados": 95,
+                   "minutos_semanales": 95}]
+        plan = generar_semana("2026-11-23", [], tareas, [], [],
+                             hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15)
+        self.assertEqual(plan["minutos_por_actividad"][3], 95)
+        self.assertEqual(plan["dias"][0]["sesiones"][0]["asignatura"], "Actividad pendiente")
+
     def test_plan_respeta_objetivo_semanal_de_actividad(self):
         tareas = [{"id": 7, "titulo": "Práctica", "tipo": "entrega",
                    "fecha_limite": "2026-11-28", "minutos_estimados": 300,
