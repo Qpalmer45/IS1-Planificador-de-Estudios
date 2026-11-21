@@ -2494,7 +2494,7 @@ html[data-theme="dark"] .recordatorios-card [style*="color: #10b981"] { color: #
   .app-body .main-content {
     box-sizing: border-box;
     width: calc(100% - var(--sidebar-width));
-    max-width: 1500px;
+    max-width: none;
     margin: 0 0 0 var(--sidebar-width);
     padding: 32px clamp(20px, 3vw, 48px) 64px;
   }
@@ -2511,4 +2511,21 @@ html[data-theme="dark"] .app-body .navbar {
 html[data-theme="dark"] .app-body .nav-tabs .tab-btn.active {
   background: #313b74 !important;
   color: #eef2ff !important;
+}
+
+/* El panel utiliza el espacio real disponible tras el menú lateral (HU41). */
+.app-body .main-content { min-width: 0; }
+@media (min-width: 1024px) {
+  .app-body .main-content { max-width: none; }
+  .app-body .tab-content { min-width: 0; }
+  .app-body .metrics-grid,
+  .app-body .modules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1450px) {
+  .app-body .metrics-grid,
+  .app-body .modules-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .app-body .metrics-grid,
+  .app-body .modules-grid { grid-template-columns: minmax(0, 1fr); }
 }
