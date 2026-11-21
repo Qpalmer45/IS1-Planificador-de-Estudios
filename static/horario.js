@@ -318,6 +318,8 @@
 
         const block = document.createElement("div");
         block.className = "schedule-class-block";
+        block.dataset.longClass = String(duracionMin >= 90);
+        block.title = `${clase.asignatura_nombre} · ${clase.hora_inicio} - ${clase.hora_fin}${clase.aula ? " · " + clase.aula : ""}`;
         block.setAttribute("role", "button");
         block.setAttribute("tabindex", "0");
         block.setAttribute(
