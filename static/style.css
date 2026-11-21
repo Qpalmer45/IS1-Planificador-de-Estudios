@@ -2569,3 +2569,7 @@ html[data-theme="dark"] .plan-form input { background:#202e45; color:#f1f5f9; bo
 .subject-edit-form > input, .subject-edit-form > select { flex:1 1 150px; min-width:0; max-width:100%; box-sizing:border-box; }
 html[data-theme="dark"] #subject-form input,html[data-theme="dark"] #subject-form select,html[data-theme="dark"] #tarea-form input,html[data-theme="dark"] #tarea-form select { background:#202e45; color:#f1f5f9; border-color:#42516a; }
 @media(max-width:650px){ #subject-form.new-todo-form,#tarea-form fieldset { grid-template-columns:minmax(0,1fr); } }
+
+/* Aviso contextual de exámenes: discreto y legible en ambos temas. */
+.exam-study-notice { margin:4px 0 16px; padding:12px 14px; border:1px solid var(--border-card,#cbd5e1); border-left:3px solid var(--primary,#2563eb); border-radius:9px; background:var(--bg-card,#f8fafc); color:var(--text-main,#334155); font-size:.9rem; line-height:1.5; }
+.exam-study-notice[hidden] { display:none !important; }
