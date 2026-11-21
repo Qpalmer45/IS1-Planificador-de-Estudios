@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "npm run test:frontend",
-    "test:frontend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/app.test.js tests/theme.test.js",
-    "test:all": "npm run test:frontend && python -m unittest discover -s tests -p test_app.py"
+    "test:frontend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/app.test.js tests/theme.test.js tests/plan.test.js",
+    "test:all": "npm run test:frontend && python -m unittest discover -s tests -p 'test_*.py'"
   },
   "devDependencies": {
     "jest": "^30.2.0",
