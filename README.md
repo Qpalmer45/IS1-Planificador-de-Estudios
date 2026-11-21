@@ -70,49 +70,72 @@ Cada Historia de Usuario dispone de:
 - Pablo Pérez Roldán
 - Andrés Fernández Cordero
 
-## Instalación y ejecución
+## Cómo poner en marcha la aplicación
 
-### 1. Requisitos
-- Python 3.10 o superior instalado.
+Estos son los pasos para arrancar StudyPlan en tu ordenador. La primera vez hay que preparar el entorno; después basta con abrir el proyecto y ejecutar el servidor.
 
-### 2. Instalación de dependencias
-```bash
-pip install -r requirements.txt
+### Primera vez (Windows)
+
+1. Instala **Python 3.10 o superior** y **Git**. Para editar el proyecto puedes usar VS Code.
+2. Abre una terminal en la carpeta donde quieras guardar el proyecto y descárgalo:
+
+   ```powershell
+   git clone https://github.com/Qpalmer45/IS1-Planificador-de-Estudios.git
+   cd IS1-Planificador-de-Estudios
+   ```
+
+   Si ya tienes la carpeta descargada, no hace falta clonarla otra vez.
+
+3. Crea un entorno virtual e instala las dependencias:
+
+   ```powershell
+   py -m venv .venv
+   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   ```
+
+4. Arranca el servidor:
+
+   ```powershell
+   .\.venv\Scripts\python.exe app.py
+   ```
+
+5. Abre **http://127.0.0.1:5000** en el navegador. Mantén la terminal abierta mientras uses la aplicación. Para detenerla, pulsa **Ctrl + C**.
+
+### Para abrirla otro día
+
+Abre la carpeta `IS1-Planificador-de-Estudios` en VS Code, entra en **Terminal → New Terminal** y ejecuta:
+
+```powershell
+.\.venv\Scripts\python.exe app.py
 ```
 
-### 3. Ejecución del servidor
-```bash
-python app.py
+Si quieres descargar antes los cambios que haya en GitHub, ejecuta `git pull origin main` **con el servidor detenido**, y luego vuelve a arrancarlo. Si has modificado archivos localmente, revisa esos cambios antes del pull para evitar conflictos.
+
+Si el navegador sigue mostrando estilos antiguos después de actualizar, prueba **Ctrl + F5**.
+
+### Pruebas
+
+Las pruebas del backend usan `unittest` y no requieren instalar Node.js:
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -p test_app.py -v
 ```
-Acceder a la aplicación web en [http://127.0.0.1:5000](http://127.0.0.1:5000).
 
-### 4. Instalación de dependencias del frontend
-
-Desde la raíz del proyecto:
+Para las pruebas del frontend sí necesitas **Node.js 20 o posterior**. Desde la raíz del repositorio:
 
 ```powershell
 npm.cmd install --no-package-lock
-```
-
-### 5. Ejecución de pruebas automatizadas
-
-Pruebas del backend:
-
-```bash
-python -m unittest discover -s tests -p test_app.py -v
-```
-
-Pruebas del frontend con Jest:
-
-```powershell
 npm.cmd run test:frontend
 ```
 
-Para ejecutar ambas suites:
+También puedes lanzar ambas suites con `npm.cmd run test:all` una vez instaladas las dependencias del frontend.
 
-```powershell
-npm.cmd run test:all
-```
+### Si algo falla
+
+- **`py` no se reconoce:** comprueba que Python está instalado y disponible desde la terminal.
+- **`No module named flask`:** vuelve a ejecutar la instalación de `requirements.txt` con el Python de `.venv`.
+- **No encuentra `app.py`:** asegúrate de que la terminal está abierta en la raíz del repositorio.
+- **El puerto 5000 está ocupado:** comprueba que no haya otra instancia del servidor ejecutándose.
 
 ## Estructura del proyecto
 
