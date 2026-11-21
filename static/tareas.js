@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const resumen = document.createElement("small");
       const [anio, mes, dia] = actividad.fecha_limite.split("-");
       const tipo = actividad.tipo.charAt(0).toUpperCase() + actividad.tipo.slice(1);
-      resumen.textContent = tipo + " · " + dia + "/" + mes + "/" + anio + " · " + actividad.minutos_estimados + " min · " + (actividad.minutos_semanales || 0) + " min/semana";
+      resumen.textContent = tipo + " · " + dia + "/" + mes + "/" + anio + (actividad.tipo === "examen" ? " · Estudio según asignatura" : " · " + actividad.minutos_estimados + " min · " + (actividad.minutos_semanales || 0) + " min/semana");
       detalle.append(titulo, resumen);
 
       const acciones = document.createElement("div");
