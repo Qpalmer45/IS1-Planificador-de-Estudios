@@ -73,7 +73,8 @@ def preparar_tabla_actividades(conn):
             titulo TEXT NOT NULL,
             tipo TEXT NOT NULL CHECK (tipo IN ('tarea', 'entrega', 'examen')),
             fecha_limite TEXT NOT NULL,
-            minutos_estimados INTEGER NOT NULL CHECK (minutos_estimados > 0)
+            minutos_estimados INTEGER NOT NULL CHECK (minutos_estimados > 0),
+            minutos_semanales INTEGER NOT NULL DEFAULT 0
         )"""
     )
     if migrar:
@@ -90,6 +91,8 @@ def preparar_tabla_actividades(conn):
                WHERE name = 'tareas_planificadas'"""
         )
         conn.execute("DROP TABLE actividades_anteriores")
+    if 'minutos_semanales' not in [r[1] for r in conn.execute('PRAGMA table_info(tareas_planificadas)')]:
+        conn.execute('ALTER TABLE tareas_planificadas ADD COLUMN minutos_semanales INTEGER NOT NULL DEFAULT 0')
     conn.execute(
         """CREATE INDEX IF NOT EXISTS idx_tareas_planificadas_plazo
            ON tareas_planificadas(usuario_id, fecha_limite, id)"""
@@ -174,6 +177,9 @@ def initialize_database():
                     """ALTER TABLE asignaturas ADD COLUMN prioridad TEXT NOT NULL
                        DEFAULT 'media' CHECK (prioridad IN ('baja', 'media', 'alta'))"""
                 )
+
+            if 'minutos_semanales' not in [r[1] for r in conn.execute('PRAGMA table_info(asignaturas)')]:
+                conn.execute('ALTER TABLE asignaturas ADD COLUMN minutos_semanales INTEGER NOT NULL DEFAULT 0')
 
             # Cada tema organiza un bloque de apuntes dentro de una asignatura.
             # Se guarda el usuario también en el tema para filtrar todas las
@@ -285,6 +291,8 @@ def asignatura_to_dict(row):
         data["dificultad"] = row["dificultad"]
     if "prioridad" in row.keys():
         data["prioridad"] = row["prioridad"]
+    if "minutos_semanales" in row.keys():
+        data["minutos_semanales"] = row["minutos_semanales"]
     return data
 
 
@@ -600,7 +608,7 @@ def list_asignaturas():
     # asignaturas añadidas más recientemente.
     usuario_id = session["usuario_id"]
     rows = get_db().execute(
-        """SELECT id, usuario_id, nombre, dificultad, prioridad
+        """SELECT id, usuario_id, nombre, dificultad, prioridad, minutos_semanales
            FROM asignaturas
            WHERE usuario_id = ?
            ORDER BY id DESC""",
@@ -640,17 +648,22 @@ def create_asignatura():
             return jsonify({"error": "La prioridad debe ser baja, media o alta."}), 400
         prioridad = prio_val.strip().lower()
 
+    try:
+        minutos_semana = validar_minutos_semanales(data.get('minutos_semanales', 0))
+    except ValueError as exc:
+        return jsonify(error=str(exc)), 400
+
     # Asocia la nueva materia al usuario actual y lee el registro insertado
     # para devolver el ID generado por la base de datos.
     usuario_id = session["usuario_id"]
     db = get_db()
     with db:
         cursor = db.execute(
-            "INSERT INTO asignaturas (usuario_id, nombre, dificultad, prioridad) VALUES (?, ?, ?, ?)",
-            (usuario_id, nombre, dificultad, prioridad),
+            "INSERT INTO asignaturas (usuario_id, nombre, dificultad, prioridad, minutos_semanales) VALUES (?, ?, ?, ?, ?)",
+            (usuario_id, nombre, dificultad, prioridad, minutos_semana),
         )
         row = db.execute(
-            "SELECT id, usuario_id, nombre, dificultad, prioridad FROM asignaturas WHERE id = ? AND usuario_id = ?",
+            "SELECT id, usuario_id, nombre, dificultad, prioridad, minutos_semanales FROM asignaturas WHERE id = ? AND usuario_id = ?",
             (cursor.lastrowid, usuario_id),
         ).fetchone()
     return jsonify(asignatura_to_dict(row)), 201
@@ -663,7 +676,7 @@ def get_asignatura(asignatura_id):
     # El ID solicitado y el ID de sesión forman juntos la condición: las
     # asignaturas inexistentes y las ajenas producen el mismo 404.
     row = get_db().execute(
-        """SELECT id, usuario_id, nombre, dificultad, prioridad
+        """SELECT id, usuario_id, nombre, dificultad, prioridad, minutos_semanales
            FROM asignaturas
            WHERE id = ? AND usuario_id = ?""",
         (asignatura_id, session["usuario_id"]),
@@ -717,6 +730,14 @@ def update_asignatura(asignatura_id):
         updates.append("prioridad = ?")
         params.append(prio_val.strip().lower())
 
+    if "minutos_semanales" in data:
+        try:
+            minutos_semana = validar_minutos_semanales(data["minutos_semanales"])
+        except ValueError as exc:
+            return jsonify(error=str(exc)), 400
+        updates.append("minutos_semanales = ?")
+        params.append(minutos_semana)
+
     if not updates:
         return jsonify({"error": "Debes enviar al menos un campo para actualizar."}), 400
 
@@ -728,7 +749,7 @@ def update_asignatura(asignatura_id):
             (*params, asignatura_id, usuario_id),
         )
         row = db.execute(
-            "SELECT id, usuario_id, nombre, dificultad, prioridad FROM asignaturas WHERE id = ? AND usuario_id = ?",
+            "SELECT id, usuario_id, nombre, dificultad, prioridad, minutos_semanales FROM asignaturas WHERE id = ? AND usuario_id = ?",
             (asignatura_id, usuario_id),
         ).fetchone()
     return jsonify(asignatura_to_dict(row)), 200
@@ -940,16 +961,24 @@ def hoy_planificador():
     return datetime.now(ZONA_PLANIFICADOR).date()
 
 
+def validar_minutos_semanales(valor):
+    if type(valor) is not int or not 0 <= valor <= 10080:
+        raise ValueError("El tiempo semanal debe ser un entero entre 0 y 10080 minutos.")
+    return valor
+
+
 def validar_tarea(datos, parcial=False, fecha_anterior=None):
     """Valida y normaliza los campos editables antes de escribir en SQLite."""
     if not isinstance(datos, dict) or not datos:
         raise ValueError("Envía los datos de la tarea o entrega.")
-    if datos.keys() - set(CAMPOS_TAREA):
+    if datos.keys() - (set(CAMPOS_TAREA) | {"minutos_semanales"}):
         raise ValueError("La petición incluye campos que no se pueden modificar.")
-    if not parcial and not all(campo in datos for campo in CAMPOS_TAREA):
+    if not parcial and not all(campo in datos for campo in ('titulo', 'tipo', 'fecha_limite', 'minutos_estimados')):
         raise ValueError("Indica el título, el tipo, la fecha límite y el tiempo estimado.")
 
     campos = datos.copy()
+    if "minutos_semanales" in campos:
+        campos["minutos_semanales"] = validar_minutos_semanales(campos["minutos_semanales"])
     if "titulo" in campos:
         titulo = campos["titulo"]
         if not isinstance(titulo, str) or not 1 <= len(titulo.strip()) <= 200:
@@ -975,7 +1004,7 @@ def validar_tarea(datos, parcial=False, fecha_anterior=None):
 
 def listar_tareas_planificadas(usuario_id):
     filas = get_db().execute(
-        """SELECT id, titulo, tipo, fecha_limite, minutos_estimados
+        """SELECT id, titulo, tipo, fecha_limite, minutos_estimados, minutos_semanales
            FROM tareas_planificadas WHERE usuario_id = ? ORDER BY fecha_limite, id""",
         (usuario_id,),
     )
@@ -996,12 +1025,13 @@ def crear_tarea():
     except ValueError as error:
         return jsonify(error=str(error)), 400
 
+    campos.setdefault("minutos_semanales", 0)
     db = get_db()
     with db:
         cursor = db.execute(
             """INSERT INTO tareas_planificadas
-               (usuario_id, titulo, tipo, fecha_limite, minutos_estimados)
-               VALUES (:usuario_id, :titulo, :tipo, :fecha_limite, :minutos_estimados)""",
+               (usuario_id, titulo, tipo, fecha_limite, minutos_estimados, minutos_semanales)
+               VALUES (:usuario_id, :titulo, :tipo, :fecha_limite, :minutos_estimados, :minutos_semanales)""",
             {**campos, "usuario_id": session["usuario_id"]},
         )
     return jsonify(id=cursor.lastrowid, **campos), 201
@@ -1026,13 +1056,13 @@ def editar_tarea(tarea_id):
                                    fecha_anterior=original["fecha_limite"])
         except ValueError as error:
             return jsonify(error=str(error)), 400
-        asignaciones = ", ".join(f"{campo} = :{campo}" for campo in CAMPOS_TAREA if campo in cambios)
+        asignaciones = ", ".join(f"{campo} = :{campo}" for campo in (*CAMPOS_TAREA, "minutos_semanales") if campo in cambios)
         db.execute(
             f"""UPDATE tareas_planificadas SET {asignaciones}
                 WHERE id = :id AND usuario_id = :usuario_id""", {**identidad, **cambios},
         )
         fila = db.execute(
-            """SELECT id, titulo, tipo, fecha_limite, minutos_estimados
+            """SELECT id, titulo, tipo, fecha_limite, minutos_estimados, minutos_semanales
                FROM tareas_planificadas WHERE id = :id AND usuario_id = :usuario_id""",
             identidad,
         ).fetchone()
@@ -1059,7 +1089,7 @@ def obtener_datos_planificacion(usuario_id):
     """Devuelve dificultad y prioridad de asignaturas y tareas para HU06."""
     db = get_db()
     asignaturas_rows = db.execute(
-        """SELECT id, usuario_id, nombre, dificultad, prioridad
+        """SELECT id, usuario_id, nombre, dificultad, prioridad, minutos_semanales
            FROM asignaturas
            WHERE usuario_id = ?
            ORDER BY id DESC""",
@@ -1105,10 +1135,10 @@ def api_plan_semana():
             raise ValueError("La fecha debe estar entre hace siete días y dentro de un año.")
         db = get_db()
         materias = [dict(row) for row in db.execute(
-            "SELECT id, nombre, dificultad, prioridad FROM asignaturas WHERE usuario_id = ? ORDER BY id",
+            "SELECT id, nombre, dificultad, prioridad, minutos_semanales FROM asignaturas WHERE usuario_id = ? ORDER BY id",
             (usuario_id,)).fetchall()]
         actividades = [dict(row) for row in db.execute(
-            """SELECT id, titulo, tipo, fecha_limite, minutos_estimados
+            """SELECT id, titulo, tipo, fecha_limite, minutos_estimados, minutos_semanales
                FROM tareas_planificadas WHERE usuario_id = ? AND fecha_limite >= ?
                ORDER BY fecha_limite, id""", (usuario_id, inicio)).fetchall()]
         clases = [dict(row) for row in db.execute(
