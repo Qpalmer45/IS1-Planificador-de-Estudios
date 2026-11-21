@@ -24,6 +24,38 @@ document.addEventListener("DOMContentLoaded", () => {
     fecha.setCustomValidity(fecha.validity.rangeUnderflow ? "La fecha debe ser hoy o posterior." : "");
   }
 
+  async function cargarAsignaturas() {
+    try {
+      const materias = await api("/api/asignaturas");
+      const selector = form.elements.asignatura_id;
+      const seleccionado = selector.value;
+      selector.replaceChildren(new Option("Sin asignatura", ""));
+      for (const materia of materias) selector.add(new Option(materia.nombre, String(materia.id)));
+      selector.value = seleccionado;
+    } catch (error) {
+      estado.textContent = "No se pudieron cargar las asignaturas: " + error.message;
+    }
+  }
+
+  function actualizarCamposExamen() {
+    const examen = form.elements.tipo.value === "examen";
+    const total = document.getElementById("tarea-tiempo-total");
+    const semanal = document.getElementById("tarea-tiempo-semanal");
+    total.hidden = examen;
+    semanal.hidden = examen;
+    form.elements.minutos_estimados.disabled = examen;
+    form.elements.minutos_semanales.disabled = examen;
+    if (examen) {
+      form.elements.minutos_estimados.value = "1";
+      form.elements.minutos_semanales.value = "0";
+      form.elements.asignatura_id.required = true;
+    } else {
+      form.elements.minutos_estimados.disabled = false;
+      form.elements.minutos_semanales.disabled = false;
+      form.elements.asignatura_id.required = false;
+    }
+  }
+
   function actualizarEtiqueta() {
     document.getElementById("tarea-etiqueta-fecha").textContent =
       form.elements.tipo.value === "examen" ? "Día del examen" : "Fecha límite";
@@ -42,10 +74,11 @@ document.addEventListener("DOMContentLoaded", () => {
     form.reset();
     if (actividad) {
       for (const campo of campos.querySelectorAll("[name]")) {
-        campo.value = actividad[campo.name];
+        campo.value = actividad[campo.name] ?? "";
       }
     }
     actualizarEtiqueta();
+    actualizarCamposExamen();
     actualizarFecha();
     encabezado.textContent = actividad ? "Editar actividad" : "Nueva actividad";
     guardar.textContent = actividad ? "Guardar cambios" : "Crear actividad";
@@ -127,12 +160,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  form.elements.tipo.addEventListener("change", actualizarCamposExamen);
+  cargarAsignaturas();
+  document.querySelector('[data-tab="tareas"]')?.addEventListener("click", cargarAsignaturas);
   form.addEventListener("submit", async evento => {
     evento.preventDefault();
     if (guardar.disabled) return;
     actualizarFecha();
     if (!form.reportValidity()) return;
     const datos = Object.fromEntries(new FormData(form));
+    if (datos.asignatura_id) datos.asignatura_id = Number(datos.asignatura_id);
+    else delete datos.asignatura_id;
+    if (form.elements.tipo.value === "examen") {
+      datos.minutos_estimados = 1;
+      datos.minutos_semanales = 0;
+    }
     datos.titulo = datos.titulo.trim();
     datos.minutos_estimados = Number(datos.minutos_estimados);
     datos.minutos_semanales = Number(datos.minutos_semanales);
