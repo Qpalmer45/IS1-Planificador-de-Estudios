@@ -47,6 +47,7 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
         if fecha >= inicio:
             pendientes.append({**dict(act), "_fecha": fecha, "_restante": int(act["minutos_estimados"])})
     pendientes.sort(key=lambda a: (a["_fecha"], a["id"]))
+    minutos_actividad = {a["id"]: 0 for a in pendientes}
     dias = []
     minutos_materia = {a["id"]: 0 for a in materias}
 
@@ -68,7 +69,7 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
             if choque:
                 cursor = max(cursor, choque[1])
                 continue
-            candidatos = [a for a in pendientes if a["_restante"] > 0 and a["_fecha"] >= actual]
+            candidatos = [a for a in pendientes if a["_restante"] > 0 and a["_fecha"] >= actual and (not a.get("minutos_semanales") or minutos_actividad[a["id"]] < a["minutos_semanales"])]
             if candidatos:
                 # Plazos más cercanos primero; empate por fecha e identificador.
                 tarea = min(candidatos, key=lambda a: (a["_fecha"], a["id"]))
@@ -76,9 +77,13 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
                 # HU04 no tiene campo asignatura_id: no inventamos esa relación.
                 # Las actividades independientes se muestran como tal.
                 tarea["_restante"] = max(0, tarea["_restante"] - duracion)
+                minutos_actividad[tarea["id"]] += duracion
             else:
                 tarea = None
-                materia = min(materias, key=lambda a: (
+                elegibles = [a for a in materias if not a.get("minutos_semanales") or minutos_materia[a["id"]] < a["minutos_semanales"]]
+                if not elegibles:
+                    break
+                materia = min(elegibles, key=lambda a: (
                     minutos_materia[a["id"]] / PESO.get(a.get("prioridad"), 2),
                     -PESO.get(a.get("dificultad"), 2), a["id"]))
             if materia is not None:
@@ -94,4 +99,5 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
         dias.append({"fecha": fecha, "dia": DIAS[actual.weekday()],
                      "libre": libre, "sesiones": sesiones})
     return {"dias": dias, "total_sesiones": sum(len(d["sesiones"]) for d in dias),
-            "minutos_por_asignatura": minutos_materia, "vista_previa": True}
+            "minutos_por_asignatura": minutos_materia,
+            "minutos_por_actividad": minutos_actividad, "vista_previa": True}
