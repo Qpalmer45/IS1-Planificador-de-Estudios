@@ -73,3 +73,10 @@
 - [HU06](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6)
 - [HU12](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/12)
 - [HU13](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/13)
+
+## Correcciones adicionales del mismo día
+
+- **HU04:** se eliminan caracteres `\\n` que aparecían literalmente antes de la barra de botones; se ajustan los márgenes, la distribución y la presentación adaptable. La lista de exámenes deja de mostrar minutos ficticios y muestra «Estudio según asignatura».
+- **HU06:** se conserva en `localStorage` el último plan semanal generado y los parámetros, separados por correo del usuario, para recuperarlos tras refrescar en **el mismo navegador**. No equivale a guardar en SQLite ni sincronizar entre dispositivos; si cambian los objetivos, hay que regenerar el plan.
+- **Prueba añadida:** `tests/plan.test.js` incluye recuperación del plan y de los parámetros sin nueva petición a la API.
+- **Pendiente:** ejecutar Jest y revisar visualmente la interfaz en escritorio y móvil.
