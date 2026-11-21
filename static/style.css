@@ -2573,3 +2573,16 @@ html[data-theme="dark"] #subject-form input,html[data-theme="dark"] #subject-for
 /* Aviso contextual de exámenes: discreto y legible en ambos temas. */
 .exam-study-notice { margin:4px 0 16px; padding:12px 14px; border:1px solid var(--border-card,#cbd5e1); border-left:3px solid var(--primary,#2563eb); border-radius:9px; background:var(--bg-card,#f8fafc); color:var(--text-main,#334155); font-size:.9rem; line-height:1.5; }
 .exam-study-notice[hidden] { display:none !important; }
+
+/* Correcciones visuales de la barra de acciones y del formulario de actividades. */
+#tarea-form .subject-actions { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:12px 0 20px; }
+#tarea-form .subject-actions button { width:auto; min-height:42px; }
+#tarea-form #tarea-form-heading { margin:0 0 18px; }
+#tarea-form fieldset { row-gap:18px; column-gap:14px; }
+#tarea-form fieldset label { line-height:1.4; }
+#tarea-form .exam-study-notice { margin:2px 0 14px; }
+#tarea-lista .subject-list-item { gap:12px; }
+#tarea-lista .subject-list-item > div:first-child { min-width:0; overflow-wrap:anywhere; }
+#tarea-lista .subject-actions { display:flex; gap:8px; flex-wrap:wrap; }
+#tarea-lista .subject-actions button { width:auto; }
+@media (max-width:650px) { #tarea-lista .subject-list-item { flex-wrap:wrap; } }
