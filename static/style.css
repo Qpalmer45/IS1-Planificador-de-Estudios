@@ -2420,3 +2420,95 @@ html[data-theme="dark"] .recordatorios-card [style*="color: #94a3b8"] { color: #
 html[data-theme="dark"] .recordatorios-card [style*="color: #065f46"],
 html[data-theme="dark"] .recordatorios-card [style*="color: #059669"] { color: #86efac !important; }
 html[data-theme="dark"] .recordatorios-card [style*="color: #10b981"] { color: #6ee7b7 !important; }
+
+
+/* Navegación lateral en escritorio. En móvil mantenemos la barra adaptable. */
+@media (min-width: 1024px) {
+  .app-body { --sidebar-width: 264px; }
+  .app-body .navbar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--sidebar-width);
+    height: 100dvh;
+    border-right: 1px solid var(--border-card);
+    border-bottom: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 100;
+  }
+  .app-body .nav-container {
+    width: 100%;
+    max-width: none;
+    min-height: 100%;
+    height: auto;
+    margin: 0;
+    padding: 26px 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 18px;
+  }
+  .app-body .nav-brand { padding: 4px 10px 20px; border-bottom: 1px solid var(--border-card); }
+  .app-body .nav-tabs {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    overflow: visible;
+    width: 100%;
+    padding: 0;
+    gap: 6px;
+  }
+  .app-body .nav-tabs .tab-btn {
+    width: 100%;
+    min-height: 46px;
+    justify-content: flex-start;
+    text-align: left;
+    white-space: normal;
+    line-height: 1.25;
+    padding: 11px 12px;
+    border-radius: 12px;
+  }
+  .app-body .nav-tabs .tab-btn svg { flex-shrink: 0; }
+  .app-body .nav-tabs .badge-count,
+  .app-body .nav-tabs .tab-badge { margin-left: auto; flex-shrink: 0; }
+  .app-body .nav-container > .theme-toggle {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: auto;
+    padding: 12px;
+  }
+  .app-body .nav-user {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px 4px 0;
+    border-top: 1px solid var(--border-card);
+  }
+  .app-body .user-info { min-width: 0; }
+  .app-body .user-details { min-width: 0; overflow: hidden; }
+  .app-body .user-name, .app-body .user-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app-body .btn-logout { width: 100%; justify-content: center; }
+  .app-body .main-content {
+    box-sizing: border-box;
+    width: calc(100% - var(--sidebar-width));
+    max-width: 1500px;
+    margin: 0 0 0 var(--sidebar-width);
+    padding: 32px clamp(20px, 3vw, 48px) 64px;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .app-body { --sidebar-width: 236px; }
+  .app-body .nav-container { padding-left: 12px; padding-right: 12px; }
+  .app-body .main-content { padding-left: 22px; padding-right: 22px; }
+}
+html[data-theme="dark"] .app-body .navbar {
+  background: #111c2e !important;
+  border-color: #35445b;
+}
+html[data-theme="dark"] .app-body .nav-tabs .tab-btn.active {
+  background: #313b74 !important;
+  color: #eef2ff !important;
+}
