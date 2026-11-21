@@ -79,7 +79,7 @@ class ObjetivosSemanalesTests(unittest.TestCase):
                              hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15)
         self.assertEqual(plan["minutos_por_asignatura"][1], 95)
         self.assertEqual(plan["total_sesiones"], 2)
-        self.assertEqual(plan["dias"][0]["sesiones"][1]["fin"], "18:50")
+        self.assertEqual(plan["dias"][0]["sesiones"][1]["fin"], "17:50")
 
     def test_actividad_sin_asignatura_puede_planificarse(self):
         tareas = [{"id": 3, "titulo": "Preparar examen", "tipo": "examen",
