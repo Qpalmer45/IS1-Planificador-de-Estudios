@@ -2552,3 +2552,20 @@ html[data-theme="dark"] .plan-form input { background:#202e45; color:#f1f5f9; bo
 @media(max-width:1450px){ .plan-week { grid-template-columns:repeat(4,minmax(190px,1fr)); } }
 @media(max-width:900px){ .plan-week { grid-template-columns:repeat(2,minmax(160px,1fr)); } }
 @media(max-width:550px){ .plan-week { grid-template-columns:minmax(0,1fr); } }
+
+
+/* Formularios de asignaturas y actividades: controles alineados y sin desbordes. */
+#subject-form.new-todo-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; align-items:end; }
+#subject-form > * { min-width:0; width:100%; box-sizing:border-box; }
+#subject-form .input-wrapper, #subject-form .select-wrapper { min-width:0; width:100%; }
+#subject-form input, #subject-form select, #subject-form .weekly-goal-label input { box-sizing:border-box; width:100%; min-width:0; min-height:44px; }
+#subject-form .weekly-goal-label { display:flex; flex-direction:column; gap:6px; font-size:.86rem; font-weight:600; color:var(--text-main); }
+#subject-form > button { min-height:44px; }
+#tarea-form fieldset { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; border:0; padding:0; margin:0 0 16px; min-width:0; }
+#tarea-form fieldset label { display:flex; flex-direction:column; gap:6px; min-width:0; font-weight:600; }
+#tarea-form fieldset input, #tarea-form fieldset select { box-sizing:border-box; min-width:0; width:100%; min-height:44px; }
+#tarea-form fieldset label[hidden] { display:none !important; }
+.subject-edit-form { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.subject-edit-form > input, .subject-edit-form > select { flex:1 1 150px; min-width:0; max-width:100%; box-sizing:border-box; }
+html[data-theme="dark"] #subject-form input,html[data-theme="dark"] #subject-form select,html[data-theme="dark"] #tarea-form input,html[data-theme="dark"] #tarea-form select { background:#202e45; color:#f1f5f9; border-color:#42516a; }
+@media(max-width:650px){ #subject-form.new-todo-form,#tarea-form fieldset { grid-template-columns:minmax(0,1fr); } }
