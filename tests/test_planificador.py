@@ -52,7 +52,7 @@ class GeneradorSemanalTests(unittest.TestCase):
     def test_examen_proximo_se_prioriza(self):
         actividades = [
             {"id": 1, "titulo": "Entrega", "tipo": "entrega", "fecha_limite": "2026-11-27", "minutos_estimados": 60},
-            {"id": 2, "titulo": "Examen", "tipo": "examen", "fecha_limite": "2026-11-24", "minutos_estimados": 60},
+            {"id": 2, "titulo": "Examen", "tipo": "examen", "fecha_limite": "2026-11-24", "minutos_estimados": 60, "asignatura_id": 1},
         ]
         plan = generar_semana("2026-11-23", ASIGNATURAS, actividades, [], [],
                              hora_inicio="16:00", hora_fin="18:00", duracion=60, descanso=0)
