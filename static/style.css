@@ -2262,3 +2262,14 @@ body { background: radial-gradient(circle at 92% 4%, #e9edff 0, transparent 34%)
 .module-card:hover { transform: translateY(-3px); box-shadow: 0 18px 36px -22px rgba(30,41,85,.3); }
 .metric-value { letter-spacing: -.045em; }
 .section-title-wrap h3, .header-titles h2 { letter-spacing: -.025em; }
+
+
+/* Controles y listados */
+.todo-panel, .subject-panel, .schedule-panel { border-radius: 20px; box-shadow: var(--shadow-card); }
+.todo-item, .subject-list-item { border-radius: 13px; transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.todo-item:hover, .subject-list-item:hover { background-color: #fafbff; border-color: #cbd5f5; }
+.primary-btn { background: var(--primary); box-shadow: 0 6px 14px rgba(79,70,229,.14); }
+.primary-btn:hover { background: var(--primary-hover); box-shadow: 0 9px 20px rgba(79,70,229,.2); }
+.secondary-btn, .filter-btn { transition: background-color .18s ease, border-color .18s ease, color .18s ease; }
+:where(button, a, input, select, textarea):focus-visible { outline: 3px solid #818cf8; outline-offset: 3px; }
+:where(input, select, textarea) { accent-color: var(--primary); }
