@@ -349,7 +349,8 @@
                 <option value="examen">Examen</option>
               </select></label>
               <label><span id="tarea-etiqueta-fecha">Fecha límite</span><input type="date" name="fecha_limite" required></label>
-              <label>Tiempo estimado (min)<input type="number" name="minutos_estimados" min="1" max="9007199254740991" step="1" required placeholder="90"></label>
+              <label>Tiempo estimado total (min)<input type="number" name="minutos_estimados" min="1" max="9007199254740991" step="1" required placeholder="90"></label>
+              <label>Objetivo semanal (min; 0 = automático)<input type="number" name="minutos_semanales" min="0" max="10080" step="1" value="0" required></label>
             </fieldset>
             <div class="subject-actions">
               <button type="submit" id="tarea-guardar" class="primary-btn">Crear actividad</button>
@@ -402,6 +403,7 @@
                 <option value="alta">Prioridad Alta</option>
               </select>
             </div>
+            <label class="weekly-goal-label">Tiempo semanal (min; 0 = automático)<input id="subject-weekly-minutes" type="number" min="0" max="10080" step="1" value="0" required></label>
             <button type="submit" class="primary-btn">
               <span>Añadir asignatura</span>
             </button>
