@@ -1,4 +1,4 @@
-"""Motor determinista de vista previa semanal. Sin efectos en base de datos."""
+"""Generador semanal: primero objetivos y después distribución ponderada de huecos."""
 from datetime import date, timedelta
 
 DIAS = ("lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo")
@@ -20,92 +20,157 @@ def formato(valor):
 
 
 def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
-                   hora_inicio="16:00", hora_fin="21:00",
-                   duracion=60, descanso=15):
-    """Genera siete días sin conflictos, priorizando entregas cercanas.
-
-    No guarda sesiones; usa solo los datos recibidos del usuario autenticado.
-    """
+                   hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15):
     if isinstance(inicio, str):
         inicio = date.fromisoformat(inicio)
     if not isinstance(inicio, date):
-        raise ValueError("Fecha de inicio inválida.")
+        raise ValueError("Fecha inválida.")
     desde, hasta = minutos(hora_inicio), minutos(hora_fin)
-    if desde >= hasta or not (25 <= duracion <= 180) or not (0 <= descanso <= 60):
-        raise ValueError("Revisa la franja, duración y descanso.")
-    if not isinstance(duracion, int) or not isinstance(descanso, int):
-        raise ValueError("Duración y descanso deben ser enteros.")
-
-    materias = [dict(a) for a in asignaturas]
-    materias.sort(key=lambda a: a["id"])
+    if type(duracion) is not int or type(descanso) is not int or not 25 <= duracion <= 180 or not 0 <= descanso <= 60 or desde >= hasta:
+        raise ValueError("Franja, duración o descanso inválidos.")
+    materias = sorted([dict(m) for m in asignaturas], key=lambda m: m["id"])
+    ids = {m["id"] for m in materias}
     pendientes = []
     for act in actividades:
         try:
             fecha = date.fromisoformat(act["fecha_limite"])
         except (KeyError, TypeError, ValueError):
             continue
-        if fecha >= inicio:
-            pendientes.append({**dict(act), "_fecha": fecha, "_restante": int(act["minutos_estimados"])})
+        if fecha < inicio:
+            continue
+        item = dict(act)
+        item["_fecha"] = fecha
+        item["_restante"] = max(0, int(item.get("minutos_estimados", 0)))
+        # Los exámenes son hitos: nunca consumen horas adicionales a la materia.
+        if item.get("tipo") == "examen":
+            continue
+        pendientes.append(item)
     pendientes.sort(key=lambda a: (a["_fecha"], a["id"]))
-    minutos_actividad = {a["id"]: 0 for a in pendientes}
-    dias = []
-    minutos_materia = {a["id"]: 0 for a in materias}
+    usados_m = {m["id"]: 0 for m in materias}
+    usados_a = {a["id"]: 0 for a in pendientes}
+    sesiones_dia = []
 
+    # Dos fases sobre las mismas franjas: primero cubrir objetivos explícitos;
+    # solo después, repartir huecos sobrantes según prioridad y dificultad.
     for desplazamiento in range(7):
         actual = inicio + timedelta(days=desplazamiento)
         fecha = actual.isoformat()
         libre = any(p["fecha_inicio"] <= fecha <= p["fecha_fin"] for p in periodos)
-        ocupados = []
-        if not libre:
-            for clase in clases:
-                if clase["dia_semana"] == DIAS[actual.weekday()]:
-                    ocupados.append((minutos(clase["hora_inicio"]), minutos(clase["hora_fin"])))
-        ocupados.sort()
-        sesiones = []
+        ocupados = sorted(
+            (minutos(c["hora_inicio"]), minutos(c["hora_fin"]))
+            for c in clases if c["dia_semana"] == DIAS[actual.weekday()]
+        ) if not libre else []
+        franjas = []
         cursor = desde
-        while (materias or pendientes) and not libre and cursor < hasta:
-            candidatos = [a for a in pendientes if a["_restante"] > 0 and a["_fecha"] >= actual
-                          and (not a.get("minutos_semanales") or minutos_actividad[a["id"]] < a["minutos_semanales"])]
-            if candidatos:
-                tarea = min(candidatos, key=lambda a: (a["_fecha"], a["id"]))
-                materia = next((a for a in materias if a["id"] == tarea.get("asignatura_id")), None)
-                restante = tarea["_restante"]
-                if tarea.get("minutos_semanales"):
-                    restante = min(restante, tarea["minutos_semanales"] - minutos_actividad[tarea["id"]])
-            else:
-                tarea = None
-                elegibles = [a for a in materias if not a.get("minutos_semanales")
-                             or minutos_materia[a["id"]] < a["minutos_semanales"]]
-                if not elegibles:
+        if not libre:
+            for a, b in ocupados + [(hasta, hasta)]:
+                if b <= cursor:
+                    continue
+                if a > cursor:
+                    franjas.append((cursor, min(a, hasta)))
+                cursor = max(cursor, b)
+                if cursor >= hasta:
                     break
-                materia = min(elegibles, key=lambda a: (
-                    minutos_materia[a["id"]] / PESO.get(a.get("prioridad"), 2),
-                    -PESO.get(a.get("dificultad"), 2), a["id"]))
-                restante = (materia["minutos_semanales"] - minutos_materia[materia["id"]]
-                            if materia.get("minutos_semanales") else duracion)
-            bloque = min(duracion, restante, hasta - cursor)
-            if bloque <= 0:
-                break
-            final = cursor + bloque
-            choque = next(((a, b) for a, b in ocupados if cursor < b and final > a), None)
-            if choque:
-                cursor = max(cursor, choque[1])
-                continue
-            if tarea is not None:
-                tarea["_restante"] -= bloque
-                minutos_actividad[tarea["id"]] += bloque
-            if materia is not None:
-                minutos_materia[materia["id"]] += bloque
-            sesiones.append({
-                "fecha": fecha, "inicio": formato(cursor), "fin": formato(final),
-                "asignatura_id": materia["id"] if materia else None,
-                "asignatura": materia["nombre"] if materia else "Actividad pendiente",
-                "actividad": tarea["titulo"] if tarea else None,
-                "tipo": tarea["tipo"] if tarea else None,
-            })
-            cursor = final + descanso
-        dias.append({"fecha": fecha, "dia": DIAS[actual.weekday()],
-                     "libre": libre, "sesiones": sesiones})
-    return {"dias": dias, "total_sesiones": sum(len(d["sesiones"]) for d in dias),
-            "minutos_por_asignatura": minutos_materia,
-            "minutos_por_actividad": minutos_actividad, "vista_previa": True}
+        sesiones_dia.append({"fecha": fecha, "dia": DIAS[actual.weekday()],
+                             "libre": libre, "sesiones": [], "_franjas": franjas})
+
+    def peso(m):
+        return PESO.get(m.get("prioridad"), 2) * PESO.get(m.get("dificultad"), 2)
+
+    # Primero objetivos semanales de asignaturas y actividades, con plazos.
+    for fase in ("objetivos", "extras"):
+        for dia in sesiones_dia:
+            fecha = date.fromisoformat(dia["fecha"])
+            nuevas = []
+            for comienzo, final_franja in dia["_franjas"]:
+                cursor = comienzo
+                while cursor < final_franja:
+                    candidatos = []
+                    if fase == "objetivos":
+                        for m in materias:
+                            falta = max(0, int(m.get("minutos_semanales") or 0) - usados_m[m["id"]])
+                            if falta:
+                                examen = min((a for a in actividades if a.get("tipo") == "examen"
+                                              and a.get("asignatura_id") == m["id"]
+                                              and a.get("fecha_limite", "") >= dia["fecha"]),
+                                             key=lambda a: a["fecha_limite"], default=None)
+                                candidatos.append((0 if examen else 2, examen["fecha_limite"] if examen else "9999-12-31",
+                                                   -peso(m), m["id"], "materia", m, falta, examen))
+                        for a in pendientes:
+                            if a["_fecha"] >= fecha:
+                                limite = int(a.get("minutos_semanales") or 0)
+                                falta = min(a["_restante"], max(0, limite - usados_a[a["id"]])) if limite else 0
+                                if falta:
+                                    candidatos.append((1, a["fecha_limite"], 0, a["id"], "actividad", a, falta, None))
+                    else:
+                        # Extras únicamente si no queda ningún objetivo explícito
+                        # pendiente que pueda utilizar este hueco.
+                        for m in materias:
+                            candidatos.append((0, "9999-12-31", -peso(m), m["id"], "materia", m, duracion, None))
+                        for a in pendientes:
+                            if a["_fecha"] >= fecha and a["_restante"] > 0 and not a.get("minutos_semanales"):
+                                candidatos.append((1, a["fecha_limite"], 0, a["id"], "actividad", a, a["_restante"], None))
+                    if not candidatos:
+                        break
+                    # En fase de extras se escoge la materia menos favorecida
+                    # respecto a su peso, no siempre la misma.
+                    if fase == "extras":
+                        candidatos.sort(key=lambda c: (
+                            usados_m[c[5]["id"]] / peso(c[5]) if c[4] == "materia" else float("inf"),
+                            c[2], c[3]))
+                    else:
+                        candidatos.sort(key=lambda c: c[:4])
+                    _, _, _, _, tipo, objeto, restante, examen = candidatos[0]
+                    bloque = min(duracion, restante, final_franja - cursor)
+                    if bloque <= 0:
+                        break
+                    fin = cursor + bloque
+                    if tipo == "materia":
+                        materia = objeto
+                        usados_m[materia["id"]] += bloque
+                        actividad = examen["titulo"] if examen else None
+                        tipo_actividad = "examen" if examen else None
+                    else:
+                        materia = next((m for m in materias if m["id"] == objeto.get("asignatura_id")), None)
+                        objeto["_restante"] -= bloque
+                        usados_a[objeto["id"]] += bloque
+                        actividad, tipo_actividad = objeto["titulo"], objeto["tipo"]
+                    nuevas.append({"fecha": dia["fecha"], "inicio": formato(cursor),
+                                   "fin": formato(fin), "asignatura_id": materia["id"] if materia else None,
+                                   "asignatura": materia["nombre"] if materia else "Actividad pendiente",
+                                   "actividad": actividad, "tipo": tipo_actividad})
+                    cursor = fin + descanso
+            if fase == "objetivos":
+                dia["sesiones"] = nuevas
+                # En fase extras se recalculan los huecos después de reservar
+                # sesiones de objetivos.
+                franjas = []
+                for a, b in dia["_franjas"]:
+                    cursor = a
+                    for ses in nuevas:
+                        si, sf = minutos(ses["inicio"]), minutos(ses["fin"])
+                        if si >= a and si < b:
+                            if si > cursor:
+                                franjas.append((cursor, si))
+                            cursor = max(cursor, sf + descanso)
+                    if cursor < b:
+                        franjas.append((cursor, b))
+                dia["_franjas"] = franjas
+            else:
+                dia["sesiones"].extend(nuevas)
+                dia["sesiones"].sort(key=lambda s: s["inicio"])
+
+    deficit = {m["id"]: max(0, int(m.get("minutos_semanales") or 0) - usados_m[m["id"]])
+               for m in materias}
+    deficit_actividades = {a["id"]: max(0, min(a["_restante"] + usados_a[a["id"]],
+                            int(a.get("minutos_semanales") or 0)) - usados_a[a["id"]])
+                          for a in pendientes if a.get("minutos_semanales")}
+    for dia in sesiones_dia:
+        dia.pop("_franjas")
+    return {"dias": sesiones_dia,
+            "total_sesiones": sum(len(d["sesiones"]) for d in sesiones_dia),
+            "minutos_por_asignatura": usados_m,
+            "minutos_por_actividad": usados_a,
+            "deficit_minutos_por_asignatura": deficit,
+            "deficit_minutos_por_actividad": deficit_actividades,
+            "vista_previa": True}
