@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "test": "npm run test:frontend",
-    "test:frontend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/app.test.js tests/theme.test.js tests/plan.test.js tests/objetivos.test.js",
+    "test:frontend": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand tests/app.test.js tests/theme.test.js tests/plan.test.js tests/objetivos.test.js tests/examenes-form.test.js",
     "test:all": "npm run test:frontend && python -m unittest discover -s tests -p 'test_*.py'"
   },
   "devDependencies": {
