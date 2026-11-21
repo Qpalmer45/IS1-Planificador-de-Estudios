@@ -1100,6 +1100,19 @@ function editAsignatura(asignatura, item) {
     prioritySelect.appendChild(option);
   });
 
+  const weeklyLabel = document.createElement("label");
+  weeklyLabel.className = "weekly-goal-label";
+  weeklyLabel.textContent = "Minutos de estudio por semana";
+  const weeklyInput = document.createElement("input");
+  weeklyInput.type = "number";
+  weeklyInput.min = "0";
+  weeklyInput.max = "10080";
+  weeklyInput.step = "1";
+  weeklyInput.required = true;
+  weeklyInput.value = String(asignatura.minutos_semanales ?? 0);
+  weeklyInput.setAttribute("aria-label", `Minutos semanales para ${asignatura.nombre}`);
+  weeklyLabel.append(weeklyInput);
+
   const saveButton = document.createElement("button");
   saveButton.type = "submit";
   saveButton.className = "action-btn save";
@@ -1137,7 +1150,7 @@ function editAsignatura(asignatura, item) {
     }
   });
 
-  form.append(input, diffSelect, prioritySelect, weeklyInput, saveButton, cancelButton);
+  form.append(input, diffSelect, prioritySelect, weeklyLabel, saveButton, cancelButton);
   item.replaceChildren(form);
   input.focus();
 }
