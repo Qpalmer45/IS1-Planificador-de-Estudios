@@ -314,6 +314,41 @@ class TestStudyPlannerApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Estudiante", response.data)
 
+    def test_dashboard_incluye_navegacion_lateral_y_selector_de_tema(self):
+        """La vista contiene el menú, el control de tema y el script compartido."""
+        self.registrar()
+        response = self.client.get("/")
+        html = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('class="nav-tabs"', html)
+        self.assertIn('class="main-content"', html)
+        self.assertIn('data-theme-toggle', html)
+        self.assertIn('aria-pressed="false"', html)
+        self.assertIn('theme.js', html)
+        for tab in ("inicio", "todos", "tareas", "asignaturas", "horarios", "planificador"):
+            self.assertIn(f'data-tab="{tab}"', html)
+
+    def test_dashboard_no_muestra_referencias_internas_en_los_modulos(self):
+        """Los nombres visibles de módulos no incluyen códigos de HU."""
+        import re
+
+        self.registrar()
+        html = self.client.get("/").get_data(as_text=True)
+        for heading in re.findall(r"<h4[^>]*>(.*?)</h4>", html, re.DOTALL):
+            self.assertNotRegex(heading, r"\\bHU\\d+\\b")
+
+    def test_login_y_registro_ofrecen_el_selector_de_tema(self):
+        """Ambas pantallas de acceso incluyen el mismo control accesible."""
+        for url in ("/login", "/registro"):
+            with self.subTest(url=url):
+                response = self.client.get(url)
+                html = response.get_data(as_text=True)
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("theme.js", html)
+                self.assertIn("data-theme-toggle", html)
+                self.assertIn('aria-pressed="false"', html)
+
     def test_login_view_muestra_formulario_y_redirige_si_autenticado(self):
         """login_view muestra login.html anónimamente y redirige con sesión."""
         anonymous_response = self.client.get("/login")
