@@ -2310,3 +2310,45 @@ body { background: radial-gradient(circle at 92% 4%, #e9edff 0, transparent 34%)
 }
 
 
+
+
+/* Clases del horario: corregir el recorte que introdujo el diseño anterior. */
+.schedule-class-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 7px;
+  min-height: 0;
+  overflow: hidden;
+}
+.schedule-class-block .class-block-title {
+  display: block;
+  flex: 0 1 auto;
+  min-height: 0;
+  font-size: .78rem;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.schedule-class-block .class-block-time {
+  display: block;
+  flex: 0 0 auto;
+  font-size: .71rem;
+  line-height: 1.15;
+  margin: 0;
+  white-space: nowrap;
+}
+.schedule-class-block .class-block-room {
+  display: none;
+}
+.schedule-class-block[data-long-class="true"] .class-block-room {
+  display: block;
+  font-size: .68rem;
+  line-height: 1.1;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
