@@ -2663,3 +2663,21 @@ html:not([data-theme="dark"]) .plan-mini-slot.occupied { background:#fff0d4; bor
 html:not([data-theme="dark"]) .plan-block-item { background:#fff0d4; color:#774413; }
 html:not([data-theme="dark"]) .plan-block-result { background:#fff0d4; color:#774413; }
 html:not([data-theme="dark"]) :is(a,button,input,select,textarea):focus-visible { outline-color:#b42332; }
+
+/* Selector de bandera de perfil: accesible y adaptable a pantallas pequeñas. */
+button.user-avatar { border:0; padding:0; flex-shrink:0; cursor:pointer; font-family:inherit; }
+button.user-avatar:focus-visible { outline:3px solid var(--primary); outline-offset:3px; }
+.user-avatar.has-flag { font-size:26px; background:transparent !important; box-shadow:none !important; }
+.avatar-flag-dialog { width:min(560px,calc(100vw - 28px)); max-height:min(75vh,720px); border:1px solid var(--border-card); border-radius:16px; padding:22px; background:var(--bg-card); color:var(--text-body); box-shadow:0 22px 65px #0004; }
+.avatar-flag-dialog::backdrop { background:#1218279e; }
+.avatar-flag-header { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.avatar-flag-header h2 { font-size:1.25rem; margin:0; color:var(--text-main); }
+.avatar-flag-dialog label { display:block; margin:12px 0 6px; font-weight:700; }
+#avatar-flag-search { width:100%; padding:11px; border:1px solid var(--border-card); border-radius:9px; background:var(--bg-page); color:var(--text-main); }
+.avatar-flag-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; max-height:310px; overflow-y:auto; margin:14px 0; }
+.avatar-flag-option { border:1px solid var(--border-card); border-radius:8px; background:var(--bg-page); color:var(--text-main); text-align:left; padding:10px; cursor:pointer; }
+.avatar-flag-option:hover,.avatar-flag-option:focus-visible { background:var(--primary-light); border-color:var(--primary); }
+html[data-theme="dark"] .avatar-flag-dialog { background:#172235; border-color:#35445b; color:#f1f5f9; }
+html[data-theme="dark"] .avatar-flag-dialog :is(#avatar-flag-search,.avatar-flag-option) { background:#202e45; color:#f1f5f9; border-color:#42516a; }
+html[data-theme="dark"] .avatar-flag-dialog .avatar-flag-option:hover { background:#35445b; }
+@media(max-width:480px) { .avatar-flag-list { grid-template-columns:1fr; } }
