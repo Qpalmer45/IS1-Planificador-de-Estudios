@@ -35,3 +35,19 @@ test("sin pestaña Ajedrez activa no se consulta la API",async()=>{
   const w=dom.window;w.fetch=jest.fn();vm.runInContext(source,vm.createContext(w));
   expect(w.fetch).not.toHaveBeenCalled();w.close();
 });
+
+test("al abrir Ajedrez después de Inicio carga las piezas",async()=>{
+  const dom=new JSDOM(`<button data-tab="ajedrez">Ajedrez</button><section id="tab-ajedrez"><div id="daily-chess-board"></div></section><span id="user-email-display">test@example.com</span><span id="daily-chess-date"></span><p id="daily-chess-status"></p><p id="daily-chess-progress"></p><p id="daily-chess-prompt"></p><button id="daily-chess-hint"></button><button id="daily-chess-reset"></button>`,{url:"http://localhost/"});
+  const w=dom.window;
+  w.fetch=jest.fn(async()=>({ok:true,json:async()=>({fecha:"2026-11-22",ejercicios:puzzles})}));
+  vm.runInContext(source,vm.createContext(w));
+  const tab=w.document.getElementById("tab-ajedrez");
+  // Simula el listener de app.js registrado después del módulo de ajedrez.
+  w.document.querySelector('[data-tab="ajedrez"]').addEventListener("click",()=>tab.classList.add("active"));
+  w.document.querySelector('[data-tab="ajedrez"]').click();
+  await new Promise(resolve=>setTimeout(resolve,25));
+  expect(w.fetch).toHaveBeenCalledTimes(1);
+  expect(w.document.querySelectorAll(".daily-chess-square")).toHaveLength(64);
+  expect(Array.from(w.document.querySelectorAll(".daily-chess-square")).some(x=>x.textContent==="♕")).toBe(true);
+  w.close();
+});
