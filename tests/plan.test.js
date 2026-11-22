@@ -59,7 +59,7 @@ test("conserva y recupera el horario y parámetros tras refrescar", async () => 
   w.document.getElementById("plan-duracion").value = "45";
   w.document.getElementById("plan-form").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
   await new Promise(resolve => setImmediate(resolve));
-  expect(w.localStorage.length).toBe(1);
+  expect(w.localStorage.getItem("studyplan:plan-semanal:v1:test@example.com")).not.toBeNull();
   w.document.getElementById("plan-week").replaceChildren();
   w.document.getElementById("plan-duracion").value = "60";
   vm.runInContext(source, vm.createContext(w)); // Simula la carga de nuevo del script.
@@ -129,4 +129,65 @@ test("un compromiso se envía al generar y aparece en el calendario", async () =
   expect(options.method).toBe("POST");
   expect(JSON.parse(options.body).bloqueos[0].motivo).toBe("Partido de fútbol");
   expect(w.document.querySelector(".plan-block-result").textContent).toContain("Partido de fútbol");
+});
+
+test("la cuadrícula muestra siete días y permite seleccionar una franja", () => {
+  const w = setup({ ok: true, json: async () => ({ dias: [], total_sesiones: 0 }) });
+  w.document.getElementById("plan-fecha").value = "2026-11-23";
+  w.document.getElementById("plan-fecha").dispatchEvent(new w.Event("change"));
+  expect(w.document.querySelectorAll(".plan-mini-day")).toHaveLength(7);
+  expect(w.document.querySelectorAll(".plan-mini-slot")).toHaveLength(105);
+  const cell = w.document.querySelector('.plan-mini-slot[data-date="2026-11-25"][data-hour="18:00"]');
+  cell.click();
+  expect(w.document.getElementById("plan-block-date").value).toBe("2026-11-25");
+  expect(w.document.getElementById("plan-block-start").value).toBe("18:00");
+  expect(w.document.getElementById("plan-block-end").value).toBe("19:00");
+  expect(w.document.querySelector(".plan-mini-slot.selected").dataset.date).toBe("2026-11-25");
+});
+
+test("al cambiar la fecha de inicio se actualizan los siete días", () => {
+  const w = setup({ ok: true, json: async () => ({}) });
+  w.document.getElementById("plan-fecha").value = "2026-12-01";
+  w.document.getElementById("plan-fecha").dispatchEvent(new w.Event("change"));
+  expect(w.document.querySelectorAll(".plan-mini-day")).toHaveLength(7);
+  expect(w.document.querySelector('.plan-mini-day[data-date="2026-12-01"]')).not.toBeNull();
+  expect(w.document.querySelector('.plan-mini-day[data-date="2026-12-07"]')).not.toBeNull();
+});
+
+test("impide horas invertidas y motivos vacíos", () => {
+  const w = setup({ ok: true, json: async () => ({}) });
+  w.document.getElementById("plan-fecha").value = "2026-11-23";
+  w.document.getElementById("plan-fecha").dispatchEvent(new w.Event("change"));
+  w.document.getElementById("plan-block-start").value = "19:00";
+  w.document.getElementById("plan-block-end").value = "17:00";
+  w.document.getElementById("plan-block-reason").value = "Fútbol";
+  w.document.getElementById("plan-block-form").dispatchEvent(new w.Event("submit", { cancelable: true }));
+  expect(w.document.querySelectorAll(".plan-block-item")).toHaveLength(0);
+  expect(w.document.getElementById("plan-block-feedback").textContent).toContain("Comprueba");
+  w.document.getElementById("plan-block-end").value = "20:00";
+  w.document.getElementById("plan-block-reason").value = " ";
+  w.document.getElementById("plan-block-form").dispatchEvent(new w.Event("submit", { cancelable: true }));
+  expect(w.document.querySelectorAll(".plan-block-item")).toHaveLength(0);
+});
+
+test("permite quitar un bloqueo y deja libre la franja", () => {
+  const w = setup({ ok: true, json: async () => ({}) });
+  w.document.getElementById("plan-fecha").value = "2026-11-23";
+  w.document.getElementById("plan-fecha").dispatchEvent(new w.Event("change"));
+  w.document.getElementById("plan-block-reason").value = "Entrenamiento";
+  w.document.getElementById("plan-block-form").dispatchEvent(new w.Event("submit", { cancelable: true }));
+  expect(w.document.querySelectorAll(".plan-mini-slot.occupied").length).toBeGreaterThan(0);
+  w.document.querySelector(".plan-block-item button").click();
+  expect(w.document.querySelectorAll(".plan-mini-slot.occupied")).toHaveLength(0);
+  expect(w.document.querySelectorAll(".plan-block-item")).toHaveLength(0);
+});
+
+test("el motivo se muestra como texto y no como HTML", () => {
+  const w = setup({ ok: true, json: async () => ({}) });
+  w.document.getElementById("plan-fecha").value = "2026-11-23";
+  w.document.getElementById("plan-fecha").dispatchEvent(new w.Event("change"));
+  w.document.getElementById("plan-block-reason").value = "<img src=x onerror=alert(1)>";
+  w.document.getElementById("plan-block-form").dispatchEvent(new w.Event("submit", { cancelable: true }));
+  expect(w.document.querySelector(".plan-block-item img")).toBeNull();
+  expect(w.document.querySelector(".plan-block-item").textContent).toContain("<img");
 });
