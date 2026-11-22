@@ -21,6 +21,7 @@
   const blockForm = document.getElementById("plan-block-form");
   const blockCalendar = document.getElementById("plan-block-calendar");
   const blockDate = document.getElementById("plan-block-date");
+  let selectedSlot = null;
   const blockFeedback = document.getElementById("plan-block-feedback");
   const blocksKey = userEmail ? "studyplan:bloqueos:v1:" + userEmail : null;
   let blocks = [];
@@ -56,41 +57,90 @@
       option.value = day.date;
       option.textContent = day.label;
       blockDate.append(option);
-      const column = document.createElement("section");
-      column.className = "plan-block-day";
-      const heading = document.createElement("h4");
-      heading.textContent = day.label;
-      column.append(heading);
-      const dayBlocks = blocks.filter(b => b.fecha === day.date).sort((a, b) => a.inicio.localeCompare(b.inicio));
-      if (!dayBlocks.length) {
-        const empty = document.createElement("p");
-        empty.textContent = "Sin bloqueos";
-        empty.className = "plan-empty";
-        column.append(empty);
+    }
+    if (days.some(d => d.date === previous)) blockDate.value = previous;
+    else if (days.length) blockDate.value = days[0].date;
+
+    const grid = document.createElement("div");
+    grid.className = "plan-mini-grid";
+    const corner = document.createElement("div");
+    corner.className = "plan-mini-corner";
+    corner.textContent = "Hora";
+    grid.append(corner);
+    for (const day of days) {
+      const header = document.createElement("button");
+      header.type = "button";
+      header.className = "plan-mini-day";
+      header.textContent = day.label;
+      header.dataset.date = day.date;
+      header.setAttribute("aria-label", "Seleccionar " + day.label);
+      header.addEventListener("click", () => {
+        blockDate.value = day.date;
+        selectedSlot = null;
+        renderBlocks();
+      });
+      if (blockDate.value === day.date) header.classList.add("selected");
+      grid.append(header);
+    }
+    for (let hour = 8; hour < 23; hour++) {
+      const time = String(hour).padStart(2, "0") + ":00";
+      const next = String(hour + 1).padStart(2, "0") + ":00";
+      const timeLabel = document.createElement("div");
+      timeLabel.className = "plan-mini-hour";
+      timeLabel.textContent = time;
+      grid.append(timeLabel);
+      for (const day of days) {
+        const cell = document.createElement("button");
+        cell.type = "button";
+        cell.className = "plan-mini-slot";
+        cell.dataset.date = day.date;
+        cell.dataset.hour = time;
+        const overlapping = blocks.filter(b => b.fecha === day.date && b.inicio < next && b.fin > time);
+        cell.textContent = overlapping.length ? overlapping.map(b => b.motivo).join(", ") : "+";
+        cell.title = overlapping.length ? overlapping.map(b => b.inicio + "–" + b.fin + " " + b.motivo).join("; ") : "Bloquear " + day.label + " a las " + time;
+        cell.setAttribute("aria-label", cell.title);
+        if (overlapping.length) cell.classList.add("occupied");
+        if (selectedSlot && selectedSlot.date === day.date && selectedSlot.hour === time) cell.classList.add("selected");
+        cell.addEventListener("click", () => {
+          blockDate.value = day.date;
+          document.getElementById("plan-block-start").value = time;
+          document.getElementById("plan-block-end").value = next;
+          selectedSlot = { date: day.date, hour: time };
+          renderBlocks();
+          blockFeedback.textContent = "Seleccionado " + day.label + " de " + time + " a " + next + ". Puedes ampliar las horas y escribir el motivo.";
+        });
+        grid.append(cell);
       }
-      for (const b of dayBlocks) {
+    }
+    blockCalendar.append(grid);
+    const list = document.createElement("div");
+    list.className = "plan-mini-block-list";
+    for (const day of days) {
+      for (const b of blocks.filter(x => x.fecha === day.date).sort((x, y) => x.inicio.localeCompare(y.inicio))) {
         const item = document.createElement("div");
         item.className = "plan-block-item";
         const detail = document.createElement("span");
-        detail.textContent = b.inicio + "–" + b.fin + " · " + b.motivo;
+        detail.textContent = day.label + " · " + b.inicio + "–" + b.fin + " · " + b.motivo;
         const remove = document.createElement("button");
         remove.type = "button";
         remove.textContent = "Quitar";
         remove.setAttribute("aria-label", "Quitar " + b.motivo + " del " + day.label);
         remove.addEventListener("click", () => {
           blocks = blocks.filter(x => x.id !== b.id);
+          selectedSlot = null;
           persistBlocks();
           renderBlocks();
+          blockFeedback.textContent = "Compromiso eliminado.";
         });
         item.append(detail, remove);
-        column.append(item);
+        list.append(item);
       }
-      blockCalendar.append(column);
     }
-    if (days.some(d => d.date === previous)) blockDate.value = previous;
+    blockCalendar.append(list);
   }
 
-  dateInput.addEventListener("change", renderBlocks);
+  dateInput.addEventListener("change", () => { selectedSlot = null; renderBlocks(); });
+  blockDate.addEventListener("change", () => { selectedSlot = null; renderBlocks(); });
   blockForm.addEventListener("submit", event => {
     event.preventDefault();
     const fecha = blockDate.value;
@@ -103,6 +153,7 @@
     }
     blocks.push({ id: String(Date.now()) + "-" + Math.random(), fecha, inicio, fin, motivo });
     persistBlocks();
+    selectedSlot = null;
     renderBlocks();
     blockFeedback.textContent = "Franja bloqueada. Se tendrá en cuenta al generar el horario.";
     document.getElementById("plan-block-reason").value = "";
@@ -160,7 +211,7 @@
       card.append(text("h3", day.dia + " · " + day.fecha));
       if (day.libre) card.append(text("p", "Día bloqueado en tu horario", "plan-empty"));
       for (const b of (day.bloqueos || [])) card.append(text("p", "Ocupado " + b.inicio + "–" + b.fin + " · " + b.motivo, "plan-block-result"));
-      else if (!day.sesiones.length) card.append(text("p", "Sin sesiones", "plan-empty"));
+      if (!day.libre && !day.sesiones.length) card.append(text("p", "Sin sesiones", "plan-empty"));
       for (const session of day.sesiones) {
         const block = document.createElement("div");
         block.className = "plan-session";
