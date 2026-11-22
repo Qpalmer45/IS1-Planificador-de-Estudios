@@ -69,3 +69,34 @@ Se han añadido o ampliado pruebas para:
 - [Repositorio del proyecto](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios)
 - [README](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/blob/main/README.md)
 - [Registro detallado de cambios de historias](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/blob/main/docs/registro-cambios-hu-2026-11-21.md)
+
+
+## Actualización adicional — 22/11/2026
+
+Se incorpora aquí el trabajo posterior al resumen inicial de esta semana, **sin atribuir como terminadas historias que todavía requieren comprobación**.
+
+| Historia o área | Cambios incorporados | Pruebas o verificación |
+|---|---|---|
+| HU02 / HU06 / HU07 — Planificación semanal | Cuadrícula interactiva para bloquear franjas de estudio, generación del horario y persistencia local de la última planificación | `static/plan.js`, `tests/plan.test.js`; comprobación visual pendiente |
+| HU04 — Tareas y exámenes | Validación de fechas límite, corrección del error que permitía seleccionar ayer, distinción entre examen y tarea | [Bug #48](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/48) cerrado; ejecución completa pendiente |
+| HU16 — Personalización del perfil | Selector de banderas por país o territorio, búsqueda y persistencia de la elección | `static/avatar-flags.js`, `tests/avatar-flags.test.js` |
+| HU16 — Escudos de fútbol | Selección de escudos por Primera y Segunda españolas, Premier League, Bundesliga, Serie A y Ligue 1; API `/api/perfil/escudos` con caché de 24 h | `app.py`, `tests/test_escudos.py`, `tests/avatar-flags.test.js`; fuente externa no verificada exhaustivamente |
+| HU40 — Temas visuales | Ajustes de colores del tema claro hacia una paleta roja, conservando el tema oscuro | `static/style.css`; revisión visual pendiente |
+| HU41 — Diseño adaptable | Mejor aprovechamiento del ancho del panel principal, según la issue existente | [HU41](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/51); no se afirma verificación completa |
+| HU44 — Ajedrez diario | Nuevo módulo en Inicio: tablero 8×8, mate en una jugada, cuatro posiciones rotatorias, pista, reintento, solución y progreso por usuario y día | `static/daily-chess.js`, `tests/daily-chess.test.js` (cinco pruebas), incluidas en `npm run test:frontend` |
+
+### Historias nuevas documentadas en el Product Backlog
+
+Se actualizó `docs/Historias-de-usuario.md` para incluir las HU28–HU44 y los vínculos a sus issues. La HU42 está documentada como **duplicada** de HU06/HU07/HU09/HU11; HU43 (recuperación de contraseña) permanece pendiente de implementación; HU44 tiene código y pruebas escritas, pero no ejecución validada.
+
+### Archivos y evidencias de esta ampliación
+
+- Interfaz: `templates/index.html`, `static/style.css`.
+- JavaScript: `static/plan.js`, `static/avatar-flags.js`, `static/daily-chess.js`.
+- Backend: `app.py`, endpoint de escudos.
+- Pruebas: `tests/plan.test.js`, `tests/avatar-flags.test.js`, `tests/daily-chess.test.js`, `tests/test_escudos.py`.
+- Configuración de pruebas: `package.json`.
+
+**Pendiente:** ejecutar las pruebas, revisar visualmente ambos temas y el tablero, verificar la disponibilidad de escudos en las seis competiciones y registrar resultados en el Sprint Doc. No se ha añadido un motor de ajedrez completo: se comprueba la solución prefijada de cada ejercicio.
+
+[Backlog completo](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/blob/main/docs/Historias-de-usuario.md) · [Registro detallado de cambios](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/blob/main/docs/registro-cambios-hu-2026-11-21.md)
