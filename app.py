@@ -2003,6 +2003,87 @@ def api_perfil_escudos():
             return jsonify({"liga": liga, "nombre": CLUB_LEAGUES[liga], "equipos": cached["equipos"], "cache": True})
         return jsonify({"error": "No se han podido cargar los escudos de esta liga. Inténtalo de nuevo."}), 503
 
+
+# HU44: puzzles externos (datos abiertos de Lichess) mediante Chess Puzzle API.
+# La respuesta de soluciones solo se obtiene en el servidor; se almacena en caché diaria.
+_chess_cache = {}
+CHESS_PUZZLE_API = "https://chess.mauriulloa.com/v1/puzzles"
+
+
+def _chess_fetch_json(url):
+    import json
+    from urllib.request import Request, urlopen
+    req = Request(url, headers={"User-Agent": "StudyPlan/1.0", "Accept": "application/json"})
+    with urlopen(req, timeout=8) as response:
+        return json.load(response)
+
+
+def _chess_daily_set(today):
+    """Obtiene cinco problemas de mate en una jugada; reutiliza el mismo lote durante el día."""
+    import time
+    cached = _chess_cache.get(today)
+    if cached:
+        return cached
+    raw = _chess_fetch_json(CHESS_PUZZLE_API + "/random?themes=mateIn1&count=5")
+    items = raw if isinstance(raw, list) else (
+        raw.get("puzzles", raw.get("data", [])) if isinstance(raw, dict) else []
+    )
+    if isinstance(items, dict):
+        items = items.get("puzzles", items.get("items", []))
+    if not isinstance(items, list):
+        raise ValueError("Formato de problemas no reconocido")
+    puzzles = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        ident = str(item.get("id", ""))
+        fen = item.get("positionFen")
+        color = item.get("solverColor")
+        if not ident.isalnum() or not isinstance(fen, str) or color not in ("white", "black"):
+            continue
+        solution = _chess_fetch_json(CHESS_PUZZLE_API + "/" + ident + "/solution")
+        moves = solution.get("solution", []) if isinstance(solution, dict) else []
+        if not isinstance(moves, list) or len(moves) != 1 or not isinstance(moves[0], str) or len(moves[0]) not in (4, 5):
+            continue
+        puzzles.append({"id": ident, "fen": fen, "color": color, "rating": item.get("rating"), "move": moves[0]})
+        if len(puzzles) == 5:
+            break
+    if len(puzzles) != 5 or len({p["id"] for p in puzzles}) != 5:
+        raise ValueError("La API no devolvió cinco mates en una jugada válidos")
+    _chess_cache.clear()
+    _chess_cache[today] = puzzles
+    return puzzles
+
+
+@app.get("/api/ajedrez/diario")
+def api_ajedrez_diario():
+    from datetime import date
+    try:
+        puzzles = _chess_daily_set(date.today().isoformat())
+        return jsonify({"fecha": date.today().isoformat(), "ejercicios": [
+            {"id": p["id"], "fen": p["fen"], "color": p["color"], "rating": p["rating"]}
+            for p in puzzles
+        ]})
+    except (OSError, ValueError, KeyError, TypeError):
+        return jsonify({"error": "No se han podido cargar los cinco ejercicios de ajedrez."}), 503
+
+
+@app.post("/api/ajedrez/comprobar")
+def api_ajedrez_comprobar():
+    from datetime import date
+    data = request.get_json(silent=True) or {}
+    ident, move = data.get("id"), data.get("movimiento")
+    if not isinstance(ident, str) or not isinstance(move, str) or len(move) not in (4, 5):
+        return jsonify({"error": "Movimiento inválido"}), 400
+    try:
+        puzzles = _chess_daily_set(date.today().isoformat())
+    except (OSError, ValueError, KeyError, TypeError):
+        return jsonify({"error": "Servicio de ajedrez no disponible"}), 503
+    puzzle = next((p for p in puzzles if p["id"] == ident), None)
+    if puzzle is None:
+        return jsonify({"error": "Ejercicio no disponible hoy"}), 404
+    return jsonify({"correcto": move.lower() == puzzle["move"].lower()})
+
 if __name__ == "__main__":
     # Permite ejecutar este módulo directamente para desarrollo local.
     app.run(debug=True)
