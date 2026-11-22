@@ -61,7 +61,6 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
     pendientes.sort(key=lambda a: (a["_fecha"], a["id"]))
     usados_m = {m["id"]: 0 for m in materias}
     usados_a = {a["id"]: 0 for a in pendientes}
-    bloqueos = bloqueos or []
     sesiones_dia = []
 
     # Dos fases sobre las mismas franjas: primero cubrir objetivos explícitos;
