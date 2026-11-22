@@ -164,12 +164,29 @@
       </div>
       <div>
         <h3 style="margin: 0; font-size: 1.1rem; font-weight: 700; color: #1e293b;">Próximos Recordatorios</h3>
-        <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Entregas y exámenes programados para los próximos 7 días</p>
+        <p style="margin: 0; font-size: 0.85rem; color: #64748b;">Entregas y exámenes dentro de tu periodo de aviso</p>
       </div>
     </div>
     <span id="badge-total-recordatorios" style="background: #2563eb; color: #ffffff; font-size: 0.85rem; font-weight: 700; padding: 4px 12px; border-radius: 20px;">0</span>
   </div>
 
+  <form id="recordatorios-config-form" class="reminder-settings-form">
+    <div>
+      <label for="recordatorios-dias">Configurar recordatorios</label>
+      <p>¿Con cuántos días de antelación quieres ver tus avisos?</p>
+    </div>
+    <select id="recordatorios-dias" name="dias_anticipacion" aria-label="Días de antelación" required>
+      <option value="0">Solo el mismo día</option>
+      <option value="1">1 día antes</option>
+      <option value="3">3 días antes</option>
+      <option value="7" selected>7 días antes</option>
+      <option value="14">14 días antes</option>
+      <option value="30">30 días antes</option>
+      <option value="60">60 días antes</option>
+    </select>
+    <button type="submit" class="primary-btn">Guardar</button>
+    <p id="recordatorios-config-estado" role="status" aria-live="polite"></p>
+  </form>
   <div id="lista-recordatorios">
     <div style="text-align: center; padding: 1.5rem; color: #64748b; font-size: 0.9rem;">
       <span>Cargando tus recordatorios...</span>
