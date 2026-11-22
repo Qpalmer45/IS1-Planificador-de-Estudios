@@ -2632,3 +2632,34 @@ html[data-theme="dark"] .plan-block-form input,html[data-theme="dark"] .plan-blo
 html[data-theme="dark"] .plan-mini-slot,html[data-theme="dark"] .plan-mini-day { background:#202e45; border-color:#42516a; color:#f1f5f9; }
 html[data-theme="dark"] .plan-mini-slot.occupied { background:#5c451b; border-color:#f59e0b; color:#fef3c7; }
 html[data-theme="dark"] .plan-mini-slot.selected,html[data-theme="dark"] .plan-mini-day.selected { background:#193b6b; outline-color:#93c5fd; }
+
+/* Tema claro rojo granate: identidad cálida, conservando intacto el modo oscuro. */
+html:not([data-theme="dark"]) {
+  --primary:#b42332;
+  --primary-hover:#8f1826;
+  --primary-light:#fff0f1;
+  --primary-border:#f3b7bd;
+  --bg-page:#fff9f8;
+  --bg-card:#ffffff;
+  --border-card:#efd9d9;
+  --text-main:#341c23;
+  --text-body:#513943;
+  --text-muted:#795c66;
+  --text-light:#967c85;
+  --shadow-card:0 12px 30px -4px rgba(126,31,47,.08);
+}
+html:not([data-theme="dark"]) .navbar { background:#fffafa; }
+html:not([data-theme="dark"]) .welcome-card { background:linear-gradient(120deg,#771827,#b42332 60%,#d34a50); box-shadow:0 10px 25px -5px rgba(139,24,38,.24); }
+html:not([data-theme="dark"]) .welcome-text p { color:#ffe3e5; }
+html:not([data-theme="dark"]) .welcome-action .primary-btn { color:#9c1e2d; }
+html:not([data-theme="dark"]) .user-avatar { background:linear-gradient(135deg,#a21d2e,#df6870); box-shadow:0 2px 6px rgba(151,28,43,.22); }
+html:not([data-theme="dark"]) .tab-btn:hover { background:#ffeaed; }
+html:not([data-theme="dark"]) .tab-badge.muted { background:#fbecee; }
+html:not([data-theme="dark"]) .plan-mini-slot:hover,
+html:not([data-theme="dark"]) .plan-mini-day:hover { border-color:#b42332; background:#ffe1e5; color:#7e1726; }
+html:not([data-theme="dark"]) .plan-mini-slot.selected,
+html:not([data-theme="dark"]) .plan-mini-day.selected { outline-color:#b42332; background:#ffdce1; color:#821726; }
+html:not([data-theme="dark"]) .plan-mini-slot.occupied { background:#fff0d4; border-color:#d18a26; color:#774413; }
+html:not([data-theme="dark"]) .plan-block-item { background:#fff0d4; color:#774413; }
+html:not([data-theme="dark"]) .plan-block-result { background:#fff0d4; color:#774413; }
+html:not([data-theme="dark"]) :is(a,button,input,select,textarea):focus-visible { outline-color:#b42332; }
