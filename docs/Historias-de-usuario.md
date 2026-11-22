@@ -2,7 +2,7 @@
 
 Recopilación del Product Backlog a partir de las [issues de GitHub](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues). Se conservan el valor, la estimación y los criterios de aceptación publicados en cada issue. En GitHub, el valor se expresa como nivel (por ejemplo, «Muy alto»); no se sustituye por una prioridad distinta.
 
-Estado consultado: 27 issues abiertas y 0 cerradas.
+Estado histórico del documento original (HU01–HU27). Las HU posteriores se incorporan a continuación; consultar cada issue para conocer su estado actual.
 
 ## HU01 - Gestión de asignaturas
 
@@ -380,3 +380,121 @@ Estado consultado: 27 issues abiertas y 0 cerradas.
 - El usuario puede editar un To-Do.
 - El usuario puede eliminar un To-Do.
 - Se diferencian visualmente los To-Dos pendientes de los completados.
+
+---
+
+# Ampliación del Product Backlog — 22/11/2026
+
+Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpora las historias creadas después. **Los resúmenes no sustituyen los criterios de aceptación completos de las issues enlazadas.** La implementación no equivale a pruebas superadas.
+
+## HU28 — Filtrar To-Dos por estado
+
+[Issue #36](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/36)
+
+**Alcance y criterios principales:** Filtrar todas, pendientes o completadas, sin alterar los datos ni mostrar To-Dos ajenos.
+
+## HU29 — Buscar To-Dos por título
+
+[Issue #37](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/37)
+
+**Alcance y criterios principales:** Búsqueda parcial sin distinguir mayúsculas, con aislamiento por usuario.
+
+## HU30 — Navegación mediante teclado
+
+[Issue #38](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/38)
+
+**Alcance y criterios principales:** Navegación, activación y foco visibles sin ratón.
+
+## HU31 — Etiquetas accesibles
+
+[Issue #39](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/39)
+
+**Alcance y criterios principales:** Etiquetas, regiones y mensajes para lectores de pantalla.
+
+## HU32 — Modo de alto contraste
+
+[Issue #40](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/40)
+
+**Alcance y criterios principales:** Preferencia persistente y contraste legible.
+
+## HU33 — Texto ampliado
+
+[Issue #41](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/41)
+
+**Alcance y criterios principales:** Interfaz utilizable con zoom al 200 %.
+
+## HU34 — Movimiento reducido
+
+[Issue #42](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/42)
+
+**Alcance y criterios principales:** Respetar preferencias del sistema y evitar animaciones innecesarias.
+
+## HU35 — Errores de formularios accesibles
+
+[Issue #43](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/43)
+
+**Alcance y criterios principales:** Mensajes asociados a campos, comprensibles y sin pérdida de datos.
+
+## HU36 — Exportación ICS
+
+[Issue #44](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/44)
+
+**Alcance y criterios principales:** Exportar sesiones propias en calendario interoperable.
+
+## HU37 — Exportación de datos personales
+
+[Issue #45](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/45)
+
+**Alcance y criterios principales:** Descargar JSON propio sin credenciales ni datos de terceros.
+
+## HU38 — Deshacer eliminación de To-Do
+
+[Issue #46](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/46)
+
+**Alcance y criterios principales:** Recuperar eliminación accidental durante al menos diez segundos.
+
+## HU39 — Confirmación de cambios sin guardar
+
+[Issue #47](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/47)
+
+**Alcance y criterios principales:** Avisar antes de descartar formularios modificados.
+
+## HU40 — Modo claro y oscuro
+
+[Issue #50](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/50)
+
+**Alcance y criterios principales:** Alternar tema, persistir elección y respetar preferencia del sistema.
+
+## HU41 — Aprovechamiento del ancho del panel
+
+[Issue #51](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/51)
+
+**Alcance y criterios principales:** Diseño adaptable que aprovecha el espacio y distribuye las tarjetas.
+
+## HU42 — Horario semanal automático
+
+[Issue #52](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/52)
+
+**Alcance y criterios principales:** Issue cerrada como duplicada de HU06, HU07, HU09 y HU11; no duplicar desarrollo.
+
+## HU43 — Recuperación segura de contraseña
+
+[Issue #53](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/53)
+
+**Alcance y criterios principales:** Solicitud de enlace de un solo uso, caducidad, protección contra enumeración de cuentas y restablecimiento.
+
+## HU44 — Reto diario de ajedrez
+
+[Issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54)
+
+**Alcance y criterios principales:** Tablero 8×8; mate en una jugada; rotación diaria de cuatro posiciones; pistas, reintentos, explicación y persistencia local por usuario y fecha. Pruebas en tests/daily-chess.test.js; ejecución pendiente.
+
+## Cambios funcionales relacionados, sin HU nueva
+
+- **HU02/HU06/HU07:** selección interactiva de franjas horarias bloqueadas, generación y recuperación del horario semanal (`static/plan.js`, `tests/plan.test.js`).
+- **HU04:** validación de fechas límite y distinción entre tareas y exámenes (bug [#48](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/48)).
+- **HU16:** avatar personalizable con banderas y escudos de equipos de LaLiga Primera y Segunda, Premier League, Bundesliga, Serie A y Ligue 1 (`static/avatar-flags.js`, `app.py`; `tests/avatar-flags.test.js`, `tests/test_escudos.py`). Los escudos dependen de un proveedor externo.
+- **HU40:** ajustes de la paleta roja del tema claro.
+- **HU44:** reto de ajedrez incorporado a Inicio, con cinco pruebas frontend escritas.
+
+**Verificación:** no consta una ejecución completa satisfactoria de las pruebas ni revisión manual de todos estos cambios; no se atribuye cierre funcional sin evidencias.
