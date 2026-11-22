@@ -139,6 +139,8 @@ IS1-Planificador-de-Estudios/
 
 La documentación detallada se encuentra en [docs/tecnica/](docs/tecnica/README.md) e incluye requisitos y alcance, arquitectura, base de datos, API de Flask y manual de instalación y uso.
 
+Para la verificación funcional y pruebas paso a paso de la aplicación, consulta la [Guía de Revisión Técnica Formal (RTF)](docs/guia-revision-rtf.md).
+
 ## Estado del proyecto
 
 - **Sprint 1 (Finalizado):**
