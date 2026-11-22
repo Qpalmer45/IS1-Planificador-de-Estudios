@@ -45,3 +45,14 @@ test("al actualizar asignaturas no se mantiene una selección que ya no existe",
   if (selector.value !== seleccionado) selector.value = "";
   expect(selector.value).toBe("");
 });
+
+test("el panel de recordatorios permite seleccionar antelación y guardar", () => {
+  const document = new JSDOM(html).window.document;
+  const form = document.getElementById("recordatorios-config-form");
+  const select = document.getElementById("recordatorios-dias");
+  expect(form).not.toBeNull();
+  expect(select.value).toBe("7");
+  expect([...select.options].map(o => o.value)).toEqual(["0", "1", "3", "7", "14", "30", "60"]);
+  expect(form.querySelector('button[type="submit"]')).not.toBeNull();
+  expect(document.getElementById("recordatorios-config-estado").getAttribute("aria-live")).toBe("polite");
+});
