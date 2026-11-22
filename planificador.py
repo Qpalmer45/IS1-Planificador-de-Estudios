@@ -20,7 +20,7 @@ def formato(valor):
 
 
 def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
-                   hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15):
+                   hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15, bloqueos=None):
     if isinstance(inicio, str):
         inicio = date.fromisoformat(inicio)
     if not isinstance(inicio, date):
@@ -28,6 +28,19 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
     desde, hasta = minutos(hora_inicio), minutos(hora_fin)
     if type(duracion) is not int or type(descanso) is not int or not 25 <= duracion <= 180 or not 0 <= descanso <= 60 or desde >= hasta:
         raise ValueError("Franja, duración o descanso inválidos.")
+    bloqueos = [] if bloqueos is None else bloqueos
+    if not isinstance(bloqueos, list) or len(bloqueos) > 100:
+        raise ValueError("Demasiados bloqueos.")
+    fechas_semana = {(inicio + timedelta(days=i)).isoformat() for i in range(7)}
+    normalizados = []
+    for item in bloqueos:
+        if not isinstance(item, dict) or item.get("fecha") not in fechas_semana:
+            raise ValueError("Fecha del bloqueo fuera de la semana.")
+        a, b = minutos(item.get("inicio", "")), minutos(item.get("fin", ""))
+        motivo = item.get("motivo")
+        if a >= b or not isinstance(motivo, str) or not motivo.strip() or len(motivo.strip()) > 120:
+            raise ValueError("Bloqueo inválido: revisa horas y motivo.")
+        normalizados.append({"fecha": item["fecha"], "inicio": formato(a), "fin": formato(b), "motivo": motivo.strip()})
     materias = sorted([dict(m) for m in asignaturas], key=lambda m: m["id"])
     ids = {m["id"] for m in materias}
     pendientes = []
@@ -57,8 +70,10 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
         fecha = actual.isoformat()
         libre = any(p["fecha_inicio"] <= fecha <= p["fecha_fin"] for p in periodos)
         ocupados = sorted(
-            (minutos(c["hora_inicio"]), minutos(c["hora_fin"]))
-            for c in clases if c["dia_semana"] == DIAS[actual.weekday()]
+            [(minutos(c["hora_inicio"]), minutos(c["hora_fin"]))
+             for c in clases if c["dia_semana"] == DIAS[actual.weekday()]]
+            + [(minutos(b["inicio"]), minutos(b["fin"]))
+               for b in normalizados if b["fecha"] == fecha]
         ) if not libre else []
         franjas = []
         cursor = desde
@@ -72,7 +87,9 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
                 if cursor >= hasta:
                     break
         sesiones_dia.append({"fecha": fecha, "dia": DIAS[actual.weekday()],
-                             "libre": libre, "sesiones": [], "_franjas": franjas})
+                             "libre": libre, "sesiones": [],
+                             "bloqueos": [dict(b) for b in normalizados if b["fecha"] == fecha],
+                             "_franjas": franjas})
 
     def peso(m):
         return PESO.get(m.get("prioridad"), 2) * PESO.get(m.get("dificultad"), 2)
