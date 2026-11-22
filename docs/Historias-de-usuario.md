@@ -487,7 +487,7 @@ Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpo
 
 [Issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54)
 
-**Alcance y criterios principales:** Tablero 8×8; mate en una jugada; rotación diaria de cuatro posiciones; pistas, reintentos, explicación y persistencia local por usuario y fecha. Pruebas en tests/daily-chess.test.js; ejecución pendiente.
+**Alcance y criterios principales:** Tablero 8×8; mate en una jugada; cinco ejercicios diarios en secuencia; pistas, reintentos, explicación y persistencia local por usuario y fecha. Pruebas en tests/daily-chess.test.js; ejecución pendiente.
 
 ## Cambios funcionales relacionados, sin HU nueva
 
@@ -495,7 +495,7 @@ Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpo
 - **HU04:** validación de fechas límite y distinción entre tareas y exámenes (bug [#48](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/48)).
 - **HU16:** avatar personalizable con banderas y escudos de equipos de LaLiga Primera y Segunda, Premier League, Bundesliga, Serie A y Ligue 1 (`static/avatar-flags.js`, `app.py`; `tests/avatar-flags.test.js`, `tests/test_escudos.py`). Los escudos dependen de un proveedor externo.
 - **HU40:** ajustes de la paleta roja del tema claro.
-- **HU44:** reto de ajedrez incorporado a Inicio, con cinco pruebas frontend escritas.
+- **HU44:** reto de ajedrez incorporado a Inicio, con siete pruebas frontend escritas.
 
 **Verificación:** no consta una ejecución completa satisfactoria de las pruebas ni revisión manual de todos estos cambios; no se atribuye cierre funcional sin evidencias.
 
@@ -509,3 +509,12 @@ Se han marcado como **Completed** en GitHub las historias con implementación in
 - **HU44 — Reto diario de ajedrez:** [issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54).
 
 El cierre indica que se ha incorporado la funcionalidad; **no certifica una ejecución satisfactoria de la batería de pruebas ni una revisión manual**. HU06, HU13 y HU41 conservan su estado abierto por verificaciones o criterios pendientes; las propuestas no implementadas no se marcan como completadas.
+
+
+### 22/11/2026 — HU44: cinco ejercicios diarios y corrección de «Reintentar»
+
+- Se amplía el reto a **cinco ejercicios diarios** de mate en una jugada, resueltos consecutivamente, con progreso visible de 0/5 a 5/5 y orden dependiente de la fecha.
+- Se corrige el botón **Reintentar**: reinicia la posición y permite repetir incluso tras completar los cinco, conservando los ejercicios anteriores; el ejercicio repetido se descuenta hasta volver a resolverlo.
+- Se utiliza `localStorage` con clave versión `v2`, separada por correo y fecha, para guardar el conjunto de ejercicios completados.
+- Se amplía `tests/daily-chess.test.js` a **siete pruebas**; falta ejecutar la batería y realizar verificación manual.
+- Cambios en `static/daily-chess.js` y `tests/daily-chess.test.js`; [HU44 #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54) permanece cerrada como implementada, sin afirmar validación de pruebas.
