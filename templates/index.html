@@ -9,8 +9,20 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   
 <script src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script src="{{ url_for('static', filename='avatar-flags.js') }}" defer></script>
 </head>
 <body class="app-body">
+  <dialog id="avatar-flag-dialog" class="avatar-flag-dialog" aria-labelledby="avatar-flag-title">
+    <div class="avatar-flag-header">
+      <h2 id="avatar-flag-title">Elegir bandera de perfil</h2>
+      <button type="button" id="avatar-flag-close" class="secondary-btn" aria-label="Cerrar selector">Cerrar</button>
+    </div>
+    <p>Selecciona la bandera de cualquier país o recupera tu inicial. Tu elección se guarda en este navegador.</p>
+    <label for="avatar-flag-search">Buscar país</label>
+    <input id="avatar-flag-search" type="search" autocomplete="off" placeholder="España, Alemania, Japón…">
+    <div id="avatar-flag-list" class="avatar-flag-list" aria-label="Banderas disponibles"></div>
+    <button type="button" id="avatar-flag-reset" class="secondary-btn">Usar mi inicial</button>
+  </dialog>
   <!-- Marco principal de la aplicación: navegación, perfil y acceso a las vistas. -->
   <header class="navbar">
     <div class="nav-container">
@@ -63,9 +75,9 @@
       <button type="button" class="theme-toggle" data-theme-toggle aria-label="Activar modo oscuro" aria-pressed="false">🌙 <span data-theme-label>Modo oscuro</span></button>
       <div class="nav-user">
         <div class="user-info">
-          <div class="user-avatar" id="user-avatar">
+          <button type="button" class="user-avatar" id="user-avatar" title="Cambiar foto de perfil por una bandera" aria-label="Elegir bandera de perfil" aria-haspopup="dialog">
             {{ usuario_nombre[0].upper() if usuario_nombre else 'E' }}
-          </div>
+          </button>
           <div class="user-details">
             <span class="user-name" id="user-name-display">{{ usuario_nombre }}</span>
             <span class="user-email" id="user-email-display">{{ usuario_email }}</span>
