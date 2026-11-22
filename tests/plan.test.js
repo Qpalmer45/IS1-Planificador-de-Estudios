@@ -87,3 +87,21 @@ test("no restaura un horario guardado con menos de siete días", () => {
   expect(w.document.querySelectorAll(".plan-day")).toHaveLength(0);
   expect(w.document.getElementById("plan-duracion").value).toBe("60");
 });
+
+test("un error al regenerar no borra el horario anterior", async () => {
+  const w = setup({ ok: false, json: async () => ({ error: "Sin conexión" }) });
+  const oldPlan = {
+    total_sesiones: 1,
+    dias: Array.from({ length: 7 }, (_, i) => ({
+      dia: "lunes", fecha: "2026-11-" + (23 + i), libre: false,
+      sesiones: i === 0 ? [{ inicio: "16:00", fin: "17:00", asignatura: "Probabilidad" }] : []
+    }))
+  };
+  w.localStorage.setItem("studyplan:plan-semanal:v1:test@example.com",
+    JSON.stringify({ parametros: {}, plan: oldPlan }));
+  vm.runInContext(source, vm.createContext(w));
+  w.document.getElementById("plan-form").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+  await new Promise(resolve => setImmediate(resolve));
+  expect(w.document.querySelector(".plan-session strong").textContent).toBe("Probabilidad");
+  expect(w.document.getElementById("plan-feedback").textContent).toBe("Sin conexión");
+});
