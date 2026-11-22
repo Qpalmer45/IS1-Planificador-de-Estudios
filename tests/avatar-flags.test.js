@@ -39,7 +39,7 @@ test("buscar España sin tilde y elegir su bandera", () => {
   const option = w.document.querySelector('[data-code="ES"]');
   expect(option).not.toBeNull();
   option.click();
-  expect(w.document.getElementById("user-avatar").textContent).toBe("🇪🇸");
+  expect(w.document.querySelector("#user-avatar img").getAttribute("src")).toBe("https://flagcdn.com/w80/es.png");
   expect(w.localStorage.getItem("studyplan:avatar-flag:v1:test@example.com")).toBe("ES");
 });
 test("restablecer inicial borra la preferencia", () => {
@@ -62,4 +62,13 @@ test("no se ejecuta HTML procedente de los nombres", () => {
   const w = setup();
   w.document.getElementById("user-avatar").click();
   expect(w.document.querySelector(".avatar-flag-list script")).toBeNull();
+});
+
+test("las banderas usan imágenes en vez de depender del soporte emoji", () => {
+  const w = setup();
+  w.document.getElementById("user-avatar").click();
+  const option = w.document.querySelector('[data-code="ES"]');
+  expect(option.querySelector("img").getAttribute("src")).toBe("https://flagcdn.com/w40/es.png");
+  option.click();
+  expect(w.document.querySelector("#user-avatar img").alt).toContain("España");
 });
