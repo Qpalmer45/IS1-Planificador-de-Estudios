@@ -95,6 +95,6 @@
     if(started||!document.getElementById("tab-ajedrez")?.classList.contains("active"))return;
     started=true;void init();
   }
-  document.querySelector('[data-tab="ajedrez"]')?.addEventListener("click",activate);
+  document.querySelector('[data-tab="ajedrez"]')?.addEventListener("click",()=>{\n    // app.js puede registrar su listener después del nuestro: esperar al final del evento.\n    setTimeout(activate,0);\n  });
   activate();
 })();
