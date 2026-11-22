@@ -30,7 +30,7 @@
     if (!storageKey) return;
     try {
       const guardado = JSON.parse(localStorage.getItem(storageKey) || "null");
-      if (!guardado || !guardado.plan || !Array.isArray(guardado.plan.dias)) return;
+      if (!guardado || !guardado.plan || !Array.isArray(guardado.plan.dias) || guardado.plan.dias.length !== 7) return;
       for (const id of fields) {
         if (typeof guardado.parametros?.[id] === "string") document.getElementById(id).value = guardado.parametros[id];
       }
