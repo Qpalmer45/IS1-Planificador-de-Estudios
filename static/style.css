@@ -2617,3 +2617,18 @@ html[data-theme="dark"] .plan-block-day { border-color:#42516a; }
 html[data-theme="dark"] .plan-block-form input,html[data-theme="dark"] .plan-block-form select { background:#202e45; border-color:#42516a; color:#f1f5f9; }
 @media(max-width:1100px) { .plan-block-calendar { grid-template-columns:repeat(4,minmax(0,1fr)); } .plan-block-form { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:600px) { .plan-block-calendar { grid-template-columns:repeat(2,minmax(0,1fr)); } .plan-block-form { grid-template-columns:minmax(0,1fr); } }
+
+/* Cuadrícula semanal compacta: 7 días y franjas de una hora. */
+.plan-block-calendar { display:block; overflow-x:auto; margin:14px 0; }
+.plan-mini-grid { display:grid; grid-template-columns:56px repeat(7,minmax(94px,1fr)); gap:3px; min-width:740px; }
+.plan-mini-corner,.plan-mini-hour { display:flex; align-items:center; justify-content:center; font-size:.78rem; color:var(--text-muted,#64748b); }
+.plan-mini-day { padding:9px 3px; border:1px solid var(--border-card,#cbd5e1); border-radius:7px; background:var(--bg-page,#fff); color:var(--text-main,#334155); font-weight:700; cursor:pointer; text-transform:capitalize; }
+.plan-mini-slot { min-height:33px; padding:3px; border:1px solid var(--border-card,#cbd5e1); border-radius:5px; background:var(--bg-page,#fff); color:var(--text-muted,#64748b); cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.75rem; }
+.plan-mini-slot:hover,.plan-mini-day:hover { border-color:#2563eb; background:#dbeafe; color:#1e40af; }
+.plan-mini-slot.occupied { background:#fef3c7; color:#713f12; border-color:#f59e0b; }
+.plan-mini-slot.selected,.plan-mini-day.selected { outline:2px solid #2563eb; outline-offset:-2px; background:#dbeafe; color:#1e40af; }
+.plan-mini-block-list { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.plan-mini-block-list .plan-block-item { flex:1 1 190px; margin:0; }
+html[data-theme="dark"] .plan-mini-slot,html[data-theme="dark"] .plan-mini-day { background:#202e45; border-color:#42516a; color:#f1f5f9; }
+html[data-theme="dark"] .plan-mini-slot.occupied { background:#5c451b; border-color:#f59e0b; color:#fef3c7; }
+html[data-theme="dark"] .plan-mini-slot.selected,html[data-theme="dark"] .plan-mini-day.selected { background:#193b6b; outline-color:#93c5fd; }
