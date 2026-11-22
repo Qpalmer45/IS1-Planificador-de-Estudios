@@ -2018,38 +2018,52 @@ def _chess_fetch_json(url):
         return json.load(response)
 
 
+# Reserva local cuando el servicio externo no responde o devuelve un lote incompleto.
+# Se mantiene el mismo contrato JSON y la comprobación de movimientos en Flask.
+CHESS_FALLBACK = [
+    {"id": "local-a", "fen": "k7/8/1QK5/8/8/8/8/8 w - - 0 1", "color": "white", "rating": 600, "move": "b6b7"},
+    {"id": "local-b", "fen": "7k/8/5KQ1/8/8/8/8/8 w - - 0 1", "color": "white", "rating": 600, "move": "g6g7"},
+    {"id": "local-c", "fen": "8/8/8/8/8/1QK5/8/k7 w - - 0 1", "color": "white", "rating": 600, "move": "b3b2"},
+    {"id": "local-d", "fen": "8/8/8/8/8/5KQ1/8/7k w - - 0 1", "color": "white", "rating": 600, "move": "g3g2"},
+    {"id": "local-e", "fen": "k7/2K5/1Q6/8/8/8/8/8 w - - 0 1", "color": "white", "rating": 600, "move": "b6b7"},
+]
+
+
 def _chess_daily_set(today):
     """Obtiene cinco problemas de mate en una jugada; reutiliza el mismo lote durante el día."""
     import time
     cached = _chess_cache.get(today)
     if cached:
         return cached
-    raw = _chess_fetch_json(CHESS_PUZZLE_API + "/random?themes=mateIn1&count=5")
-    items = raw if isinstance(raw, list) else (
-        raw.get("puzzles", raw.get("data", [])) if isinstance(raw, dict) else []
-    )
-    if isinstance(items, dict):
-        items = items.get("puzzles", items.get("items", []))
-    if not isinstance(items, list):
-        raise ValueError("Formato de problemas no reconocido")
-    puzzles = []
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-        ident = str(item.get("id", ""))
-        fen = item.get("positionFen")
-        color = item.get("solverColor")
-        if not ident.isalnum() or not isinstance(fen, str) or color not in ("white", "black"):
-            continue
-        solution = _chess_fetch_json(CHESS_PUZZLE_API + "/" + ident + "/solution")
-        moves = solution.get("solution", []) if isinstance(solution, dict) else []
-        if not isinstance(moves, list) or len(moves) != 1 or not isinstance(moves[0], str) or len(moves[0]) not in (4, 5):
-            continue
-        puzzles.append({"id": ident, "fen": fen, "color": color, "rating": item.get("rating"), "move": moves[0]})
-        if len(puzzles) == 5:
-            break
-    if len(puzzles) != 5 or len({p["id"] for p in puzzles}) != 5:
-        raise ValueError("La API no devolvió cinco mates en una jugada válidos")
+    try:
+        raw = _chess_fetch_json(CHESS_PUZZLE_API + "/random?themes=mateIn1&count=5")
+        items = raw if isinstance(raw, list) else (
+            raw.get("puzzles", raw.get("data", [])) if isinstance(raw, dict) else []
+        )
+        if isinstance(items, dict):
+            items = items.get("puzzles", items.get("items", []))
+        if not isinstance(items, list):
+            raise ValueError("Formato de problemas no reconocido")
+        puzzles = []
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            ident = str(item.get("id", ""))
+            fen = item.get("positionFen")
+            color = item.get("solverColor")
+            if not ident.isalnum() or not isinstance(fen, str) or color not in ("white", "black"):
+                continue
+            solution = _chess_fetch_json(CHESS_PUZZLE_API + "/" + ident + "/solution")
+            moves = solution.get("solution", []) if isinstance(solution, dict) else []
+            if not isinstance(moves, list) or len(moves) != 1 or not isinstance(moves[0], str) or len(moves[0]) not in (4, 5):
+                continue
+            puzzles.append({"id": ident, "fen": fen, "color": color, "rating": item.get("rating"), "move": moves[0]})
+            if len(puzzles) == 5:
+                break
+        if len(puzzles) != 5 or len({p["id"] for p in puzzles}) != 5:
+            raise ValueError("La API no devolvió cinco mates en una jugada válidos")
+    except (OSError, ValueError, KeyError, TypeError, TimeoutError):
+        puzzles = [dict(p) for p in CHESS_FALLBACK]
     _chess_cache.clear()
     _chess_cache[today] = puzzles
     return puzzles
