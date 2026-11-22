@@ -2586,3 +2586,14 @@ html[data-theme="dark"] #subject-form input,html[data-theme="dark"] #subject-for
 #tarea-lista .subject-actions { display:flex; gap:8px; flex-wrap:wrap; }
 #tarea-lista .subject-actions button { width:auto; }
 @media (max-width:650px) { #tarea-lista .subject-list-item { flex-wrap:wrap; } }
+
+/* Preferencias de avisos del panel de inicio. */
+.reminder-settings-form { display:flex; flex-wrap:wrap; gap:12px; align-items:end; padding:16px; margin:0 0 18px; border:1px solid var(--border-card,#cbd5e1); border-radius:12px; background:var(--bg-card,#f8fafc); color:var(--text-main,#334155); }
+.reminder-settings-form > div { flex:1 1 220px; }
+.reminder-settings-form label { display:block; font-weight:700; }
+.reminder-settings-form p { margin:5px 0 0; font-size:.85rem; color:var(--text-muted,#64748b); }
+.reminder-settings-form select { flex:1 1 165px; min-height:42px; padding:8px; border-radius:8px; border:1px solid var(--border-card,#cbd5e1); background:var(--bg-page,#fff); color:var(--text-main,#334155); }
+.reminder-settings-form button { min-height:42px; }
+.reminder-settings-form #recordatorios-config-estado { flex-basis:100%; margin:0; }
+html[data-theme="dark"] .reminder-settings-form { background:#172235; border-color:#35445b; color:#f1f5f9; }
+html[data-theme="dark"] .reminder-settings-form select { background:#202e45; border-color:#42516a; color:#f1f5f9; }
