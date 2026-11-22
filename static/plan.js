@@ -16,6 +16,99 @@
   const storageKey = userEmail ? "studyplan:plan-semanal:v1:" + userEmail : null;
   const fields = ["plan-fecha", "plan-desde", "plan-hasta", "plan-duracion", "plan-descanso"];
 
+
+  // Compromisos puntuales de la semana, guardados por usuario y fecha en este navegador.
+  const blockForm = document.getElementById("plan-block-form");
+  const blockCalendar = document.getElementById("plan-block-calendar");
+  const blockDate = document.getElementById("plan-block-date");
+  const blockFeedback = document.getElementById("plan-block-feedback");
+  const blocksKey = userEmail ? "studyplan:bloqueos:v1:" + userEmail : null;
+  let blocks = [];
+  try {
+    const saved = blocksKey ? JSON.parse(localStorage.getItem(blocksKey) || "[]") : [];
+    if (Array.isArray(saved)) blocks = saved.filter(b => b && typeof b.fecha === "string" && typeof b.motivo === "string");
+  } catch (_) { blocks = []; }
+
+  function weekDates() {
+    const base = new Date(dateInput.value + "T12:00:00");
+    if (Number.isNaN(base.getTime())) return [];
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(base);
+      d.setDate(base.getDate() + i);
+      return { date: d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"),
+        label: d.toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" }) };
+    });
+  }
+
+  function persistBlocks() {
+    if (!blocksKey) return;
+    try { localStorage.setItem(blocksKey, JSON.stringify(blocks)); }
+    catch (_) { blockFeedback.textContent = "No se pudieron guardar los bloqueos en este navegador."; }
+  }
+
+  function renderBlocks() {
+    const days = weekDates();
+    const previous = blockDate.value;
+    blockDate.replaceChildren();
+    blockCalendar.replaceChildren();
+    for (const day of days) {
+      const option = document.createElement("option");
+      option.value = day.date;
+      option.textContent = day.label;
+      blockDate.append(option);
+      const column = document.createElement("section");
+      column.className = "plan-block-day";
+      const heading = document.createElement("h4");
+      heading.textContent = day.label;
+      column.append(heading);
+      const dayBlocks = blocks.filter(b => b.fecha === day.date).sort((a, b) => a.inicio.localeCompare(b.inicio));
+      if (!dayBlocks.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "Sin bloqueos";
+        empty.className = "plan-empty";
+        column.append(empty);
+      }
+      for (const b of dayBlocks) {
+        const item = document.createElement("div");
+        item.className = "plan-block-item";
+        const detail = document.createElement("span");
+        detail.textContent = b.inicio + "–" + b.fin + " · " + b.motivo;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "Quitar";
+        remove.setAttribute("aria-label", "Quitar " + b.motivo + " del " + day.label);
+        remove.addEventListener("click", () => {
+          blocks = blocks.filter(x => x.id !== b.id);
+          persistBlocks();
+          renderBlocks();
+        });
+        item.append(detail, remove);
+        column.append(item);
+      }
+      blockCalendar.append(column);
+    }
+    if (days.some(d => d.date === previous)) blockDate.value = previous;
+  }
+
+  dateInput.addEventListener("change", renderBlocks);
+  blockForm.addEventListener("submit", event => {
+    event.preventDefault();
+    const fecha = blockDate.value;
+    const inicio = document.getElementById("plan-block-start").value;
+    const fin = document.getElementById("plan-block-end").value;
+    const motivo = document.getElementById("plan-block-reason").value.trim();
+    if (!weekDates().some(d => d.date === fecha) || !inicio || !fin || inicio >= fin || !motivo) {
+      blockFeedback.textContent = "Comprueba el día, las horas y el motivo.";
+      return;
+    }
+    blocks.push({ id: String(Date.now()) + "-" + Math.random(), fecha, inicio, fin, motivo });
+    persistBlocks();
+    renderBlocks();
+    blockFeedback.textContent = "Franja bloqueada. Se tendrá en cuenta al generar el horario.";
+    document.getElementById("plan-block-reason").value = "";
+  });
+  renderBlocks();
+
   function guardarPlan(plan) {
     if (!storageKey) return;
     try {
@@ -34,6 +127,7 @@
       for (const id of fields) {
         if (typeof guardado.parametros?.[id] === "string") document.getElementById(id).value = guardado.parametros[id];
       }
+      renderBlocks();
       render(guardado.plan);
       feedback.textContent = "Último horario recuperado. Si cambiaste asignaturas u objetivos, vuelve a generarlo.";
     } catch (_) {
@@ -65,6 +159,7 @@
       card.className = "plan-day";
       card.append(text("h3", day.dia + " · " + day.fecha));
       if (day.libre) card.append(text("p", "Día bloqueado en tu horario", "plan-empty"));
+      for (const b of (day.bloqueos || [])) card.append(text("p", "Ocupado " + b.inicio + "–" + b.fin + " · " + b.motivo, "plan-block-result"));
       else if (!day.sesiones.length) card.append(text("p", "Sin sesiones", "plan-empty"));
       for (const session of day.sesiones) {
         const block = document.createElement("div");
@@ -83,17 +178,18 @@
   form.addEventListener("submit", async event => {
     event.preventDefault();
     feedback.textContent = "Generando horario…";
-    const params = new URLSearchParams({
+    const params = {
       inicio: dateInput.value,
       desde: document.getElementById("plan-desde").value,
       hasta: document.getElementById("plan-hasta").value,
       duracion: document.getElementById("plan-duracion").value,
-      descanso: document.getElementById("plan-descanso").value
-    });
+      descanso: document.getElementById("plan-descanso").value,
+      bloqueos: blocks.filter(b => weekDates().some(d => d.date === b.fecha)).map(({ fecha, inicio, fin, motivo }) => ({ fecha, inicio, fin, motivo }))
+    };
     const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
     try {
-      const response = await fetch("/api/plan/semana?" + params, { credentials: "same-origin" });
+      const response = await fetch("/api/plan/semana", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json" }, body: JSON.stringify(params) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo generar el plan.");
       render(data);
