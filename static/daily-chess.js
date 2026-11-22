@@ -8,7 +8,7 @@
     { fen:"7k/8/5KQ1/8/8/8/8/8",from:"g6",to:"g7",answer:"Dg7#",hint:"Busca una casilla defendida por el rey blanco.",explanation:"Dg7# cubre g8 y h7; el rey blanco defiende g7." },
     { fen:"8/8/8/8/8/1QK5/8/k7",from:"b3",to:"b2",answer:"Db2#",hint:"El mate está en la segunda fila.",explanation:"Db2# cubre a2 y b1; el rey blanco protege b2." },
     { fen:"8/8/8/8/8/5KQ1/8/7k",from:"g3",to:"g2",answer:"Dg2#",hint:"Acerca la dama sin dejarla indefensa.",explanation:"Dg2# cierra g1 y h2; el rey blanco protege g2." },
-    { fen:"k7/8/2KQ4/8/8/8/8/8",from:"d6",to:"b8",answer:"Db8#",hint:"La dama puede alcanzar la última fila en diagonal.",explanation:"Db8# controla a7 y b7; el rey blanco cubre b7." }
+    { fen:"k7/2K5/1Q6/8/8/8/8/8",from:"b6",to:"b7",answer:"Db7#",hint:"El rey blanco protege la séptima fila.",explanation:"Db7# cubre a8 y a7; el rey blanco controla b8 y protege b7." }
   ];
   const glyphs={K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟︎"};
   const email=document.getElementById("user-email-display")?.textContent?.trim()||"guest";
