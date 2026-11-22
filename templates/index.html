@@ -85,6 +85,7 @@
           <span>Plan de Estudio</span>
           <span class="tab-badge muted">Próximamente</span>
         </button>
+        <button type="button" class="tab-btn" data-tab="ajedrez">♟️ Ajedrez</button>
       </nav>
 
       <!-- Datos del usuario insertados desde Flask y botón para cerrar sesión. -->
@@ -132,24 +133,7 @@
         </div>
       </div>
 
-      <section class="daily-chess-card" aria-labelledby="daily-chess-title">
-        <div class="daily-chess-heading">
-          <div><h3 id="daily-chess-title">♟️ Reto diario de ajedrez</h3><p>Un ejercicio breve de táctica para activar la mente antes de estudiar.</p></div>
-          <span id="daily-chess-date" class="daily-chess-date"></span>
-        </div>
-        <div class="daily-chess-layout">
-          <div id="daily-chess-board" class="daily-chess-board" role="group" aria-label="Tablero de ajedrez"></div>
-          <div class="daily-chess-info">
-            <p id="daily-chess-prompt" class="daily-chess-prompt"></p>
-            <p id="daily-chess-status" role="status" aria-live="polite">Selecciona una pieza y después su casilla de destino.</p>
-            <div class="daily-chess-actions">
-              <button id="daily-chess-hint" class="secondary-btn" type="button">Pista</button>
-              <button id="daily-chess-reset" class="secondary-btn" type="button">Reintentar</button>
-            </div>
-            <p id="daily-chess-progress" class="daily-chess-progress"></p>
-          </div>
-        </div>
-      </section>
+
 
       <!-- Métricas que app.js actualiza con el número de notas pendientes y completadas.
            Las demás tarjetas son marcadores de funcionalidades futuras. -->
@@ -768,6 +752,28 @@
       <div id="plan-feedback" class="feedback-alert" role="status" aria-live="polite"></div>
       <div id="plan-summary" class="plan-summary"></div>
       <div id="plan-week" class="plan-week" aria-label="Horario de estudio semanal"></div>
+    </section>
+
+    <!-- HU44: módulo independiente, fuera del panel de Inicio. -->
+    <section id="tab-ajedrez" class="tab-content" aria-label="Ejercicios de ajedrez">
+      <section class="daily-chess-card" aria-labelledby="daily-chess-title">
+        <div class="daily-chess-heading">
+          <div><h3 id="daily-chess-title">♟️ Reto diario de ajedrez</h3><p>Un ejercicio breve de táctica para activar la mente antes de estudiar.</p></div>
+          <span id="daily-chess-date" class="daily-chess-date"></span>
+        </div>
+        <div class="daily-chess-layout">
+          <div id="daily-chess-board" class="daily-chess-board" role="group" aria-label="Tablero de ajedrez"></div>
+          <div class="daily-chess-info">
+            <p id="daily-chess-prompt" class="daily-chess-prompt"></p>
+            <p id="daily-chess-status" role="status" aria-live="polite">Selecciona una pieza y después su casilla de destino.</p>
+            <div class="daily-chess-actions">
+              <button id="daily-chess-hint" class="secondary-btn" type="button">Pista</button>
+              <button id="daily-chess-reset" class="secondary-btn" type="button">Reintentar</button>
+            </div>
+            <p id="daily-chess-progress" class="daily-chess-progress"></p>
+          </div>
+        </div>
+      </section>
     </section>
 
   </main>
