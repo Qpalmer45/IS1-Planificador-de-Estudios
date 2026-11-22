@@ -17,8 +17,24 @@
       <h2 id="avatar-flag-title">Elegir bandera de perfil</h2>
       <button type="button" id="avatar-flag-close" class="secondary-btn" aria-label="Cerrar selector">Cerrar</button>
     </div>
-    <p>Selecciona la bandera de cualquier país o recupera tu inicial. Tu elección se guarda en este navegador.</p>
-    <label for="avatar-flag-search">Buscar país</label>
+    <p>Elige una bandera o el escudo de tu equipo favorito. La elección se guarda en este navegador.</p>
+    <div class="avatar-choice-tabs" role="group" aria-label="Tipo de avatar">
+      <button type="button" id="avatar-show-flags" class="secondary-btn" aria-pressed="true">Banderas</button>
+      <button type="button" id="avatar-show-clubs" class="secondary-btn" aria-pressed="false">Escudos de fútbol</button>
+    </div>
+    <div id="avatar-club-controls" hidden>
+      <label for="avatar-club-league">Liga</label>
+      <select id="avatar-club-league">
+        <option value="esp.1">LaLiga (Primera División)</option>
+        <option value="esp.2">LaLiga Hypermotion (Segunda División)</option>
+        <option value="eng.1">Premier League</option>
+        <option value="ger.1">Bundesliga</option>
+        <option value="ita.1">Serie A</option>
+        <option value="fra.1">Ligue 1</option>
+      </select>
+      <p id="avatar-club-status" role="status" aria-live="polite"></p>
+    </div>
+    <label for="avatar-flag-search" id="avatar-search-label">Buscar país</label>
     <input id="avatar-flag-search" type="search" autocomplete="off" placeholder="España, Alemania, Japón…">
     <div id="avatar-flag-list" class="avatar-flag-list" aria-label="Banderas disponibles"></div>
     <button type="button" id="avatar-flag-reset" class="secondary-btn">Usar mi inicial</button>
