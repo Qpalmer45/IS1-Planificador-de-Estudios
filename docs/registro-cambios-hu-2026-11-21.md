@@ -80,3 +80,14 @@
 - **HU06:** se conserva en `localStorage` el último plan semanal generado y los parámetros, separados por correo del usuario, para recuperarlos tras refrescar en **el mismo navegador**. No equivale a guardar en SQLite ni sincronizar entre dispositivos; si cambian los objetivos, hay que regenerar el plan.
 - **Prueba añadida:** `tests/plan.test.js` incluye recuperación del plan y de los parámetros sin nueva petición a la API.
 - **Pendiente:** ejecutar Jest y revisar visualmente la interfaz en escritorio y móvil.
+
+## 22/11/2026 — HU19: configuración de recordatorios
+
+- Se amplía la **HU19 existente** (issue #19), sin duplicarla.
+- Panel de Inicio: selector de antelación (hoy, 1, 3, 7, 14, 30 o 60 días), botón Guardar y mensaje de resultado.
+- Preferencia por usuario en SQLite mediante `preferencias_recordatorios` (migración no destructiva, 7 días por defecto).
+- API autenticada: `GET/PUT /api/recordatorios/configuracion`, validación de 0 a 365 días.
+- `GET /api/recordatorios` aplica el rango configurado.
+- Pruebas: `tests/test_configuracion_recordatorios.py` (valor por defecto, guardado, errores, aislamiento, filtrado, autenticación) y `tests/examenes-form.test.js` (formulario).
+- Alcance: recordatorios **dentro de la aplicación**, no correos ni notificaciones del sistema.
+- Estado: cambios subidos a `main`; **pruebas pendientes de ejecución**.
