@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const seleccionado = selector.value;
       selector.replaceChildren(new Option("Sin asignatura", ""));
       for (const materia of materias) selector.add(new Option(materia.nombre, String(materia.id)));
-      selector.value = seleccionado;
+      selector.value = seleccionado;\n      if (selector.value !== seleccionado) selector.value = "";
     } catch (error) {
       estado.textContent = "No se pudieron cargar las asignaturas: " + error.message;
     }
