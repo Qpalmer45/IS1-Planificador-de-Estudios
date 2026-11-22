@@ -91,3 +91,20 @@
 - Pruebas: `tests/test_configuracion_recordatorios.py` (valor por defecto, guardado, errores, aislamiento, filtrado, autenticación) y `tests/examenes-form.test.js` (formulario).
 - Alcance: recordatorios **dentro de la aplicación**, no correos ni notificaciones del sistema.
 - Estado: cambios subidos a `main`; **pruebas pendientes de ejecución**.
+
+
+## 22/11/2026 — Actualización de HU y funcionalidades recientes
+
+- **HU02/HU06/HU07:** selector visual de bloqueos semanales, planificación y recuperación del horario. Archivos: `static/plan.js`, `static/style.css`, `tests/plan.test.js`.
+- **HU04:** corrección de fechas límite anteriores al día actual; [bug #48](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/48) cerrado. Mantener pruebas de creación y edición.
+- **HU16:** selector de avatar con banderas de países y territorios. Se corrige la normalización de acentos en búsquedas y se usan imágenes PNG con alternativa.
+- **HU16:** escudos de equipos de LaLiga (Primera), LaLiga Hypermotion (Segunda), Premier League, Bundesliga, Serie A y Ligue 1; nueva API `GET /api/perfil/escudos?liga=...` con caché, búsqueda por equipo y selección persistida en el navegador. Pruebas: `tests/avatar-flags.test.js`, `tests/test_escudos.py`.
+- **HU40:** paleta roja del tema claro, sin reemplazar el tema oscuro.
+- **HU41:** cambios de diseño del panel principal para utilizar mejor el ancho disponible; issue #51.
+- **HU42:** issue #52 cerrada como duplicada de HU06/HU07/HU09/HU11; no se cuenta como funcionalidad independiente.
+- **HU43:** recuperación segura de contraseña, issue #53, documentada como pendiente de implementación; no se declara completada.
+- **HU44:** [issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54), reto diario de ajedrez en Inicio. Tablero de 64 casillas, mate en una jugada, cuatro posiciones en rotación por fecha, pistas, reintentos, explicación y progreso en localStorage. Archivos: `static/daily-chess.js`, `templates/index.html`, `static/style.css`. Cinco pruebas en `tests/daily-chess.test.js`, añadidas al script `test:frontend` de `package.json`.
+
+**Documentación:** se amplía `docs/Historias-de-usuario.md` con HU28–HU44, preservando HU01–HU27. Las HU de accesibilidad, exportación y otras propuestas se documentan sin afirmar que están implementadas.
+
+**Verificación pendiente:** ejecutar `npm run test:frontend` y `python -m unittest discover -s tests -p 'test_*.py'`; probar en navegador la selección de escudos, el ajedrez, el cambio de tema y la planificación. Los tests escritos no se declaran superados hasta ejecutar la batería.
