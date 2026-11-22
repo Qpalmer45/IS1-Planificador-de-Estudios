@@ -153,6 +153,15 @@ def initialize_database():
             if "prioridad" not in cols_todos:
                 conn.execute("ALTER TABLE todos ADD COLUMN prioridad TEXT NOT NULL DEFAULT 'media'")
 
+            # HU19: antelación de recordatorios, independiente para cada cuenta.
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS preferencias_recordatorios (
+                    usuario_id INTEGER PRIMARY KEY REFERENCES usuarios(id) ON DELETE CASCADE,
+                    dias_anticipacion INTEGER NOT NULL DEFAULT 7
+                        CHECK (dias_anticipacion BETWEEN 0 AND 365)
+                )
+            """)
+
             preparar_tabla_actividades(conn)
 
             # Cada asignatura pertenece a un usuario y puede consultarse de forma
@@ -1786,6 +1795,30 @@ import os
 import sqlite3
 from datetime import datetime, timedelta
 from flask import jsonify, session
+@app.route('/api/recordatorios/configuracion', methods=['GET', 'PUT'])
+def configurar_recordatorios():
+    """Consultar o guardar los días de aviso anticipado del usuario autenticado."""
+    user_id = session.get('usuario_id') or session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'No autorizado'}), 401
+    db = get_db()
+    if request.method == 'PUT':
+        datos = request.get_json(silent=True)
+        if not isinstance(datos, dict):
+            return jsonify({'error': 'Se requiere un objeto JSON'}), 400
+        dias = datos.get('dias_anticipacion')
+        if type(dias) is not int or not 0 <= dias <= 365:
+            return jsonify({'error': 'La antelación debe ser un entero entre 0 y 365 días'}), 400
+        with db:
+            db.execute("""INSERT INTO preferencias_recordatorios (usuario_id, dias_anticipacion)
+                          VALUES (?, ?) ON CONFLICT(usuario_id)
+                          DO UPDATE SET dias_anticipacion = excluded.dias_anticipacion""",
+                       (user_id, dias))
+        return jsonify({'dias_anticipacion': dias}), 200
+    fila = db.execute('SELECT dias_anticipacion FROM preferencias_recordatorios WHERE usuario_id = ?', (user_id,)).fetchone()
+    return jsonify({'dias_anticipacion': fila['dias_anticipacion'] if fila else 7}), 200
+
+
 @app.route('/api/recordatorios', methods=['GET'])
 def obtener_recordatorios():
     # Detectar el ID de usuario desde la sesión
@@ -1798,7 +1831,10 @@ def obtener_recordatorios():
         }), 401
 
     hoy = hoy_planificador()
-    limite_dias = hoy + timedelta(days=7)
+    db = get_db()
+    preferencia = db.execute("SELECT dias_anticipacion FROM preferencias_recordatorios WHERE usuario_id = ?", (user_id,)).fetchone()
+    dias_anticipacion = preferencia['dias_anticipacion'] if preferencia else 7
+    limite_dias = hoy + timedelta(days=dias_anticipacion)
     recordatorios = []
 
     try:
@@ -1902,6 +1938,7 @@ def obtener_recordatorios():
         return jsonify({
             'status': 'success',
             'total': len(recordatorios),
+            'dias_anticipacion': dias_anticipacion,
             'recordatorios': recordatorios
         }), 200
 
