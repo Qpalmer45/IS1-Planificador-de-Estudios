@@ -78,3 +78,12 @@ test("el resumen suma la duración real de sesiones de diferente longitud", asyn
   await new Promise(resolve => setImmediate(resolve));
   expect(w.document.getElementById("plan-summary").textContent).toContain("1,25 horas planificadas");
 });
+
+test("no restaura un horario guardado con menos de siete días", () => {
+  const w = setup({ ok: true, json: async () => ({}) });
+  w.localStorage.setItem("studyplan:plan-semanal:v1:test@example.com",
+    JSON.stringify({ parametros: { "plan-duracion": "30" }, plan: { dias: [{ dia: "lunes", sesiones: [] }], total_sesiones: 0 } }));
+  vm.runInContext(source, vm.createContext(w));
+  expect(w.document.querySelectorAll(".plan-day")).toHaveLength(0);
+  expect(w.document.getElementById("plan-duracion").value).toBe("60");
+});
