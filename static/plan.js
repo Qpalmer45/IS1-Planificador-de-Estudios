@@ -51,7 +51,7 @@
   function render(plan) {
     week.replaceChildren();
     summary.textContent = plan.total_sesiones
-      ? plan.total_sesiones + " sesiones · " + plan.total_sesiones * Number(document.getElementById("plan-duracion").value) / 60 + " horas planificadas"
+      ? plan.total_sesiones + " sesiones · " + (plan.dias.reduce((total, day) => total + day.sesiones.reduce((minutes, session) => {\n          const [h1, m1] = session.inicio.split(":").map(Number);\n          const [h2, m2] = session.fin.split(":").map(Number);\n          return minutes + (h2 * 60 + m2) - (h1 * 60 + m1);\n        }, 0), 0) / 60).toLocaleString("es-ES", { maximumFractionDigits: 2 }) + " horas planificadas"
       : "No se han encontrado sesiones. Añade asignaturas o amplía la franja horaria.";
     const faltan = Object.values(plan.deficit_minutos_por_asignatura || {}).reduce((a, b) => a + b, 0)
       + Object.values(plan.deficit_minutos_por_actividad || {}).reduce((a, b) => a + b, 0);
