@@ -64,6 +64,30 @@ class GeneradorSemanalTests(unittest.TestCase):
         plan = generar_semana("2026-11-23", ASIGNATURAS, act, [], [])
         self.assertTrue(all(s["actividad"] is None for d in plan["dias"] for s in d["sesiones"]))
 
+    def test_bloqueo_puntual_respeta_horas_y_muestra_motivo(self):
+        bloqueos = [{"fecha": "2026-11-23", "inicio": "17:00", "fin": "19:00", "motivo": "Partido de fútbol"}]
+        plan = self.generar(hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=0, bloqueos=bloqueos)
+        lunes = plan["dias"][0]
+        self.assertEqual(lunes["bloqueos"][0]["motivo"], "Partido de fútbol")
+        self.assertTrue(all(not (minutos(s["inicio"]) < 1140 and minutos(s["fin"]) > 1020)
+                            for s in lunes["sesiones"]))
+        self.assertTrue(any(s["inicio"] == "19:00" for s in lunes["sesiones"]))
+
+    def test_bloqueo_de_un_dia_no_afecta_al_siguiente(self):
+        plan = self.generar(hora_inicio="17:00", hora_fin="19:00", duracion=60, descanso=0,
+                            bloqueos=[{"fecha": "2026-11-23", "inicio": "17:00", "fin": "19:00", "motivo": "Entreno"}])
+        self.assertFalse(plan["dias"][0]["sesiones"])
+        self.assertTrue(plan["dias"][1]["sesiones"])
+
+    def test_rechaza_bloqueos_invalidos(self):
+        for bloque in (
+            {"fecha": "2026-11-23", "inicio": "19:00", "fin": "17:00", "motivo": "Partido"},
+            {"fecha": "2026-11-23", "inicio": "17:00", "fin": "19:00", "motivo": ""},
+            {"fecha": "2026-12-01", "inicio": "17:00", "fin": "19:00", "motivo": "Partido"},
+        ):
+            with self.subTest(bloque=bloque), self.assertRaises(ValueError):
+                self.generar(bloqueos=[bloque])
+
     def test_sin_asignaturas_no_hay_sesiones(self):
         plan = generar_semana("2026-11-23", [], [], [], [])
         self.assertEqual(plan["total_sesiones"], 0)
