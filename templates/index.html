@@ -696,6 +696,19 @@
         <h2>Mi plan de estudio</h2>
         <p>Organiza automáticamente tus sesiones de la semana sin solaparlas con las clases.</p>
       </div></div>
+      <section class="plan-block-editor" aria-labelledby="plan-block-heading">
+        <h3 id="plan-block-heading">Disponibilidad de los próximos 7 días</h3>
+        <p>Marca los tramos en los que no puedes o no quieres estudiar. Por ejemplo, un partido de fútbol. Se respetarán al generar el horario.</p>
+        <div id="plan-block-calendar" class="plan-block-calendar" aria-label="Días de la planificación"></div>
+        <form id="plan-block-form" class="plan-block-form">
+          <label>Día <select id="plan-block-date" required></select></label>
+          <label>Desde <input id="plan-block-start" type="time" value="17:00" required></label>
+          <label>Hasta <input id="plan-block-end" type="time" value="19:00" required></label>
+          <label>Motivo <input id="plan-block-reason" type="text" maxlength="120" placeholder="Partido de fútbol" required></label>
+          <button class="secondary-btn" type="submit">Bloquear franja</button>
+        </form>
+        <p id="plan-block-feedback" role="status" aria-live="polite"></p>
+      </section>
       <form id="plan-form" class="plan-form">
         <label>Primer día <input id="plan-fecha" type="date" required></label>
         <label>Desde <input id="plan-desde" type="time" value="16:00" required></label>
