@@ -1150,16 +1150,20 @@ def api_datos_planificacion():
 
 
 # --- Vista previa del plan semanal: no persiste sesiones (HU42). ---
-@app.get("/api/plan/semana")
+@app.route("/api/plan/semana", methods=["GET", "POST"])
 @login_required
 def api_plan_semana():
     from planificador import generar_semana
     usuario_id = session["usuario_id"]
-    inicio = request.args.get("inicio", hoy_planificador().isoformat())
+    datos = request.get_json(silent=True) if request.method == "POST" else None
+    if request.method == "POST" and not isinstance(datos, dict):
+        return jsonify(error="Se requiere un objeto JSON."), 400
+    parametros = datos if datos is not None else request.args
+    inicio = parametros.get("inicio", hoy_planificador().isoformat())
     try:
         # Validación estricta y límites para evitar cargas excesivas.
-        duracion = int(request.args.get("duracion", "60"))
-        descanso = int(request.args.get("descanso", "15"))
+        duracion = int(parametros.get("duracion", "60"))
+        descanso = int(parametros.get("descanso", "15"))
         if not (25 <= duracion <= 180 and 0 <= descanso <= 60):
             raise ValueError("Duración o descanso fuera de rango.")
         fecha_inicio = date.fromisoformat(inicio)
@@ -1181,9 +1185,10 @@ def api_plan_semana():
                WHERE usuario_id = ? AND fecha_fin >= ?""", (usuario_id, inicio)).fetchall()]
         plan = generar_semana(
             fecha_inicio, materias, actividades, clases, periodos,
-            hora_inicio=request.args.get("desde", "16:00"),
-            hora_fin=request.args.get("hasta", "21:00"),
-            duracion=duracion, descanso=descanso)
+            hora_inicio=parametros.get("desde", "16:00"),
+            hora_fin=parametros.get("hasta", "21:00"),
+            duracion=duracion, descanso=descanso,
+            bloqueos=parametros.get("bloqueos", []))
     except (ValueError, TypeError, OverflowError) as exc:
         return jsonify(error=str(exc)), 400
     return jsonify(plan), 200
