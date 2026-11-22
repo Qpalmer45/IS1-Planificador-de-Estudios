@@ -64,3 +64,17 @@ test("conserva y recupera el horario y parámetros tras refrescar", async () => 
   expect(w.document.getElementById("plan-duracion").value).toBe("45");
   expect(w.fetch).toHaveBeenCalledTimes(1); // Restaurar no necesita petición.
 });
+
+test("el resumen suma la duración real de sesiones de diferente longitud", async () => {
+  const days = Array.from({ length: 7 }, (_, i) => ({
+    dia: "lunes", fecha: "2026-11-" + (23 + i), libre: false,
+    sesiones: i === 0 ? [
+      { inicio: "16:00", fin: "16:45", asignatura: "Álgebra" },
+      { inicio: "17:00", fin: "17:30", asignatura: "Cálculo" }
+    ] : []
+  }));
+  const w = setup({ ok: true, json: async () => ({ dias: days, total_sesiones: 2 }) });
+  w.document.getElementById("plan-form").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+  await new Promise(resolve => setImmediate(resolve));
+  expect(w.document.getElementById("plan-summary").textContent).toContain("1,25 horas planificadas");
+});
