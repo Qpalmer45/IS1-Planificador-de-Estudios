@@ -2597,3 +2597,23 @@ html[data-theme="dark"] #subject-form input,html[data-theme="dark"] #subject-for
 .reminder-settings-form #recordatorios-config-estado { flex-basis:100%; margin:0; }
 html[data-theme="dark"] .reminder-settings-form { background:#172235; border-color:#35445b; color:#f1f5f9; }
 html[data-theme="dark"] .reminder-settings-form select { background:#202e45; border-color:#42516a; color:#f1f5f9; }
+
+/* Disponibilidad puntual de los siete días previos al plan. */
+.plan-block-editor { margin:18px 0; padding:18px; border:1px solid var(--border-card,#cbd5e1); border-radius:12px; background:var(--bg-card,#fff); color:var(--text-main,#334155); }
+.plan-block-editor h3 { margin:0 0 8px; }
+.plan-block-editor p { line-height:1.45; }
+.plan-block-calendar { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:9px; margin:15px 0; }
+.plan-block-day { min-width:0; padding:10px; border:1px solid var(--border-card,#cbd5e1); border-radius:9px; }
+.plan-block-day h4 { margin:0 0 10px; text-transform:capitalize; }
+.plan-block-day .plan-empty { font-size:.8rem; }
+.plan-block-item { display:flex; flex-direction:column; gap:7px; margin:6px 0; padding:9px; border-radius:8px; background:#fef3c7; color:#713f12; overflow-wrap:anywhere; font-size:.82rem; }
+.plan-block-item button { align-self:flex-start; padding:4px 7px; border:1px solid #a16207; border-radius:6px; background:transparent; color:inherit; cursor:pointer; }
+.plan-block-form { display:grid; grid-template-columns:1fr 1fr 1fr 2fr auto; gap:10px; align-items:end; }
+.plan-block-form label { display:flex; flex-direction:column; gap:5px; min-width:0; font-weight:600; }
+.plan-block-form input,.plan-block-form select { width:100%; min-width:0; box-sizing:border-box; min-height:40px; padding:7px; border:1px solid var(--border-card,#cbd5e1); border-radius:7px; background:var(--bg-page,#fff); color:var(--text-main,#334155); }
+.plan-block-result { margin:6px 0; padding:8px; border-left:3px solid #d97706; background:#fef3c7; color:#713f12; border-radius:5px; }
+html[data-theme="dark"] .plan-block-editor { background:#172235; border-color:#35445b; color:#f1f5f9; }
+html[data-theme="dark"] .plan-block-day { border-color:#42516a; }
+html[data-theme="dark"] .plan-block-form input,html[data-theme="dark"] .plan-block-form select { background:#202e45; border-color:#42516a; color:#f1f5f9; }
+@media(max-width:1100px) { .plan-block-calendar { grid-template-columns:repeat(4,minmax(0,1fr)); } .plan-block-form { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) { .plan-block-calendar { grid-template-columns:repeat(2,minmax(0,1fr)); } .plan-block-form { grid-template-columns:minmax(0,1fr); } }
