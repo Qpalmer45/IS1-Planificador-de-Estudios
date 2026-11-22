@@ -7,6 +7,10 @@ import vm from "node:vm";
 const source = fs.readFileSync("static/plan.js", "utf8");
 let dom;
 
+test("el módulo del planificador tiene sintaxis JavaScript válida", () => {
+  expect(() => new vm.Script(source, { filename: "static/plan.js" })).not.toThrow();
+});
+
 function setup(response) {
   dom = new JSDOM(`<!doctype html><form id="plan-form">
     <input id="plan-fecha"><input id="plan-desde" value="16:00">
