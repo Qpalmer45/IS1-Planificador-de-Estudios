@@ -1342,7 +1342,46 @@ document.addEventListener("DOMContentLoaded", () => {
   loadTodos();
   loadAsignaturas();
   cargarRecordatorios();
+  configurarFormularioRecordatorios();
 });
+
+// HU19: preferencias persistentes de recordatorios.
+async function configurarFormularioRecordatorios() {
+  const form = document.getElementById("recordatorios-config-form");
+  if (!form) return;
+  const selector = document.getElementById("recordatorios-dias");
+  const estado = document.getElementById("recordatorios-config-estado");
+  const boton = form.querySelector('button[type="submit"]');
+  try {
+    const respuesta = await fetch("/api/recordatorios/configuracion", { credentials: "same-origin" });
+    if (!respuesta.ok) throw new Error("No se pudo cargar la configuración.");
+    const datos = await respuesta.json();
+    selector.value = String(datos.dias_anticipacion);
+  } catch (error) {
+    estado.textContent = error.message;
+  }
+  form.addEventListener("submit", async evento => {
+    evento.preventDefault();
+    boton.disabled = true;
+    estado.textContent = "Guardando…";
+    try {
+      const respuesta = await fetch("/api/recordatorios/configuracion", {
+        method: "PUT",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dias_anticipacion: Number(selector.value) })
+      });
+      const datos = await respuesta.json();
+      if (!respuesta.ok) throw new Error(datos.error || "No se pudo guardar.");
+      estado.textContent = "Avisos configurados: " + datos.dias_anticipacion + " días de antelación.";
+      await cargarRecordatorios();
+    } catch (error) {
+      estado.textContent = error.message || "No se pudo guardar.";
+    } finally {
+      boton.disabled = false;
+    }
+  });
+}
 
 // ==============================================================================
 // HU19: CARGA Y RENDERIZADO DE RECORDATORIOS EN EL DASHBOARD
@@ -1370,7 +1409,7 @@ async function cargarRecordatorios() {
                 <div style="text-align: center; padding: 1.25rem; background: #f0fdf4; border-radius: 12px; color: #166534; border: 1px solid #bbf7d0;">
                     <span style="font-size: 1.2rem; display: block; margin-bottom: 4px;">✅</span>
                     <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">¡Todo al día!</p>
-                    <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: #15803d;">No tienes entregas ni exámenes en los próximos 7 días.</p>
+                    <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: #15803d;">No tienes entregas ni exámenes en el periodo configurado.</p>
                 </div>
             `;
             return;
