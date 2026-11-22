@@ -1950,6 +1950,59 @@ def obtener_recordatorios():
     except Exception as e:
         return jsonify({'status': 'error', 'mensaje': str(e)}), 500
 
+
+# Catálogo de escudos de las cinco grandes ligas y Segunda División española.
+# Se consulta por competición para evitar mantener listas desactualizadas tras ascensos.
+CLUB_LEAGUES = {
+    "esp.1": "LaLiga EA Sports",
+    "esp.2": "LaLiga Hypermotion (Segunda)",
+    "eng.1": "Premier League",
+    "ger.1": "Bundesliga",
+    "ita.1": "Serie A",
+    "fra.1": "Ligue 1",
+}
+_club_cache = {}
+
+
+@app.get("/api/perfil/escudos")
+def api_perfil_escudos():
+    """Devuelve equipos y URLs de escudos de una liga permitida, con caché."""
+    import json
+    import time
+    from urllib.request import Request, urlopen
+
+    liga = request.args.get("liga", "")
+    if liga not in CLUB_LEAGUES:
+        return jsonify({"error": "Liga no válida"}), 400
+    cached = _club_cache.get(liga)
+    if cached and time.time() - cached["timestamp"] < 86400:
+        return jsonify({"liga": liga, "nombre": CLUB_LEAGUES[liga], "equipos": cached["equipos"]})
+    url = "https://site.api.espn.com/apis/site/v2/sports/soccer/" + liga + "/teams?limit=100"
+    try:
+        req = Request(url, headers={"User-Agent": "StudyPlan/1.0", "Accept": "application/json"})
+        with urlopen(req, timeout=8) as response:
+            data = json.load(response)
+        equipos = []
+        for sport in data.get("sports", []):
+            for league in sport.get("leagues", []):
+                for entry in league.get("teams", []):
+                    team = entry.get("team", {})
+                    logos = team.get("logos") or []
+                    logo = next((x.get("href") for x in logos if isinstance(x, dict) and x.get("href", "").startswith("https://")), None)
+                    name = team.get("displayName")
+                    team_id = str(team.get("id", ""))
+                    if team_id.isdigit() and name and logo:
+                        equipos.append({"id": team_id, "nombre": name, "escudo": logo})
+        equipos.sort(key=lambda item: item["nombre"].casefold())
+        if not equipos:
+            raise ValueError("La fuente no ha devuelto escudos")
+        _club_cache[liga] = {"timestamp": time.time(), "equipos": equipos}
+        return jsonify({"liga": liga, "nombre": CLUB_LEAGUES[liga], "equipos": equipos})
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        if cached:
+            return jsonify({"liga": liga, "nombre": CLUB_LEAGUES[liga], "equipos": cached["equipos"], "cache": True})
+        return jsonify({"error": "No se han podido cargar los escudos de esta liga. Inténtalo de nuevo."}), 503
+
 if __name__ == "__main__":
     # Permite ejecutar este módulo directamente para desarrollo local.
     app.run(debug=True)
