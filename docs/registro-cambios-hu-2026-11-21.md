@@ -103,8 +103,17 @@
 - **HU41:** cambios de diseño del panel principal para utilizar mejor el ancho disponible; issue #51.
 - **HU42:** issue #52 cerrada como duplicada de HU06/HU07/HU09/HU11; no se cuenta como funcionalidad independiente.
 - **HU43:** recuperación segura de contraseña, issue #53, documentada como pendiente de implementación; no se declara completada.
-- **HU44:** [issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54), reto diario de ajedrez en Inicio. Tablero de 64 casillas, mate en una jugada, cuatro posiciones en rotación por fecha, pistas, reintentos, explicación y progreso en localStorage. Archivos: `static/daily-chess.js`, `templates/index.html`, `static/style.css`. Cinco pruebas en `tests/daily-chess.test.js`, añadidas al script `test:frontend` de `package.json`.
+- **HU44:** [issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54), reto diario de ajedrez en Inicio. Tablero de 64 casillas, mate en una jugada, cinco ejercicios diarios, ordenados por fecha, pistas, reintentos, explicación y progreso en localStorage. Archivos: `static/daily-chess.js`, `templates/index.html`, `static/style.css`. Cinco pruebas en `tests/daily-chess.test.js`, añadidas al script `test:frontend` de `package.json`.
 
 **Documentación:** se amplía `docs/Historias-de-usuario.md` con HU28–HU44, preservando HU01–HU27. Las HU de accesibilidad, exportación y otras propuestas se documentan sin afirmar que están implementadas.
 
 **Verificación pendiente:** ejecutar `npm run test:frontend` y `python -m unittest discover -s tests -p 'test_*.py'`; probar en navegador la selección de escudos, el ajedrez, el cambio de tema y la planificación. Los tests escritos no se declaran superados hasta ejecutar la batería.
+
+
+### 22/11/2026 — HU44: cinco ejercicios diarios y corrección de «Reintentar»
+
+- Se amplía el reto a **cinco ejercicios diarios** de mate en una jugada, resueltos consecutivamente, con progreso visible de 0/5 a 5/5 y orden dependiente de la fecha.
+- Se corrige el botón **Reintentar**: reinicia la posición y permite repetir incluso tras completar los cinco, conservando los ejercicios anteriores; el ejercicio repetido se descuenta hasta volver a resolverlo.
+- Se utiliza `localStorage` con clave versión `v2`, separada por correo y fecha, para guardar el conjunto de ejercicios completados.
+- Se amplía `tests/daily-chess.test.js` a **siete pruebas**; falta ejecutar la batería y realizar verificación manual.
+- Cambios en `static/daily-chess.js` y `tests/daily-chess.test.js`; [HU44 #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54) permanece cerrada como implementada, sin afirmar validación de pruebas.
