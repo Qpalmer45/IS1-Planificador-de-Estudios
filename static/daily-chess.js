@@ -89,5 +89,12 @@
       document.getElementById("daily-chess-date").textContent=data.fecha;
     }catch(_){status.textContent="No se han podido cargar los ejercicios. Recarga la página para volver a intentarlo.";prompt.textContent="Servicio de ajedrez temporalmente no disponible.";}
   }
-  void init();
+  // La API se consulta solo al entrar en la pestaña Ajedrez.
+  let started=false;
+  function activate(){
+    if(started||!document.getElementById("tab-ajedrez")?.classList.contains("active"))return;
+    started=true;void init();
+  }
+  document.querySelector('[data-tab="ajedrez"]')?.addEventListener("click",activate);
+  activate();
 })();
