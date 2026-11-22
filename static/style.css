@@ -2681,3 +2681,8 @@ html[data-theme="dark"] .avatar-flag-dialog { background:#172235; border-color:#
 html[data-theme="dark"] .avatar-flag-dialog :is(#avatar-flag-search,.avatar-flag-option) { background:#202e45; color:#f1f5f9; border-color:#42516a; }
 html[data-theme="dark"] .avatar-flag-dialog .avatar-flag-option:hover { background:#35445b; }
 @media(max-width:480px) { .avatar-flag-list { grid-template-columns:1fr; } }
+
+/* Banderas reales en imagen: Windows no muestra de forma nativa todos los emojis de banderas. */
+.avatar-flag-image { display:inline-block; width:28px; height:19px; object-fit:cover; border-radius:2px; vertical-align:middle; flex-shrink:0; box-shadow:0 0 0 1px #0002; }
+.user-avatar.has-flag .avatar-flag-image { width:35px; height:25px; object-fit:cover; border-radius:3px; }
+.avatar-flag-option { display:flex; align-items:center; gap:9px; }
