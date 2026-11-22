@@ -33,3 +33,15 @@ test("el aviso de horas aparece solo en exámenes y explica dónde cambiarlas", 
   expect(tareas).toContain('document.getElementById("tarea-aviso-examen").hidden = !examen');
   expect(css).toContain(".exam-study-notice[hidden]");
 });
+
+test("al actualizar asignaturas no se mantiene una selección que ya no existe", () => {
+  expect(tareas).toContain('if (selector.value !== seleccionado) selector.value = ""');
+  const dom = new JSDOM('<select><option value="">Sin asignatura</option><option value="3">Álgebra</option></select>');
+  const selector = dom.window.document.querySelector("select");
+  selector.value = "3";
+  const seleccionado = selector.value;
+  selector.replaceChildren(new dom.window.Option("Sin asignatura", ""));
+  selector.value = seleccionado;
+  if (selector.value !== seleccionado) selector.value = "";
+  expect(selector.value).toBe("");
+});
