@@ -498,3 +498,14 @@ Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpo
 - **HU44:** reto de ajedrez incorporado a Inicio, con cinco pruebas frontend escritas.
 
 **Verificación:** no consta una ejecución completa satisfactoria de las pruebas ni revisión manual de todos estos cambios; no se atribuye cierre funcional sin evidencias.
+
+
+## Actualización de estados — 22/11/2026
+
+Se han marcado como **Completed** en GitHub las historias con implementación incorporada a `main`:
+
+- **HU07 — Calendario semanal:** [issue #7](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7).
+- **HU40 — Modo claro y oscuro:** [issue #50](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/50).
+- **HU44 — Reto diario de ajedrez:** [issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54).
+
+El cierre indica que se ha incorporado la funcionalidad; **no certifica una ejecución satisfactoria de la batería de pruebas ni una revisión manual**. HU06, HU13 y HU41 conservan su estado abierto por verificaciones o criterios pendientes; las propuestas no implementadas no se marcan como completadas.
