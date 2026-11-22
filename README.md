@@ -30,8 +30,8 @@ Pila tecnológica utilizada para la aplicación web:
 - **Lenguaje:** Python 3
 - **Backend:** Flask
 - **Frontend:** HTML5, CSS3 y JavaScript moderno
-- **Base de datos:** SQLite (módulo estándar sqlite3 de Python)
-- **Pruebas del backend:** unittest
+- **Base de datos:** SQLite (módulo estándar `sqlite3` de Python)
+- **Pruebas del backend:** `unittest`
 - **Pruebas del frontend:** Jest y jsdom (Node.js 20 o posterior)
 - **Control de versiones:** Git & GitHub
 
@@ -41,11 +41,11 @@ El proyecto se desarrolla utilizando **Scrum** con Sprints de **dos semanas**, o
 
 Flujo de trabajo:
 
-Product Backlog -> Sprint Backlog -> To Do -> In Progress -> In Review -> Completed
+`Product Backlog → Sprint Backlog → To Do → In Progress → In Review → Completed`
 
 ## Product Backlog
 
-El Product Backlog está compuesto por las Historias de Usuario documentadas en docs/Historias-de-usuario.md y vinculadas a las Issues de GitHub.
+El Product Backlog está compuesto por las Historias de Usuario documentadas en `docs/Historias-de-usuario.md` y vinculadas a las Issues de GitHub.
 
 ## Equipo
 
@@ -61,42 +61,79 @@ El Product Backlog está compuesto por las Historias de Usuario documentadas en 
 
 1. Instala **Python 3.10 o superior** y **Git**.
 2. Abre una terminal en la carpeta donde quieras guardar el proyecto y descárgalo:
-   git clone [https://github.com/Qpalmer45/IS1-Planificador-de-Estudios.git](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios.git)
+
+   ```powershell
+   git clone https://github.com/Qpalmer45/IS1-Planificador-de-Estudios.git
    cd IS1-Planificador-de-Estudios
+   ```
+
 3. Crea un entorno virtual e instala las dependencias:
+
+   ```powershell
    py -m venv .venv
    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   ```
+
 4. Arranca el servidor:
+
+   ```powershell
    .\.venv\Scripts\python.exe app.py
-5. Abre **[http://127.0.0.1:5000](http://127.0.0.1:5000)** en el navegador. Para detener el servidor, pulsa **Ctrl + C** en la terminal.
+   ```
+
+5. Abre **http://127.0.0.1:5000** en el navegador. Para detener el servidor, pulsa **Ctrl + C** en la terminal.
 
 ### Para abrirla otro día
 
-Abre la carpeta IS1-Planificador-de-Estudios en VS Code, abre la terminal y ejecuta:
+Abre la carpeta `IS1-Planificador-de-Estudios` en VS Code, abre la terminal y ejecuta:
+
+```powershell
 .\.venv\Scripts\python.exe app.py
+```
 
 ### Pruebas
 
-Las pruebas del backend usan unittest y no requieren instalar Node.js:
+Las pruebas del backend usan `unittest` y no requieren instalar Node.js:
+
+```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py" -v
+```
 
 Para las pruebas del frontend sí necesitas **Node.js 20 o posterior**. Desde la raíz del repositorio:
+
+```powershell
 npm.cmd install --no-package-lock
 npm.cmd run test:frontend
+```
 
-También puedes lanzar ambas suites con npm.cmd run test:all una vez instaladas las dependencias del frontend.
+También puedes lanzar ambas suites con `npm.cmd run test:all` una vez instaladas las dependencias del frontend.
 
 ## Estructura del proyecto
 
-- app.py: Servidor web Flask, rutas, autenticación y APIs REST
-- planificador.py: Motor de generación automática del plan de estudio semanal
-- requirements.txt: Dependencias de Python (Flask)
-- package.json: Dependencias y comandos Jest del frontend
-- todos.db: Base de datos SQLite local (se genera automáticamente)
-- static/: Lógica cliente en JavaScript (app.js, horario.js, plan.js, tareas.js, avatar-flags.js, theme.js) y estilos (style.css)
-- templates/: Plantillas HTML (index.html, login.html, registro.html)
-- tests/: Pruebas unitarias del backend (test_*.py) y del frontend (*.test.js)
-- docs/: Historias de usuario, registros de cambios, sprints y documentación técnica
+```text
+IS1-Planificador-de-Estudios/
+├── app.py                # Servidor web Flask, rutas, autenticación y APIs REST
+├── planificador.py       # Motor de generación automática del plan de estudio semanal
+├── requirements.txt      # Dependencias de Python (Flask)
+├── package.json          # Dependencias y comandos Jest del frontend
+├── todos.db              # Base de datos SQLite local (se genera automáticamente)
+├── static/
+│   ├── app.js            # Lógica cliente principal: dashboard, asignaturas y To-Dos
+│   ├── horario.js        # Cuadrícula semanal de clases y días libres
+│   ├── plan.js           # Interfaz y persistencia local del plan de estudio
+│   ├── tareas.js         # Gestión de tareas, entregas y exámenes
+│   ├── avatar-flags.js   # Selector visual de avatar y banderas
+│   ├── theme.js          # Gestión de tema claro/oscuro
+│   └── style.css         # Estilos visuales y diseño responsivo
+├── templates/
+│   ├── index.html        # Panel principal (Dashboard) y módulos de la aplicación
+│   ├── login.html        # Pantalla de inicio de sesión (HU21)
+│   └── registro.html     # Pantalla de creación de cuenta (HU20)
+├── tests/
+│   ├── test_*.py         # Pruebas unitarias del backend con unittest
+│   ├── *.test.js         # Pruebas del frontend con Jest y jsdom
+│   └── README.md         # Instrucciones y alcance de las pruebas
+└── docs/                 # Historias de usuario, registros de cambios, sprints y documentación técnica
+```
 
 ## Documentación técnica y de usuario
 
@@ -113,7 +150,7 @@ La documentación detallada se encuentra en [docs/tecnica/](docs/tecnica/README.
   - **Dashboard:** Panel de inicio con barra de navegación, métricas y pestañas.
 - **Sprint 3 (Finalizado):**
   - **HU01 y HU23 - Gestión de asignaturas:** Creación, edición, borrado y apartado individual por materia.
-  - **Pruebas unitarias:** Implementación de las suites iniciales de backend (unittest) y frontend (Jest + jsdom).
+  - **Pruebas unitarias:** Implementación de las suites iniciales de backend (`unittest`) y frontend (`Jest` + `jsdom`).
 - **Sprint 4 (Finalizado):**
   - **HU04 - Tareas y entregas:** Gestión de actividades con fecha límite, tiempo estimado y validación de fechas.
   - **HU05 - Horario de clases:** Cuadrícula semanal sin solapamientos.
