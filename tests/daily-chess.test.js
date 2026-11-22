@@ -5,7 +5,7 @@ import vm from "node:vm";
 const source=fs.readFileSync("static/daily-chess.js","utf8");
 const puzzles=Array.from({length:5},(_,i)=>({id:"p"+i,fen:"k7/8/1QK5/8/8/8/8/8 w - - 0 1",color:"white",rating:800}));
 async function setup(){
-  const dom=new JSDOM(`<!doctype html><span id="user-email-display">test@example.com</span><div id="daily-chess-board"></div>
+  const dom=new JSDOM(`<!doctype html><span id="user-email-display">test@example.com</span><button data-tab="ajedrez">Ajedrez</button><section id="tab-ajedrez" class="tab-content active"><div id="daily-chess-board"></div></section>
   <span id="daily-chess-date"></span><p id="daily-chess-prompt"></p><p id="daily-chess-status"></p>
   <p id="daily-chess-progress"></p><button id="daily-chess-hint"></button><button id="daily-chess-reset"></button>`,{url:"http://localhost/"});
   const w=dom.window;
@@ -29,3 +29,9 @@ test("jugada errónea no aumenta progreso",async()=>{const w=await setup();const
 test("reintentar antes de resolver reinicia selección",async()=>{const w=await setup();Array.from(w.document.querySelectorAll(".daily-chess-square")).find(x=>x.textContent==="♕").click();w.document.getElementById("daily-chess-reset").click();expect(w.document.querySelector(".selected")).toBeNull();w.close();});
 test("reintentar tras completar permite repetir",async()=>{const w=await setup();for(let i=0;i<5;i++)await solve(w);w.document.getElementById("daily-chess-reset").click();expect(w.document.getElementById("daily-chess-progress").textContent).toContain("4/5");await solve(w);expect(w.document.getElementById("daily-chess-progress").textContent).toContain("5/5");w.close();});
 test("fallo de la API se muestra al usuario",async()=>{const w=await setup();w.fetch=jest.fn(async()=>{throw Error("offline")});w.close();});
+
+test("sin pestaña Ajedrez activa no se consulta la API",async()=>{
+  const dom=new JSDOM(`<button data-tab="ajedrez">Ajedrez</button><section id="tab-ajedrez"><div id="daily-chess-board"></div></section><p id="daily-chess-status"></p><p id="daily-chess-progress"></p><p id="daily-chess-prompt"></p><button id="daily-chess-hint"></button><button id="daily-chess-reset"></button>`,{url:"http://localhost/"});
+  const w=dom.window;w.fetch=jest.fn();vm.runInContext(source,vm.createContext(w));
+  expect(w.fetch).not.toHaveBeenCalled();w.close();
+});
