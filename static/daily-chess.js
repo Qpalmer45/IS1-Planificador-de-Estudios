@@ -89,15 +89,7 @@
       document.getElementById("daily-chess-date").textContent=data.fecha;
     }catch(_){status.textContent="No se han podido cargar los ejercicios. Recarga la página para volver a intentarlo.";prompt.textContent="Servicio de ajedrez temporalmente no disponible.";}
   }
-  // La API se consulta solo al entrar en la pestaña Ajedrez.
-  let started=false;
-  function activate(){
-    if(started||!document.getElementById("tab-ajedrez")?.classList.contains("active"))return;
-    started=true;void init();
-  }
-  document.querySelector('[data-tab="ajedrez"]')?.addEventListener("click",()=>{
-    // app.js puede registrar su listener después del nuestro: esperar al final del evento.
-    setTimeout(activate,0);
-  });
-  activate();
+  // Cargar al abrir la página, como en la versión que funcionaba en Inicio.
+  // La pestaña puede estar oculta: el DOM existe y se puede poblar igualmente.
+  void init();
 })();
