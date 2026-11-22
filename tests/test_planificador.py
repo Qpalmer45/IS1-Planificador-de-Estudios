@@ -141,6 +141,32 @@ class ApiPlanSemanalTests(unittest.TestCase):
         self.assertTrue(sesiones)
         self.assertEqual({s["asignatura"] for s in sesiones}, {"Álgebra"})
 
+    def test_api_post_bloqueo_con_motivo_y_sin_solapamientos(self):
+        self.login(1)
+        response = self.client.post("/api/plan/semana", json={
+            "inicio": self.inicio, "desde": "16:00", "hasta": "21:00",
+            "duracion": 60, "descanso": 0,
+            "bloqueos": [{"fecha": self.inicio, "inicio": "17:00",
+                          "fin": "19:00", "motivo": "Partido de fútbol"}]})
+        self.assertEqual(response.status_code, 200)
+        primero = response.json["dias"][0]
+        self.assertEqual(primero["bloqueos"][0]["motivo"], "Partido de fútbol")
+        self.assertTrue(all(not (minutos(s["inicio"]) < 1140 and minutos(s["fin"]) > 1020)
+                            for s in primero["sesiones"]))
+
+    def test_api_post_rechaza_bloqueos_incorrectos(self):
+        self.login(1)
+        for bloqueos in ({"fecha": self.inicio}, [
+            {"fecha": self.inicio, "inicio": "18:00", "fin": "17:00", "motivo": "Mal"}],
+            [{"fecha": self.inicio, "inicio": "17:00", "fin": "18:00", "motivo": ""}]):
+            with self.subTest(bloqueos=bloqueos):
+                response = self.client.post("/api/plan/semana", json={"inicio": self.inicio, "bloqueos": bloqueos})
+                self.assertEqual(response.status_code, 400)
+
+    def test_api_post_requiere_sesion(self):
+        response = self.client.post("/api/plan/semana", json={"inicio": self.inicio, "bloqueos": []})
+        self.assertEqual(response.status_code, 401)
+
     def test_parametros_invalidos_responden_400(self):
         self.login(1)
         for args in ({"inicio": "no-es-fecha"}, {"duracion": "0"},
