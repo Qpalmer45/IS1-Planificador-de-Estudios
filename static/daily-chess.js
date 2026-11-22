@@ -1,71 +1,62 @@
 "use strict";
-/* Cinco ejercicios diarios de mate en una jugada, sin APIs externas. */
+/* HU44: cinco ejercicios obtenidos desde Flask, que consulta Chess Puzzle API. */
 (() => {
-  const board = document.getElementById("daily-chess-board");
-  if (!board) return;
-  const puzzles = [
-    { fen:"k7/8/1QK5/8/8/8/8/8",from:"b6",to:"b7",answer:"Db7#",hint:"La dama necesita el apoyo del rey blanco.",explanation:"Db7# controla a7 y b8; el rey blanco protege b7." },
-    { fen:"7k/8/5KQ1/8/8/8/8/8",from:"g6",to:"g7",answer:"Dg7#",hint:"Busca una casilla defendida por el rey blanco.",explanation:"Dg7# cubre g8 y h7; el rey blanco defiende g7." },
-    { fen:"8/8/8/8/8/1QK5/8/k7",from:"b3",to:"b2",answer:"Db2#",hint:"El mate está en la segunda fila.",explanation:"Db2# cubre a2 y b1; el rey blanco protege b2." },
-    { fen:"8/8/8/8/8/5KQ1/8/7k",from:"g3",to:"g2",answer:"Dg2#",hint:"Acerca la dama sin dejarla indefensa.",explanation:"Dg2# cierra g1 y h2; el rey blanco protege g2." },
-    { fen:"k7/2K5/1Q6/8/8/8/8/8",from:"b6",to:"b7",answer:"Db7#",hint:"El rey blanco protege la séptima fila.",explanation:"Db7# cubre a8 y a7; el rey blanco controla b8 y protege b7." }
-  ];
+  const board=document.getElementById("daily-chess-board");
+  if(!board)return;
   const glyphs={K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟︎"};
-  const email=document.getElementById("user-email-display")?.textContent?.trim()||"guest";
-  const now=new Date();
-  const day=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
-  const epochDay=Math.floor(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/86400000);
-  const storageKey="studyplan:chess-daily:v2:"+email+":"+day;
-  const dateEl=document.getElementById("daily-chess-date");
-  const prompt=document.getElementById("daily-chess-prompt");
   const status=document.getElementById("daily-chess-status");
   const progress=document.getElementById("daily-chess-progress");
-  const cells={};
-  const order=puzzles.map((_,i)=>(i+epochDay%puzzles.length)%puzzles.length);
-  let completed=[];
-  try { const saved=JSON.parse(localStorage.getItem(storageKey)||"[]");if(Array.isArray(saved))completed=saved.filter(i=>Number.isInteger(i)&&i>=0&&i<5); }catch(_){}
-  completed=[...new Set(completed)];
-  let position=order.findIndex(i=>!completed.includes(i));
-  if(position<0)position=order.length-1;
-  let pieces={},initial={},selected=null;
-  function puzzle(){return puzzles[order[position]];}
-  function load(){
-    initial={};const ranks=puzzle().fen.split("/");
-    ranks.forEach((rank,row)=>{let file=0;for(const symbol of rank){if(/^[1-8]$/.test(symbol))file+=Number(symbol);else{initial["abcdefgh"[file]+(8-row)]=symbol;file++;}}if(file!==8)throw Error("Posición inválida");});
-    pieces={...initial};selected=null;
+  const prompt=document.getElementById("daily-chess-prompt");
+  const email=document.getElementById("user-email-display")?.textContent?.trim()||"guest";
+  const cells={};let puzzles=[],completed=[],index=0,initial={},pieces={},selected=null,busy=false,storageKey="";
+  const isOwn=p=>p&&p!== "."&&(p===p.toUpperCase())===(puzzles[index].color==="white");
+  function parseFen(fen){
+    const result={},ranks=fen.split(" ")[0].split("/");
+    if(ranks.length!==8)throw Error("FEN inválido");
+    ranks.forEach((rank,row)=>{let file=0;for(const symbol of rank){
+      if(/^[1-8]$/.test(symbol))file+=Number(symbol);
+      else {if(!glyphs[symbol]||file>=8)throw Error("FEN inválido");result["abcdefgh"[file]+(8-row)]=symbol;file++;}
+    }if(file!==8)throw Error("FEN inválido");});
+    return result;
   }
   function persist(){try{localStorage.setItem(storageKey,JSON.stringify(completed));}catch(_){}}
+  function load(){initial=parseFen(puzzles[index].fen);pieces={...initial};selected=null;}
   function render(){
-    const solved=completed.includes(order[position]);
+    const done=completed.includes(puzzles[index].id);
     for(const [square,button] of Object.entries(cells)){
       const piece=pieces[square];
       button.textContent=piece?glyphs[piece]:"";
       button.classList.toggle("selected",square===selected);
-      button.classList.toggle("target",!solved&&square===puzzle().to&&selected===puzzle().from);
-      button.setAttribute("aria-label",square+(piece?" "+(piece===piece.toUpperCase()?"blanca ":"negra ")+piece:" vacía"));
+      button.setAttribute("aria-label",square+(piece?" "+piece:" vacía"));
       button.setAttribute("aria-pressed",String(square===selected));
     }
-    prompt.textContent="Ejercicio "+(position+1)+" de 5 · Juegan blancas · Mate en una jugada.";
+    prompt.textContent="Ejercicio "+(index+1)+" de 5 · Juegan "+(puzzles[index].color==="white"?"blancas":"negras")+" · Mate en una jugada.";
     progress.textContent=completed.length+"/5 ejercicios completados hoy."+(completed.length===5?" ¡Reto diario terminado!":"");
+    document.getElementById("daily-chess-hint").disabled=busy||done;
   }
-  function advance(){
-    const next=order.findIndex(i=>!completed.includes(i));
-    if(next!==-1){position=next;load();status.textContent="¡Correcto! Siguiente ejercicio.";render();}
-    else{status.textContent="¡Enhorabuena! Has resuelto los cinco ejercicios. Pulsa Reintentar para volver a practicar.";render();}
+  async function attempt(from,to){
+    if(busy)return;busy=true;
+    status.textContent="Comprobando jugada…";
+    try{
+      const response=await fetch("/api/ajedrez/comprobar",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:puzzles[index].id,movimiento:from+to})});
+      if(!response.ok)throw Error("No se pudo verificar la jugada");
+      const result=await response.json();
+      if(result.correcto){
+        pieces[to]=pieces[from];delete pieces[from];
+        completed.push(puzzles[index].id);persist();
+        const next=puzzles.findIndex(p=>!completed.includes(p.id));
+        if(next>=0){index=next;load();status.textContent="¡Correcto! Siguiente ejercicio.";}
+        else status.textContent="¡Enhorabuena! Has completado los cinco ejercicios. Puedes pulsar Reintentar.";
+      }else status.textContent="Esa no es la solución. Prueba otra jugada.";
+    }catch(_){status.textContent="Error de conexión. Reintenta la jugada.";}
+    selected=null;busy=false;render();
   }
   function click(square){
-    if(completed.includes(order[position]))return;
-    if(selected===null){
-      if(pieces[square]&&pieces[square]===pieces[square].toUpperCase()){selected=square;status.textContent="Selecciona la casilla de destino.";}
-      else status.textContent="Selecciona una pieza blanca.";
-    }else if(square===selected)selected=null;
-    else if(square===puzzle().to&&selected===puzzle().from){
-      pieces[square]=pieces[selected];delete pieces[selected];selected=null;
-      completed.push(order[position]);persist();
-      const explanation=puzzle().answer+" — "+puzzle().explanation;
-      advance();
-      status.textContent="¡Correcto! "+explanation+(completed.length<5?" Siguiente ejercicio disponible.":" ¡Has terminado los cinco!");
-    }else{selected=pieces[square]&&pieces[square]===pieces[square].toUpperCase()?square:null;status.textContent="Esa no es la solución. Prueba otra jugada.";}
+    if(!puzzles.length||busy||completed.includes(puzzles[index].id))return;
+    if(selected===null){if(isOwn(pieces[square])){selected=square;status.textContent="Selecciona el destino.";}else status.textContent="Selecciona una pieza del color que juega.";}
+    else if(square===selected)selected=null;
+    else if(isOwn(pieces[square]))selected=square;
+    else{const from=selected;selected=null;void attempt(from,square);}
     render();
   }
   for(let row=0;row<8;row++)for(let col=0;col<8;col++){
@@ -73,13 +64,30 @@
     button.type="button";button.className="daily-chess-square "+((row+col)%2===0?"light":"dark");
     button.addEventListener("click",()=>click(square));cells[square]=button;board.append(button);
   }
-  document.getElementById("daily-chess-hint").addEventListener("click",()=>{status.textContent="Pista: "+puzzle().hint;});
-  document.getElementById("daily-chess-reset").addEventListener("click",()=>{
-    // Reinicia el ejercicio actual, incluso si los cinco ya estaban resueltos.
-    // El progreso de los ejercicios anteriores se conserva.
-    completed=completed.filter(i=>i!==order[position]);persist();
-    load();status.textContent="Ejercicio reiniciado. Selecciona una pieza y su destino.";render();
+  document.getElementById("daily-chess-hint").addEventListener("click",()=>{
+    if(puzzles.length&&!busy)status.textContent="Pista: busca un jaque que deje al rey sin escapatoria.";
   });
-  if(dateEl)dateEl.textContent=now.toLocaleDateString("es-ES",{day:"numeric",month:"long"});
-  load();render();
+  document.getElementById("daily-chess-reset").addEventListener("click",()=>{
+    if(!puzzles.length||busy)return;
+    completed=completed.filter(id=>id!==puzzles[index].id);persist();load();
+    status.textContent="Ejercicio reiniciado. Selecciona una pieza.";render();
+  });
+  async function init(){
+    status.textContent="Cargando cinco ejercicios desde la API…";
+    try{
+      const response=await fetch("/api/ajedrez/diario",{credentials:"same-origin"});
+      if(!response.ok)throw Error("API no disponible");
+      const data=await response.json();
+      if(!Array.isArray(data.ejercicios)||data.ejercicios.length!==5)throw Error("Lote incompleto");
+      puzzles=data.ejercicios;
+      for(const p of puzzles)parseFen(p.fen);
+      storageKey="studyplan:chess-daily:api:v1:"+email+":"+data.fecha;
+      try{const saved=JSON.parse(localStorage.getItem(storageKey)||"[]");completed=Array.isArray(saved)?[...new Set(saved.filter(id=>puzzles.some(p=>p.id===id)))]:[];}catch(_){completed=[];}
+      const next=puzzles.findIndex(p=>!completed.includes(p.id));index=next>=0?next:4;
+      load();render();
+      status.textContent=completed.length===5?"¡Reto diario completado!":"Selecciona una pieza y después su destino.";
+      document.getElementById("daily-chess-date").textContent=data.fecha;
+    }catch(_){status.textContent="No se han podido cargar los ejercicios. Recarga la página para volver a intentarlo.";prompt.textContent="Servicio de ajedrez temporalmente no disponible.";}
+  }
+  void init();
 })();
