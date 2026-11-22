@@ -46,6 +46,15 @@ class ChessApiTests(unittest.TestCase):
         with patch.object(module, "_chess_daily_set", side_effect=OSError("offline")):
             self.assertEqual(self.client.get("/api/ajedrez/diario").status_code, 503)
 
+    def test_external_api_down_uses_five_local_puzzles(self):
+        with patch.object(module, "_chess_fetch_json", side_effect=OSError("offline")):
+            response = self.client.get("/api/ajedrez/diario")
+        self.assertEqual(response.status_code, 200)
+        data = response.get_json()["ejercicios"]
+        self.assertEqual(len(data), 5)
+        self.assertTrue(all(item["fen"] for item in data))
+        self.assertNotIn("move", data[0])
+
     def test_cache_daily(self):
         with patch.object(module, "_chess_fetch_json") as fetch:
             fetch.side_effect = [
