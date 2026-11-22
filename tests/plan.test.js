@@ -16,7 +16,7 @@ function setup(response) {
     <input id="plan-fecha"><input id="plan-desde" value="16:00">
     <input id="plan-hasta" value="21:00"><input id="plan-duracion" value="60">
     <input id="plan-descanso" value="15"><button type="submit">Generar</button>
-    </form><div id="plan-feedback"></div><div id="plan-summary"></div>
+    </form><div id="plan-block-calendar"></div><form id="plan-block-form"><select id="plan-block-date"></select><input id="plan-block-start" value="17:00"><input id="plan-block-end" value="19:00"><input id="plan-block-reason"></form><div id="plan-block-feedback"></div><div id="plan-feedback"></div><div id="plan-summary"></div>
     <div id="plan-week"></div><span id="user-email-display">test@example.com</span>`, { url: "http://localhost/" });
   const w = dom.window;
   w.fetch = jest.fn().mockResolvedValue(response);
@@ -108,4 +108,25 @@ test("un error al regenerar no borra el horario anterior", async () => {
   await new Promise(resolve => setImmediate(resolve));
   expect(w.document.querySelector(".plan-session strong").textContent).toBe("Probabilidad");
   expect(w.document.getElementById("plan-feedback").textContent).toBe("Sin conexión");
+});
+
+test("un compromiso se envía al generar y aparece en el calendario", async () => {
+  const days = Array.from({ length: 7 }, (_, i) => ({
+    dia: "lunes", fecha: "2026-11-" + (23 + i), libre: false, sesiones: [],
+    bloqueos: i === 0 ? [{ fecha: "2026-11-23", inicio: "17:00", fin: "19:00", motivo: "Partido de fútbol" }] : []
+  }));
+  const w = setup({ ok: true, json: async () => ({ dias: days, total_sesiones: 0 }) });
+  w.document.getElementById("plan-fecha").value = "2026-11-23";
+  w.document.getElementById("plan-fecha").dispatchEvent(new w.Event("change"));
+  w.document.getElementById("plan-block-date").value = "2026-11-23";
+  w.document.getElementById("plan-block-reason").value = "Partido de fútbol";
+  w.document.getElementById("plan-block-form").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+  expect(w.document.querySelector(".plan-block-item").textContent).toContain("Partido de fútbol");
+  w.document.getElementById("plan-form").dispatchEvent(new w.Event("submit", { bubbles: true, cancelable: true }));
+  await new Promise(resolve => setImmediate(resolve));
+  const [url, options] = w.fetch.mock.calls[0];
+  expect(url).toBe("/api/plan/semana");
+  expect(options.method).toBe("POST");
+  expect(JSON.parse(options.body).bloqueos[0].motivo).toBe("Partido de fútbol");
+  expect(w.document.querySelector(".plan-block-result").textContent).toContain("Partido de fútbol");
 });
