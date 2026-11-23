@@ -2110,7 +2110,7 @@ def _sudoku_daily(date_string):
     import random
     seed = int.from_bytes(hashlib.sha256(date_string.encode("utf-8")).digest()[:8], "big")
     rng = random.Random(seed)
-    base = [1, 2, 3]
+    base = [0, 1, 2]
     def shuffled_bands():
         groups = rng.sample(base, 3)
         return [g * 3 + x for g in groups for x in rng.sample(base, 3)]
