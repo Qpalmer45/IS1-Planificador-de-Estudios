@@ -31,19 +31,20 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 - **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py` y `tests/editar-asignaturas.test.js`.
 
 
-## HU02 - Disponibilidad semanal
+## HU02 — Disponibilidad semanal
 
-[Issue #2](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/2)
-
-**Historia:** Como usuario, quiero definir mi disponibilidad semanal mediante franjas horarias para que la aplicación sepa cuándo puedo estudiar.
-
-**Valor:** Muy alto  
-**Estimación:** 1 día
-
-**Criterios de aceptación:**
-- Se pueden definir franjas horarias por día.
-- Se pueden modificar y eliminar franjas.
-- La planificación respeta las horas disponibles.
+- **Issue:** [Issue #2](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/2)
+- **Estado:** Preparada (Abierta — pendiente de implementar disponibilidad recurrente por día de la semana)
+- **Historia:** Como estudiante, quiero definir mi disponibilidad semanal recurrente mediante franjas horarias por día de la semana para que la aplicación sepa cuándo puedo estudiar habitualmente.
+- **Alcance:** Incluye la configuración de un patrón semanal recurrente (de lunes a domingo) con una o varias franjas horarias disponibles por día en SQLite, evolucionando el selector global único `Desde`/`Hasta` actual del generador. No incluye clases (`HU05`) ni bloqueos puntuales por fecha (`HU06`).
+- **Valor y prioridad:** Muy alto. Permite personalizar las horas disponibles de cada día de la semana sin depender de una misma franja global para los siete días; prioridad alta para el próximo incremento.
+- **Estimación:** 1 día (orientativa; incluye persistencia en SQLite, endpoints por usuario, interfaz de franjas por día y pruebas unitarias).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede definir una o varias franjas horarias disponibles (hora de inicio y hora de fin) de forma independiente para cada día de la semana (lunes a domingo), pudiendo dejar días sin franjas.
+  - **CA02:** El sistema valida que la hora de fin sea posterior a la de inicio (`fin > inicio`) y rechaza o fusiona franjas que se solapen dentro del mismo día.
+  - **CA03:** El usuario puede editar y eliminar franjas existentes, conservándose el patrón en SQLite para cualquier semana futura mientras no lo modifique.
+  - **CA04:** Cada usuario consulta y modifica únicamente su propia disponibilidad semanal.
+- **Evidencias:** En `main` existe actualmente una versión inicial simplificada mediante rango único diario (`Desde`/`Hasta`) en `templates/index.html` y `static/plan.js`. Pendiente implementar la disponibilidad granular por día en backend/frontend y sus pruebas automatizadas.
 
 ## HU03 - Registro de exámenes
 
