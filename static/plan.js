@@ -210,7 +210,13 @@
       card.className = "plan-day";
       card.append(text("h3", day.dia + " · " + day.fecha));
       if (day.libre) card.append(text("p", "Día bloqueado en tu horario", "plan-empty"));
-      for (const b of (day.bloqueos || [])) card.append(text("p", "Ocupado " + b.inicio + "–" + b.fin + " · " + b.motivo, "plan-block-result"));
+      for (const b of (day.bloqueos || [])) {
+        const block = document.createElement("div");
+        block.className = "plan-session plan-block-result";
+        block.append(text("span", b.inicio + "–" + b.fin, "plan-session-time"));
+        block.append(text("strong", b.motivo));
+        card.append(block);
+      }
       if (!day.libre && !day.sesiones.length) card.append(text("p", "Sin sesiones", "plan-empty"));
       for (const session of day.sesiones) {
         const block = document.createElement("div");

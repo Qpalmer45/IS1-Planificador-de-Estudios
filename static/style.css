@@ -2662,6 +2662,8 @@ html:not([data-theme="dark"]) .plan-mini-day.selected { outline-color:#b42332; b
 html:not([data-theme="dark"]) .plan-mini-slot.occupied { background:#fff0d4; border-color:#d18a26; color:#774413; }
 html:not([data-theme="dark"]) .plan-block-item { background:#fff0d4; color:#774413; }
 html:not([data-theme="dark"]) .plan-block-result { background:#fff0d4; color:#774413; }
+html:not([data-theme="dark"]) .plan-session.plan-block-result { background:#fff0d4; border-color:#d18a26; color:#774413; }
+html[data-theme="dark"] .plan-session.plan-block-result { background:#5c451b; border-color:#f59e0b; color:#fef3c7; }
 html:not([data-theme="dark"]) :is(a,button,input,select,textarea):focus-visible { outline-color:#b42332; }
 
 /* Selector de bandera de perfil: accesible y adaptable a pantallas pequeñas. */

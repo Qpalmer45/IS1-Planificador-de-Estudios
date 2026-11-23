@@ -128,7 +128,11 @@ test("un compromiso se envía al generar y aparece en el calendario", async () =
   expect(url).toBe("/api/plan/semana");
   expect(options.method).toBe("POST");
   expect(JSON.parse(options.body).bloqueos[0].motivo).toBe("Partido de fútbol");
-  expect(w.document.querySelector(".plan-block-result").textContent).toContain("Partido de fútbol");
+  const occupied = w.document.querySelector(".plan-block-result");
+  expect(occupied.classList.contains("plan-session")).toBe(true);
+  expect(occupied.querySelector(".plan-session-time").textContent).toBe("17:00–19:00");
+  expect(occupied.querySelector("strong").textContent).toBe("Partido de fútbol");
+  expect(occupied.textContent).not.toContain("Ocupado");
 });
 
 test("la cuadrícula muestra siete días y permite seleccionar una franja", () => {
