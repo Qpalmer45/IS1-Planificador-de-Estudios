@@ -5,7 +5,7 @@
 **Finalidad:** resumen del trabajo realizado para incorporarlo al documento del sprint.  
 **Ubicación:** repositorio GitHub, fuera de la Wiki.
 
-> **Actualización 23/11/2026:** `npm.cmd run test:all` pasó con 151 pruebas Jest y 171 Python. La integración externa de ajedrez y escudos no se verificó en vivo; las notas de «pendiente» que siguen describen el estado en la fecha de cada entrada.
+> **Actualización 23/11/2026:** tras integrar el resumen del plan en Inicio, `npm.cmd run test:all` pasó con 153 pruebas Jest y 171 Python. La integración externa de ajedrez y escudos no se verificó en vivo; las notas de «pendiente» que siguen describen el estado en la fecha de cada entrada.
 
 ## Resumen del trabajo
 
@@ -163,3 +163,21 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 - `tests/daily-chess.test.js` sustituye los casos de carga diferida por una regresión que comprueba la obtención de piezas aun cuando la pestaña no esté activa.
 - No se cambia el proveedor Chess Puzzle API ni los endpoints Flask; se mantiene el respaldo local si falla el proveedor.
 - En ese momento quedaba pendiente ejecutar las pruebas y comprobar el comportamiento en un navegador; la verificación posterior consta en la actualización inicial de este documento.
+
+
+### 23/11/2026 — HU40: rediseño visual del modo claro (Ocean)
+
+- Se sustituye la paleta granate del tema claro por azul marino, azul eléctrico y turquesa, con fondos blanco y gris azulado.
+- Se actualizan variables globales, encabezado, avatar, navegación, badges, estados del planificador, bordes y foco de teclado.
+- Se conservan los colores semánticos de error, éxito y aviso. No se modifica el modo oscuro ni la lógica JavaScript.
+- Pendiente la revisión visual manual y de contraste en todas las vistas.
+
+
+### 23/11/2026 — HU06/HU07: resumen semanal del plan en Inicio
+
+- Se añade al final del dashboard **Mi plan de estudio semanal**, con tarjetas para los siete días y las sesiones.
+- Si no existe un plan válido guardado para el usuario, Inicio muestra un estado vacío y un botón para abrir Plan de Estudio.
+- Se reutiliza `studyplan:plan-semanal:v1:<correo>` en `localStorage`; Inicio se actualiza al generar o restaurar el plan, sin peticiones adicionales.
+- El botón «Ver plan completo» abre la sección original del planificador. La vista se adapta a pantallas pequeñas y a ambos temas.
+- Archivos: `templates/index.html`, `static/plan.js`, `static/style.css` y `tests/plan.test.js`.
+- La suite automatizada pasó tras resolver el merge: 153 pruebas Jest y 171 Python. Queda pendiente la comprobación visual manual.

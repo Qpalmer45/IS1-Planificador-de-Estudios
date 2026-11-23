@@ -497,7 +497,7 @@ Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpo
 - **HU40:** ajustes de la paleta roja del tema claro.
 - **HU44:** reto diario disponible en la pestaña Ajedrez; `tests/daily-chess.test.js` contiene pruebas con respuestas simuladas.
 
-**Verificación:** `npm.cmd run test:all` pasó el 23/11/2026: 151 pruebas Jest y 171 Python. La API externa no se probó en vivo y no se hizo una revisión visual completa en navegador; además, el test frontend titulado «fallo de la API se muestra al usuario» no tiene aserciones.
+**Verificación:** tras integrar los cambios del dashboard, `npm.cmd run test:all` pasó el 23/11/2026: 153 pruebas Jest y 171 Python. La API externa no se probó en vivo y no se hizo una revisión visual completa en navegador; además, el test frontend titulado «fallo de la API se muestra al usuario» no tiene aserciones.
 
 
 ## Actualización de estados — 22/11/2026
@@ -573,6 +573,22 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 
 ### 23/11/2026 — Verificación posterior de HU44
 
-- `npm.cmd run test:all`: 151/151 pruebas Jest y 171/171 pruebas Python superadas.
+- `npm.cmd run test:all` pasó con 153 pruebas Jest y 171 pruebas Python tras integrar los cambios del dashboard.
 - La suite incluye una prueba backend con fallo externo simulado que comprueba los cinco puzzles locales de reserva.
 - No se hizo una petición de verificación al proveedor externo real; su disponibilidad queda fuera del resultado de la suite.
+
+### 23/11/2026 — HU40: rediseño visual del modo claro (Ocean)
+
+- Se sustituye la paleta de marca rojo granate por azul marino, azul eléctrico y turquesa; fondos blanco y gris azulado, tipografía oscura de alto contraste.
+- Se actualizan las variables CSS globales del tema claro, el encabezado de bienvenida, avatar, navegación activa y hover, badges, estados del planificador, bordes y enfoque por teclado.
+- Se conservan colores semánticos de errores (rojo), éxito (verde) y avisos (ámbar); no se cambia el modo oscuro ni la lógica JavaScript.
+- Archivo: `static/style.css`. Pendiente validación visual en navegador y revisión de contraste en todas las vistas.
+
+### 23/11/2026 — HU06/HU07: resumen semanal del plan en Inicio
+
+- Se añade al final del dashboard **Mi plan de estudio semanal**, con tarjetas para los siete días y las sesiones.
+- Si no hay un plan válido guardado para el usuario en el navegador, aparece **«Aún no has generado tu plan de estudio»** y un botón para abrir Plan de Estudio.
+- Se reutiliza la clave `studyplan:plan-semanal:v1:<correo>` de `localStorage`; Inicio muestra el plan al generarlo y al restaurarlo, sin peticiones adicionales.
+- El botón «Ver plan completo» abre la sección donde se genera el horario. La vista se adapta a pantallas pequeñas y a ambos temas.
+- Archivos: `templates/index.html`, `static/plan.js`, `static/style.css` y `tests/plan.test.js`.
+- Las pruebas automatizadas pasaron tras resolver el merge: 153 pruebas Jest y 171 Python. Queda pendiente la comprobación visual manual.

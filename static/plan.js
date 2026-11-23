@@ -160,6 +160,51 @@
   });
   renderBlocks();
 
+  // El dashboard es una vista del MISMO plan persistido, no una segunda copia.
+  const homeContent = document.getElementById("home-study-plan-content");
+  const homeSummary = document.getElementById("home-study-plan-summary");
+
+  function renderHomePlan(plan) {
+    if (!homeContent || !homeSummary) return;
+    homeContent.replaceChildren();
+    if (!plan || !Array.isArray(plan.dias) || plan.dias.length !== 7) {
+      homeSummary.textContent = "Organiza tu semana y consulta tus sesiones desde Inicio.";
+      const empty = document.createElement("div");
+      empty.className = "home-study-plan-empty";
+      empty.append(text("p", "Aún no has generado tu plan de estudio."));
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-btn";
+      button.addEventListener("click", () => document.querySelector('.tab-btn[data-tab="planificador"]')?.click());
+      button.textContent = "Generar mi plan";
+      empty.append(button);
+      homeContent.append(empty);
+      return;
+    }
+    const total = plan.dias.reduce((n,day)=>n+(Array.isArray(day.sesiones)?day.sesiones.length:0),0);
+    const minutes = plan.dias.reduce((n,day)=>n+(Array.isArray(day.sesiones)?day.sesiones.reduce((sum,item)=>sum+minutosDeHora(item.fin)-minutosDeHora(item.inicio),0):0),0);
+    homeSummary.textContent = total + " sesiones · " + (minutes/60).toLocaleString("es-ES",{maximumFractionDigits:2}) + " horas planificadas";
+    const grid = document.createElement("div");
+    grid.className = "home-study-plan-grid";
+    for (const day of plan.dias) {
+      const card = document.createElement("article");
+      card.className = "home-study-plan-day";
+      card.append(text("h4", String(day.dia || "") + " · " + String(day.fecha || "")));
+      if (day.libre) card.append(text("p", "Día bloqueado", "plan-empty"));
+      else if (!Array.isArray(day.sesiones) || !day.sesiones.length) card.append(text("p", "Sin sesiones", "plan-empty"));
+      else for (const session of day.sesiones) {
+        const item = document.createElement("div");
+        item.className = "home-study-plan-session";
+        item.append(text("span", session.inicio + "–" + session.fin, "plan-session-time"));
+        item.append(text("strong", session.asignatura || "Estudio"));
+        if (session.actividad) item.append(text("small", (session.tipo || "Actividad") + ": " + session.actividad));
+        card.append(item);
+      }
+      grid.append(card);
+    }
+    homeContent.append(grid);
+  }
+
   function guardarPlan(plan) {
     if (!storageKey) return;
     try {
@@ -180,6 +225,7 @@
       }
       renderBlocks();
       render(guardado.plan);
+      renderHomePlan(guardado.plan);
       feedback.textContent = "Último horario recuperado. Si cambiaste asignaturas u objetivos, vuelve a generarlo.";
     } catch (_) {
       // Un almacenamiento vacío o dañado no impide generar un horario nuevo.
@@ -254,6 +300,7 @@
     }
   }
 
+  renderHomePlan(null);
   restaurarPlan();
 
   form.addEventListener("submit", async event => {
@@ -274,6 +321,7 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "No se pudo generar el plan.");
       render(data);
+      renderHomePlan(data);
       feedback.textContent = "Horario generado y conservado en este navegador.";
       guardarPlan(data);
     } catch (error) {
