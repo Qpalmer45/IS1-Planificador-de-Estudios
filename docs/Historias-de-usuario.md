@@ -6,8 +6,8 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 * **Sesión de estudio:** Unidad básica de planificación temporal dentro de StudyPlan. Representa un bloque continuo de tiempo asignado a una **asignatura** (o a una tarea/entrega vinculada a una asignatura), definido por una fecha, hora de inicio, hora de fin y duración en minutos.
   
-  * *Evolución técnica:* En la fase inicial de generación y visualización (`HU06`, `HU07`, `HU09`), las sesiones se calculan dinámicamente a partir de las restricciones del usuario. Para soportar edición manual (`HU10`), registro de cumplimiento (`HU14`), replanificación (`HU15`) y estadísticas (`HU18`), cada sesión requiere persistencia individual en SQLite con tres estados explícitos: `pendiente`, `completada` y `no_realizada`.
-  * 
+* *Evolución técnica:* En la fase inicial de generación y visualización (`HU06`, `HU07`, `HU09`), las sesiones se calculan dinámicamente a partir de las restricciones del usuario. Para soportar edición manual (`HU10`), registro de cumplimiento (`HU14`), replanificación (`HU15`) y estadísticas (`HU18`), cada sesión requiere persistencia individual en SQLite con tres estados explícitos: `pendiente`, `completada` y `no_realizada`.
+    
 * **Disponibilidad semanal neta:** Tiempo útil real disponible para estudiar en una semana concreta. Se obtiene restando a la disponibilidad bruta recurrente del usuario (`HU02`) tanto su horario fijo de clases (`HU05`) como sus compromisos puntuales bloqueados para esa semana (`HU06`).
 
 * **Formulario:** Un formulario (en el contexto de vuestra aplicación web) es simplemente cualquier pantalla, cuadro o conjunto de campos donde el usuario escribe o selecciona datos y pulsa un botón para guardarlos o enviarlos.
@@ -16,7 +16,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   * Las **asignaturas** (`HU01`) tienen un objetivo semanal de minutos deseados (`HU13`), dificultad y prioridad (`HU12`).
   * Las **tareas y entregas** (`HU04`) tienen fecha límite y minutos estimados propios.
   * Los **exámenes** (`HU03`, `HU04`) actúan como hitos temporales vinculados a una asignatura: no añaden minutos propios al cálculo, sino que incrementan la urgencia de estudiar su asignatura asociada conforme se acerca su fecha.
-  * 
+
 * **Independencia y trazabilidad (INVEST):** Aunque las funcionalidades siguen un flujo lógico de datos (gestión de cuenta $\rightarrow$ asignaturas y restricciones $\rightarrow$ motor de planificación $\rightarrow$ visualización y seguimiento), cada historia se especifica y verifica de forma autocontenida mediante datos de prueba aislados, evitando mezclar criterios de aceptación entre historias distintas.
 
 ## HU01 — Gestión de asignaturas
@@ -29,14 +29,14 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Alcance:** Incluye el alta, consulta, edición y borrado de asignaturas propias del usuario.
  
-- **Valor y prioridad:** Muy alto. Es la entidad raíz del planificador sobre la que se vinculan clases, exámenes, temas y sesiones; prioridad máxima de ejecución (Sprint 1).
+- **Valor y prioridad:** Muy alto. Es la entidad raíz del planificador sobre la que se vinculan clases, exámenes, temas y sesiones; prioridad máxima de ejecución.
  
 - **Estimación:** 1 día (orientativa; operaciones CRUD básicas con validaciones y aislamiento por cuenta).
  
 - **Criterios de aceptación:**
   - **CA01:** El usuario puede crear asignaturas indicando un nombre válido.
   - **CA02:** El usuario puede editar el nombre.
-  - **CA03:** El usuario puede eliminar una asignatura existente
+  - **CA03:** El usuario puede eliminar una asignatura existente.
   - **CA04:** Cada usuario visualiza y gestiona únicamente sus propias asignaturas.
    
 - **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py` y `tests/editar-asignaturas.test.js`.
@@ -70,7 +70,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Absorbida (Cerrada — funcionalidad consolidada en [HU04](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/4))
  
-- **Historia:** Como estudiante, quiero registrar exámenes asociados a una asignatura indicando su fecha para organizar mi preparación.
+- **Historia:** Como usuario, quiero registrar exámenes asociados a una asignatura indicando su fecha para organizar mi preparación.
   
 - **Alcance:** Funcionalidad integrada íntegramente dentro de `HU04` (*Gestión de tareas, entregas y exámenes*). La antigua regla de «importancia» manual del examen se sustituyó en el modelo vigente por el objetivo semanal de la asignatura vinculada (`HU13`) y la proximidad de la fecha del examen en el generador (`HU06`). No se contabiliza estimación separada.
 
@@ -86,7 +86,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Alcance:** Incluye el CRUD completo de actividades académicas en SQLite por usuario: tareas y entregas (con o sin asignatura asociada, fecha límite, minutos estimados totales y objetivo semanal editable) y exámenes (vinculados obligatoriamente a una asignatura propia y con fecha de examen, sin objetivo de minutos independiente). No incluye prioridad manual por actividad (la urgencia se determina por fecha límite/proximidad) ni la lista rápida de To-Dos (`HU27`).
   
-- **Valor y prioridad:** Muy alto. Alimenta directamente el motor de planificación semanal y los avisos de próximos eventos; prioridad alta (Sprint 2 / Sprint 4).
+- **Valor y prioridad:** Muy alto. Alimenta directamente el motor de planificación semanal y los avisos de próximos eventos; prioridad alta.
 - **Estimación:** 2 días (orientativa; abarca formularios, endpoints, validaciones de fechas/pertenencia y pruebas).
   
 - **Criterios de aceptación:**
@@ -150,7 +150,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Historia:** Como usuario, quiero visualizar mi planificación mediante un calendario semanal con las horas de inicio y fin de cada sesión para saber qué debo estudiar en cada momento.
   
-- **Alcance:** Incluye la vista semanal de 7 días de las sesiones de estudio generadas por `HU06` (mostrada en *Plan de Estudio* y resumida en el bloque *Mi plan de estudio semanal* de *Inicio*), indicando en cada tarjeta su hora de inicio, hora de fin y asignatura o actividad asociada, así como los compromisos puntuales bloqueados. Absorbe los criterios de `HU09` (*Horas de inicio y fin de las sesiones*). La persistencia individual de sesiones en SQLite para seguimiento pertenece a `HU14`.
+- **Alcance:** Incluye la vista semanal de 7 días de las sesiones de estudio generadas por `HU06` (mostrada en *Plan de Estudio* y resumida en el bloque *Mi plan de estudio semanal* de *Inicio*), indicando en cada tarjeta su hora de inicio, hora de fin y asignatura o actividad asociada, así como los compromisos puntuales bloqueados. 
   
 - **Valor y prioridad:** Muy alto. Permite consultar de forma clara y ordenada las sesiones de estudio de la semana; prioridad máxima.
   
@@ -388,8 +388,8 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Alcance:** Incluye la generación y visualización de avisos internos en el panel *Inicio* para tareas, entregas y exámenes (`HU04`) próximos según el margen de antelación configurado por el usuario en SQLite (selector rápido en interfaz de mismo día, `1`, `3`, `7`, `14`, `30` o `60` días; validación en API entre `0` y `365` días; valor por defecto `7` días). No incluye notificaciones push, correos electrónicos ni recordatorios de sesiones de estudio individuales.
   
-- **Valor y prioridad:** Bajo-medio. Facilita detectar entregas y exámenes cercanos desde el panel principal
-  .
+- **Valor y prioridad:** Bajo-medio. Facilita detectar entregas y exámenes cercanos desde el panel principal.
+  
 - **Estimación:** 2 días (orientativa; detección de eventos próximos, filtro por ventana de antelación y configuración persistente por usuario).
   
 - **Criterios de aceptación:**
@@ -410,7 +410,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Alcance:** Incluye el alta de nuevas cuentas mediante nombre/usuario, correo electrónico y contraseña en SQLite, habilitando el aislamiento de todos los datos académicos y de planificación por usuario. No incluye recuperación de contraseña (`HU43`).
 
-- **Valor y prioridad:** Alto (base transversal). Aunque no es una función específica de estudio, resulta indispensable para persistir y aislar los datos de cada estudiante; implementada en Sprint 1.
+- **Valor y prioridad:** Alto (base transversal). Aunque no es una función específica de estudio, resulta indispensable para persistir y aislar los datos de cada estudiante.
 
 - **Estimación:** 2 días (orientativa; formulario, validaciones de correo/contraseña y almacenamiento seguro en SQLite).
 
@@ -464,7 +464,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Alcance:** Incluye una vista de detalle filtrada por asignatura accesible desde la lista de materias (`HU01`), mostrando sus parámetros configurados (`HU12`, `HU13`), temario (`HU26`) y actividades o exámenes vinculados (`HU04`).
 
-- **Valor y prioridad:** Alto. Facilita organizar el contenido y seguimiento específico de cada materia; implementada en Sprint 2.
+- **Valor y prioridad:** Alto. Facilita organizar el contenido y seguimiento específico de cada materia.
 
 - **Estimación:** 1 día (orientativa; navegación por asignatura y consultas filtradas por materia y usuario).
 
@@ -509,7 +509,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Alcance:** Incluye el alta, consulta, edición, borrado y cambio de estado (`pendiente` / `estudiado`, con posibilidad de reversión) de los temas asociados a cada asignatura propia dentro de su apartado individual (`HU23`) en SQLite.
 
-- **Valor y prioridad:** Alto. Permite desglosar el contenido de cada materia y seguir su avance; implementada en Sprint 2 / Sprint 4.
+- **Valor y prioridad:** Alto. Permite desglosar el contenido de cada materia y seguir su avance.
 
 - **Estimación:** 1 día (orientativa; operaciones CRUD de temas vinculados a asignaturas, estado y validación de pertenencia).
 
@@ -530,7 +530,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Alcance:** Incluye el alta, edición, borrado y cambio de estado (`pendiente` / `completada`, reversible) de notas rápidas persistidas en SQLite por usuario en la vista *To-Dos Rápidos*. No incluye fechas límite ni planificación automática en el calendario (cubiertas por `HU04` y `HU06`).
 
-- **Valor y prioridad:** Medio. Facilita anotar recordatorios o tareas rápidas del día a día sin sobrecargar el planificador académico; implementada en Sprint 1.
+- **Valor y prioridad:** Medio. Facilita anotar recordatorios o tareas rápidas del día a día sin sobrecargar el planificador académico.
 
 - **Estimación:** 1 día (orientativa; operaciones CRUD de To-Dos, cambio de estado y persistencia por usuario).
 
@@ -551,7 +551,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Alcance:** Incluye el filtrado visual en la vista *To-Dos Rápidos* (`HU27`) para mostrar todas las tareas, solo las pendientes o solo las completadas del usuario activo, sin alterar los registros almacenados en SQLite.
 
-- **Valor y prioridad:** Medio. Mejora la claridad cuando la lista rápida acumula varias tareas; implementada en Sprint 3.
+- **Valor y prioridad:** Medio. Mejora la claridad cuando la lista rápida acumula varias tareas.
 
 - **Estimación:** 1 día (orientativa; lógica de filtrado por estado, manejo de lista vacía y aislamiento por usuario).
 
@@ -610,7 +610,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:** Como usuario, quiero que los controles y mensajes tengan nombres accesibles y una estructura semántica comprensible para poder utilizar el planificador mediante un lector de pantalla
+- **Historia:** Como usuario, quiero que los controles y mensajes tengan nombres accesibles y una estructura semántica comprensible para poder utilizar el planificador mediante un lector de pantalla.
 
 - **Alcance:** Incluye la incorporación de etiquetas asociadas, jerarquía de encabezados, regiones ARIA de navegación y anuncios de estado en las vistas principales (acceso, asignaturas, tareas, To-Dos y calendario), sin alterar la lógica de negocio.
 
@@ -631,7 +631,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:**Como usuario, quiero activar un modo de alto contraste para distinguir con claridad todos los textos, bordes y controles de la interfaz.
+- **Historia: **Como usuario, quiero activar un modo de alto contraste para distinguir con claridad todos los textos, bordes y controles de la interfaz.
 
 - **Alcance:** Incluye un selector accesible de modo de alto contraste aplicado a las vistas principales, formularios y calendario, conservando la preferencia en el navegador (`localStorage`) y coexistiendo con los temas claro y oscuro de `HU40`.
 
@@ -749,7 +749,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA02:** El archivo sigue una estructura documentada con fechas y estados consistentes, generando colecciones vacías válidas cuando el usuario no tiene registros.
   - **CA03:** La exportación excluye cualquier dato de otros usuarios así como contraseñas, hashes o tokens internos.
 
-- **Evidencias:** Pendiente de implementación[cite: 39].
+- **Evidencias:** Pendiente de implementación.
 
 ## HU38 — Deshacer eliminación de una tarea rápida
 
@@ -888,7 +888,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/daily-chess.js`, `static/style.css`) y verificado mediante `tests/test_chess_api.py` y `tests/daily-chess.test.js` (dentro de la suite `npm run test:all`: 157 pruebas Jest y 178 Python; pendiente validación en vivo frente a la API externa).
 
-  # HU45 — Resolver reto diario de Sudoku
+## HU45 — Resolver reto diario de Sudoku
 
 - **Issue:** Pendiente de vincular en GitHub (implementado en `main` el 23/11/2026)
 
