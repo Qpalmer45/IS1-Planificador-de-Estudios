@@ -5,7 +5,7 @@
 **Finalidad:** resumen del trabajo realizado para incorporarlo al documento del sprint.  
 **Ubicación:** repositorio GitHub, fuera de la Wiki.
 
-> **Actualización 23/11/2026:** tras integrar el resumen del plan en Inicio, `npm.cmd run test:all` pasó con 153 pruebas Jest y 171 Python. La integración externa de ajedrez y escudos no se verificó en vivo; las notas de «pendiente» que siguen describen el estado en la fecha de cada entrada.
+> **Actualización 23/11/2026:** tras integrar el resumen del plan en Inicio y corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 156 pruebas Jest y 178 Python. La integración externa de ajedrez y escudos no se verificó en vivo; las notas de «pendiente» que siguen describen el estado en la fecha de cada entrada.
 
 ## Resumen del trabajo
 

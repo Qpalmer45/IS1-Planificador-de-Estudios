@@ -992,10 +992,12 @@ def validar_tarea(datos, parcial=False, fecha_anterior=None):
     campos = datos.copy()
     if "minutos_semanales" in campos:
         campos["minutos_semanales"] = validar_minutos_semanales(campos["minutos_semanales"])
-    if "asignatura_id" in campos and (type(campos["asignatura_id"]) is not int or campos["asignatura_id"] <= 0):
+    if "asignatura_id" in campos and campos["asignatura_id"] is not None and (
+        type(campos["asignatura_id"]) is not int or campos["asignatura_id"] <= 0
+    ):
         raise ValueError("Selecciona una asignatura válida.")
     if campos.get("tipo") == "examen":
-        if "asignatura_id" not in campos:
+        if campos.get("asignatura_id") is None:
             raise ValueError("El examen debe estar asociado a una asignatura.")
         if campos.get("minutos_semanales", 0) != 0:
             raise ValueError("Los exámenes utilizan las horas de su asignatura.")

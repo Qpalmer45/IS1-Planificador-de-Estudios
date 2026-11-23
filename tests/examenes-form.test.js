@@ -1,10 +1,83 @@
 import {test, expect} from "@jest/globals";
 import {JSDOM} from "jsdom";
 import fs from "node:fs";
+import vm from "node:vm";
 
 const html = fs.readFileSync("templates/index.html", "utf8");
 const css = fs.readFileSync("static/style.css", "utf8");
 const tareas = fs.readFileSync("static/tareas.js", "utf8");
+
+test("el módulo de tareas y entregas tiene sintaxis JavaScript válida", () => {
+  expect(() => new vm.Script(tareas, {filename: "static/tareas.js"})).not.toThrow();
+});
+
+test("carga asignaturas, crea una actividad asignada y permite quitarle la asignatura", async () => {
+  const dom = new JSDOM(`<!doctype html><form id="tarea-form" data-zona="Europe/Madrid">
+    <h3 id="tarea-form-heading"></h3>
+    <fieldset id="tarea-campos">
+      <input name="titulo" required>
+      <select name="tipo"><option value="tarea">Tarea</option><option value="entrega">Entrega</option><option value="examen">Examen</option></select>
+      <select name="asignatura_id"><option value="">Sin asignatura</option></select>
+      <input type="date" name="fecha_limite" required>
+      <label id="tarea-tiempo-total"><input type="number" name="minutos_estimados" value="60" required></label>
+      <label id="tarea-tiempo-semanal"><input type="number" name="minutos_semanales" value="0" required></label>
+    </fieldset>
+    <p id="tarea-aviso-examen" hidden></p>
+    <span id="tarea-etiqueta-fecha"></span>
+    <button id="tarea-guardar" type="submit"></button>
+    <button id="tarea-cancelar" type="button"></button>
+  </form>
+  <p id="tarea-estado"></p><button id="tarea-reintentar"></button>
+  <ul id="tarea-lista"></ul><p id="tarea-vacia"></p>`, {url: "http://localhost/"});
+  const {window} = dom;
+  const llamadas = [];
+  let actividadActual;
+  window.api = async (ruta, opciones = {}) => {
+    llamadas.push([ruta, opciones]);
+    if (ruta === "/api/asignaturas") return [{id: 9, nombre: "Álgebra"}];
+    if (ruta === "/api/tareas" && !opciones.method) return actividadActual ? [actividadActual] : [];
+    if (ruta === "/api/tareas" && opciones.method === "POST") {
+      actividadActual = {id: 30, ...JSON.parse(opciones.body)};
+      return actividadActual;
+    }
+    if (ruta === "/api/tareas/30" && opciones.method === "PATCH") {
+      actividadActual = {...actividadActual, ...JSON.parse(opciones.body)};
+      return actividadActual;
+    }
+    throw new Error("Ruta inesperada: " + ruta);
+  };
+  window.cargarRecordatorios = () => {};
+  vm.runInContext(tareas, vm.createContext(window));
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 0));
+    const form = window.document.getElementById("tarea-form");
+    const selector = form.elements.asignatura_id;
+    expect([...selector.options].map(opcion => opcion.value)).toContain("9");
+
+    form.elements.titulo.value = "Práctica";
+    selector.value = "9";
+    form.elements.fecha_limite.value = form.elements.fecha_limite.min;
+    form.dispatchEvent(new window.Event("submit", {bubbles: true, cancelable: true}));
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    const creacion = llamadas.find(([ruta, opciones]) => ruta === "/api/tareas" && opciones.method === "POST");
+    expect(JSON.parse(creacion[1].body).asignatura_id).toBe(9);
+    expect(window.document.querySelector("#tarea-lista").textContent).toContain("Práctica");
+
+    window.document.querySelector('[aria-label="Editar Práctica"]').click();
+    selector.value = "";
+    form.dispatchEvent(new window.Event("submit", {bubbles: true, cancelable: true}));
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    const edicion = llamadas.find(([ruta, opciones]) => ruta === "/api/tareas/30" && opciones.method === "PATCH");
+    expect(edicion).toBeDefined();
+    expect(JSON.parse(edicion[1].body).asignatura_id).toBeNull();
+    expect(actividadActual.asignatura_id).toBeNull();
+  } finally {
+    window.close();
+  }
+});
 
 test("los exámenes disponen de selector de asignatura y controles de horas identificables", () => {
   const document = new JSDOM(html).window.document;

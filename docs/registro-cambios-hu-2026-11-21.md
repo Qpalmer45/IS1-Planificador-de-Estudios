@@ -1,7 +1,7 @@
 # Registro de cambios de historias de usuario — 21/11/2026
 
 > Documento de trabajo para incorporar al próximo documento de Sprint. **No es la Wiki ni el Sprint Doc definitivo.**
-> Rama: `main`. El estado de pruebas de cada entrada corresponde al momento en que se escribió. **Actualización 23/11/2026:** tras integrar el resumen del plan en Inicio, `npm.cmd run test:all` pasó con 153 pruebas Jest y 171 Python; la integración externa de ajedrez no se verificó en vivo.
+> Rama: `main`. El estado de pruebas de cada entrada corresponde al momento en que se escribió. **Actualización 23/11/2026:** tras integrar el resumen del plan en Inicio y corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 156 pruebas Jest y 178 Python; la integración externa de ajedrez no se verificó en vivo.
 
 ## Historias existentes afectadas
 
@@ -20,20 +20,20 @@
 - Tareas y entregas admiten minutos estimados y objetivo semanal.
 - Un examen exige una asignatura asociada; no permite configurar horas de estudio propias, porque toma el tiempo semanal de la asignatura.
 - Se añade aviso contextual visible solo al seleccionar «Examen»: para modificar las horas, acudir a «Mis asignaturas».
-- El backend valida la asociación y rechaza asignaturas ajenas u objetivos semanales propios de exámenes.
+- El backend valida la asociación, permite quitarla de una tarea o entrega y rechaza asignaturas ajenas o la eliminación de la asignatura de un examen.
 - **Pruebas añadidas/modificadas:** `tests/test_reparto_horas.py`, `tests/examenes-form.test.js`, pruebas previas del planificador.
-- **Verificación pendiente:** ejecución completa y revisión de creación/edición de actividades.
+- **Verificación 23/11/2026:** pruebas de creación, edición, desvinculación y asignación de horas a tareas; suite completa con 156 pruebas Jest y 178 Python.
 
 ### HU06 — Generación automática del plan de estudio · Issue #6
 **Tipo:** modificación de la lógica de reparto.
 
-- La generación semanal intenta cubrir primero los objetivos de tiempo establecidos.
-- Los huecos sobrantes se distribuyen entre asignaturas según prioridad y dificultad.
+- Los objetivos semanales de asignaturas y actividades compiten por las franjas con tareas/entregas en modo automático (objetivo 0), ponderadas por tiempo asignado y urgencia del plazo.
+- Las asignaturas se ponderan por prioridad y dificultad; los huecos que quedan se siguen repartiendo entre asignaturas y actividades pendientes.
 - Los exámenes no consumen horas adicionales: su proximidad influye en la preparación de la asignatura asociada.
 - Se consideran clases, periodos libres, franjas horarias y descansos.
 - Se calculan déficits de minutos cuando la disponibilidad es insuficiente y se añade un aviso en la interfaz.
 - **Pruebas añadidas/modificadas:** `tests/test_reparto_horas.py`, `tests/test_planificador.py`, `tests/test_objetivos_semanales.py`.
-- **Verificación pendiente:** comprobar el reparto exacto, los casos límite, el aviso de déficit y la ausencia de solapamientos.
+- **Verificación 23/11/2026:** las pruebas comprueban el reparto simultáneo de tareas/entregas y asignaturas, prioridad por fecha límite, objetivos explícitos, déficits y ausencia de solapamientos.
 
 ### HU12 — Dificultad y prioridad · Issue #12
 **Tipo:** integración con HU06 y formulario de HU01.

@@ -497,7 +497,7 @@ Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpo
 - **HU40:** ajustes de la paleta roja del tema claro.
 - **HU44:** reto diario disponible en la pestaña Ajedrez; `tests/daily-chess.test.js` contiene pruebas con respuestas simuladas.
 
-**Verificación:** tras integrar los cambios del dashboard, `npm.cmd run test:all` pasó el 23/11/2026: 153 pruebas Jest y 171 Python. La API externa no se probó en vivo y no se hizo una revisión visual completa en navegador; además, el test frontend titulado «fallo de la API se muestra al usuario» no tiene aserciones.
+**Verificación:** tras integrar los cambios del dashboard, `npm.cmd run test:all` pasó el 23/11/2026: 153 pruebas Jest y 171 Python. **Reejecución posterior, tras corregir el reparto de horas extra y el módulo de tareas/entregas (23/11/2026):** 156 pruebas Jest y 174 Python. **Última reejecución, tras permitir desvincular tareas y equilibrar su planificación con los objetivos de las asignaturas (23/11/2026):** 156 pruebas Jest y 178 Python. La API externa no se probó en vivo y no se hizo una revisión visual completa en navegador; además, el test frontend titulado «fallo de la API se muestra al usuario» no tiene aserciones.
 
 
 ## Actualización de estados — 22/11/2026
@@ -574,6 +574,8 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 ### 23/11/2026 — Verificación posterior de HU44
 
 - `npm.cmd run test:all` pasó con 153 pruebas Jest y 171 pruebas Python tras integrar los cambios del dashboard.
+- Reejecución posterior, tras corregir el reparto de horas extra y el módulo de tareas/entregas: 156 pruebas Jest y 174 pruebas Python.
+- Última reejecución tras corregir la desvinculación y el reparto de tiempo de las tareas: 156 pruebas Jest y 178 pruebas Python.
 - La suite incluye una prueba backend con fallo externo simulado que comprueba los cinco puzzles locales de reserva.
 - No se hizo una petición de verificación al proveedor externo real; su disponibilidad queda fuera del resultado de la suite.
 
@@ -591,4 +593,4 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 - Se reutiliza la clave `studyplan:plan-semanal:v1:<correo>` de `localStorage`; Inicio muestra el plan al generarlo y al restaurarlo, sin peticiones adicionales.
 - El botón «Ver plan completo» abre la sección donde se genera el horario. La vista se adapta a pantallas pequeñas y a ambos temas.
 - Archivos: `templates/index.html`, `static/plan.js`, `static/style.css` y `tests/plan.test.js`.
-- Las pruebas automatizadas pasaron tras resolver el merge: 153 pruebas Jest y 171 Python. Queda pendiente la comprobación visual manual.
+- Las pruebas automatizadas pasaron tras resolver el merge: 153 pruebas Jest y 171 Python. En la reejecución posterior a las correcciones de reparto y tareas/entregas, pasaron 156 pruebas Jest y 174 Python; la última reejecución, tras los cambios de desvinculación y reparto de tareas, pasó 156 pruebas Jest y 178 Python. Queda pendiente la comprobación visual manual.

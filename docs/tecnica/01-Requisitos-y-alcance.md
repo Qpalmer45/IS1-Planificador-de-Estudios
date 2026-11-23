@@ -49,10 +49,10 @@ Son objetivos de calidad; no estamos diciendo que tengamos una auditoría comple
 
 El planificador genera una vista previa semanal a partir de las asignaturas, actividades pendientes, clases, días libres, franja diaria, duración y descanso indicados. Los bloqueos puntuales y los parámetros del plan se guardan en `localStorage` por cuenta/navegador; el servidor no persiste sesiones generadas. Por eso todavía no se pueden completar sesiones ni replanificar automáticamente las no realizadas.
 
-Hay una limitación conocida en el reparto de horas extra: cuando existen asignaturas y actividades sin objetivo semanal explícito, el planificador puede asignar el tiempo sobrante a las asignaturas y dejar esas actividades sin minutos. La suite actual no cubre ese caso.
+Los objetivos semanales de asignaturas y actividades compiten por las franjas con las tareas/entregas en modo automático (objetivo semanal 0). La distribución tiene en cuenta el tiempo ya asignado y la urgencia del plazo; las asignaturas se ponderan por prioridad y dificultad. Si quedan huecos, se siguen repartiendo entre las actividades pendientes y las asignaturas. Los exámenes utilizan el tiempo de su asignatura asociada.
 
 La importación de horarios desde imágenes y las estadísticas basadas en un historial real de estudio siguen pendientes. Los To-Dos rápidos (HU27) son independientes de las tareas, entregas y exámenes planificables (HU04).
 
 ## 6. Cómo se validarán los requisitos
 
-Cada requisito debe relacionarse con una HU y pruebas o demostración de aceptación. El 23 de noviembre de 2026, tras integrar los cambios del dashboard, `npm.cmd run test:all` pasó con 153 pruebas Jest y 171 pruebas Python. La integración externa de ajedrez y escudos no se prueba en vivo; la documentación de pruebas recoge otras limitaciones.
+Cada requisito debe relacionarse con una HU y pruebas o demostración de aceptación. El 23 de noviembre de 2026, tras corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 156 pruebas Jest y 178 pruebas Python. La integración externa de ajedrez y escudos no se prueba en vivo; la documentación de pruebas recoge otras limitaciones.

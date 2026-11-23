@@ -1,4 +1,4 @@
-"""Generador semanal: primero objetivos y después distribución ponderada de huecos."""
+"""Generador semanal: objetivos y reparto ponderado de las franjas disponibles."""
 from datetime import date, timedelta
 
 DIAS = ("lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo")
@@ -63,8 +63,8 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
     usados_a = {a["id"]: 0 for a in pendientes}
     sesiones_dia = []
 
-    # Dos fases sobre las mismas franjas: primero cubrir objetivos explícitos;
-    # solo después, repartir huecos sobrantes según prioridad y dificultad.
+    # Primero se combinan objetivos explícitos y actividades automáticas;
+    # después se asignan las franjas restantes según carga y urgencia.
     for desplazamiento in range(7):
         actual = inicio + timedelta(days=desplazamiento)
         fecha = actual.isoformat()
@@ -94,6 +94,16 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
     def peso(m):
         return PESO.get(m.get("prioridad"), 2) * PESO.get(m.get("dificultad"), 2)
 
+    def orden_carga(candidato, fecha):
+        """Equilibra carga por prioridad y urgencia de las actividades."""
+        _, _, _, _, tipo, objeto, _, _ = candidato
+        if tipo == "materia":
+            return (usados_m[objeto["id"]] / peso(objeto), "9999-12-31", objeto["id"])
+        dias_restantes = max(0, (objeto["_fecha"] - fecha).days)
+        urgencia = 1 + 1 / (dias_restantes + 1)
+        return (usados_a[objeto["id"]] / (PESO["media"] * urgencia),
+                objeto["_fecha"].isoformat(), objeto["id"])
+
     # Primero objetivos semanales de asignaturas y actividades, con plazos.
     for fase in ("objetivos", "extras"):
         for dia in sesiones_dia:
@@ -111,14 +121,16 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
                                               and a.get("asignatura_id") == m["id"]
                                               and a.get("fecha_limite", "") >= dia["fecha"]),
                                              key=lambda a: a["fecha_limite"], default=None)
-                                candidatos.append((0 if examen else 2, examen["fecha_limite"] if examen else "9999-12-31",
+                                candidatos.append((0 if examen else 1, examen["fecha_limite"] if examen else "9999-12-31",
                                                    -peso(m), m["id"], "materia", m, falta, examen))
                         for a in pendientes:
                             if a["_fecha"] >= fecha:
                                 limite = int(a.get("minutos_semanales") or 0)
-                                falta = min(a["_restante"], max(0, limite - usados_a[a["id"]])) if limite else 0
+                                falta = (min(a["_restante"], max(0, limite - usados_a[a["id"]]))
+                                         if limite else a["_restante"])
                                 if falta:
-                                    candidatos.append((1, a["fecha_limite"], 0, a["id"], "actividad", a, falta, None))
+                                    candidatos.append((1, a["fecha_limite"], 0, a["id"],
+                                                       "actividad", a, falta, None))
                     else:
                         # Extras únicamente si no queda ningún objetivo explícito
                         # pendiente que pueda utilizar este hueco.
@@ -131,14 +143,10 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
                     candidatos = [c for c in candidatos if min(duracion, c[6]) <= capacidad]
                     if not candidatos:
                         break
-                    # En fase de extras se escoge la materia menos favorecida
-                    # respecto a su peso, no siempre la misma.
                     if fase == "extras":
-                        candidatos.sort(key=lambda c: (
-                            usados_m[c[5]["id"]] / peso(c[5]) if c[4] == "materia" else float("inf"),
-                            c[2], c[3]))
+                        candidatos.sort(key=lambda c: orden_carga(c, fecha))
                     else:
-                        candidatos.sort(key=lambda c: c[:4])
+                        candidatos.sort(key=lambda c: (c[0], orden_carga(c, fecha)))
                     _, _, _, _, tipo, objeto, restante, examen = candidatos[0]
                     bloque = min(duracion, restante, final_franja - cursor)
                     if bloque <= 0:

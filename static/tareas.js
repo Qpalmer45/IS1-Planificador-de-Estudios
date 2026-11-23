@@ -31,7 +31,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const seleccionado = selector.value;
       selector.replaceChildren(new Option("Sin asignatura", ""));
       for (const materia of materias) selector.add(new Option(materia.nombre, String(materia.id)));
-      selector.value = seleccionado;\n      if (selector.value !== seleccionado) selector.value = "";
+      selector.value = seleccionado;
+      if (selector.value !== seleccionado) selector.value = "";
     } catch (error) {
       estado.textContent = "No se pudieron cargar las asignaturas: " + error.message;
     }
@@ -171,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!form.reportValidity()) return;
     const datos = Object.fromEntries(new FormData(form));
     if (datos.asignatura_id) datos.asignatura_id = Number(datos.asignatura_id);
+    else if (editando) datos.asignatura_id = null;
     else delete datos.asignatura_id;
     if (form.elements.tipo.value === "examen") {
       datos.minutos_estimados = 1;

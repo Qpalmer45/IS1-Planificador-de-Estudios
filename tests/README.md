@@ -68,9 +68,9 @@ con Jest.
 ## Cobertura provisional
 
 - Backend: registro y sesiones; To-Dos; asignaturas y temas; tareas, entregas y exámenes; horarios y períodos libres; generación de planes, objetivos semanales y bloqueos; recordatorios; escudos y endpoints de ajedrez, incluido el fallback local.
-- Frontend: navegación y feedback; operaciones de tareas y asignaturas; temas; plan semanal, descansos y bloqueos; formularios de objetivos y exámenes; tema visual; banderas y ajedrez.
+- Frontend: navegación y feedback; operaciones de tareas y asignaturas; temas; plan semanal, descansos y bloqueos; formulario de tareas/entregas con carga y asociación de asignatura; formularios de objetivos y exámenes; tema visual; banderas y ajedrez.
 - Para el listado exacto de módulos, consulta los patrones `tests/test_*.py` y `tests/*.test.js`, y los scripts de `package.json`.
-- No hay todavía un caso que compruebe el reparto de horas extra entre asignaturas y actividades sin objetivo semanal; se ha observado que una actividad puede quedarse sin tiempo en esa combinación.
+- El reparto de horas extra comprueba que las tareas/entregas sin objetivo semanal no queden sin tiempo por las asignaturas, que la actividad con plazo más cercano gane prioridad cuando hay carga comparable y que se respeten los objetivos semanales explícitos.
 
 ## Pruebas de asignaturas
 
@@ -95,4 +95,4 @@ Las pruebas de asignaturas verifican la identidad y separación de esas entidade
 
 ## Metodología
 
-La estructura de una suite no demuestra por sí sola que se haya seguido TDD; para afirmarlo habría que verificar el historial del ciclo prueba fallida, implementación y refactorización. El 23 de noviembre de 2026, tras integrar los cambios del dashboard, `npm.cmd run test:all` terminó con 153 pruebas Jest y 171 pruebas Python superadas. Python emitió una advertencia no fatal de conexión SQLite abierta; la ejecución terminó con `OK`. La prueba frontend titulada «fallo de la API se muestra al usuario» todavía no contiene aserciones y no debe contarse como verificación efectiva de ese comportamiento.
+La estructura de una suite no demuestra por sí sola que se haya seguido TDD; para afirmarlo habría que verificar el historial del ciclo prueba fallida, implementación y refactorización. En esta corrección, las regresiones del reparto y de edición sin asignatura fallaron antes del cambio y pasaron después. El 23 de noviembre de 2026, `npm.cmd run test:all` terminó con 156 pruebas Jest y 178 pruebas Python superadas. Python emitió una advertencia no fatal de conexión SQLite abierta; la ejecución terminó con `OK`. La prueba frontend titulada «fallo de la API se muestra al usuario» todavía no contiene aserciones y no debe contarse como verificación efectiva de ese comportamiento.

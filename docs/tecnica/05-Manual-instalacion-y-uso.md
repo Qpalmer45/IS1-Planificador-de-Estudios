@@ -66,7 +66,7 @@ El nombre es opcional a nivel de API, aunque el formulario lo presenta como camp
 
 El planificador genera una **vista previa**, no un historial persistente. No permite marcar sesiones como realizadas, editar una sesión individual ni replanificar automáticamente las que no se han realizado. Tampoco se importan horarios a partir de imágenes ni se calculan estadísticas a partir de sesiones completadas.
 
-Hay un problema conocido de reparto: si se mezclan asignaturas con actividades sin objetivo semanal, las horas extra pueden acabar asignadas a las asignaturas y dejar una actividad sin tiempo. Hasta corregirlo, comprueba los resultados de la semana generada y configura objetivos semanales explícitos cuando corresponda.
+Los objetivos semanales de las asignaturas y actividades compiten por las franjas con las tareas/entregas en modo automático (objetivo semanal 0). El reparto considera el tiempo ya asignado y la urgencia del plazo; las asignaturas se ponderan por prioridad y dificultad. Si quedan huecos, se siguen repartiendo entre las actividades pendientes y las asignaturas. Los exámenes se preparan dentro del tiempo de su asignatura asociada.
 
 Los puzzles de reserva permiten usar el tablero cuando falla el proveedor externo, pero no demuestran que la integración externa esté disponible en todo momento. Las operaciones de escudos tampoco están disponibles si ESPN falla y no hay caché.
 
@@ -91,7 +91,7 @@ Para lanzar las dos suites, después de instalar dependencias:
 npm.cmd run test:all
 ```
 
-En Linux/macOS el comando puede usarse como `npm` en lugar de `npm.cmd`. El 23 de noviembre de 2026, tras integrar los cambios del dashboard, `npm.cmd run test:all` pasó con 153 pruebas de Jest (8 suites) y 171 pruebas de Python. Python mostró una advertencia no fatal de conexión SQLite abierta durante la ejecución; no hubo fallos. Estos resultados no certifican la integración en vivo con servicios externos ni la revisión visual en todos los navegadores.
+En Linux/macOS el comando puede usarse como `npm` en lugar de `npm.cmd`. El 23 de noviembre de 2026, tras corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 156 pruebas de Jest (8 suites) y 178 pruebas de Python. Python mostró una advertencia no fatal de conexión SQLite abierta durante la ejecución; no hubo fallos. Estos resultados no certifican la integración en vivo con servicios externos ni la revisión visual en todos los navegadores.
 
 Hay información más detallada en [tests/README.md](../../tests/README.md).
 

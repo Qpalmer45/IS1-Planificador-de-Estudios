@@ -30,6 +30,74 @@ class RepartoObjetivosTests(unittest.TestCase):
         self.assertEqual(plan["minutos_por_asignatura"][1], 420)
         self.assertEqual(plan["deficit_minutos_por_asignatura"][1], 180)
 
+    def test_horas_extra_se_intercalan_y_la_tarea_mas_urgente_va_primero(self):
+        materias = [{"id": 1, "nombre": "Álgebra", "minutos_semanales": 0,
+                     "prioridad": "media", "dificultad": "media"}]
+        tareas = [{"id": 2, "titulo": "Tarea urgente", "tipo": "tarea",
+                   "fecha_limite": "2026-11-23", "minutos_estimados": 60,
+                   "minutos_semanales": 0}]
+        periodos = [{"fecha_inicio": "2026-11-24", "fecha_fin": "2026-11-29"}]
+
+        plan = generar_semana("2026-11-23", materias, tareas, [], periodos,
+                             hora_inicio="16:00", hora_fin="18:00", duracion=60, descanso=0)
+
+        self.assertEqual(plan["minutos_por_actividad"][2], 60)
+        self.assertEqual(plan["minutos_por_asignatura"][1], 60)
+        self.assertEqual(plan["dias"][0]["sesiones"][0]["actividad"], "Tarea urgente")
+
+    def test_entrega_sin_objetivo_semanal_se_planifica_tras_cubrir_objetivo_de_asignatura(self):
+        materias = [{"id": 1, "nombre": "Álgebra", "minutos_semanales": 60,
+                     "prioridad": "media", "dificultad": "media"}]
+        entregas = [{"id": 2, "titulo": "Entrega", "tipo": "entrega",
+                     "fecha_limite": "2026-11-29", "minutos_estimados": 120,
+                     "minutos_semanales": 0}]
+
+        plan = generar_semana("2026-11-23", materias, entregas, [], [],
+                             hora_inicio="16:00", hora_fin="18:00", duracion=60, descanso=0)
+
+        self.assertGreaterEqual(plan["minutos_por_asignatura"][1], 60)
+        self.assertEqual(plan["minutos_por_actividad"][2], 120)
+
+    def test_tarea_urgente_recibe_horas_aunque_quede_objetivo_de_asignatura(self):
+        materias = [{"id": 1, "nombre": "Álgebra", "minutos_semanales": 10080,
+                     "prioridad": "media", "dificultad": "media"}]
+        tareas = [{"id": 2, "titulo": "Entrega hoy", "tipo": "entrega",
+                   "fecha_limite": "2026-11-23", "minutos_estimados": 60,
+                   "minutos_semanales": 0}]
+
+        plan = generar_semana("2026-11-23", materias, tareas, [], [],
+                             hora_inicio="16:00", hora_fin="17:00", duracion=60, descanso=0)
+
+        self.assertEqual(plan["minutos_por_actividad"][2], 60)
+        self.assertEqual(plan["dias"][0]["sesiones"][0]["actividad"], "Entrega hoy")
+
+    def test_tarea_y_objetivo_semanal_se_intercalan_en_las_franjas(self):
+        materias = [{"id": 1, "nombre": "Álgebra", "minutos_semanales": 60,
+                     "prioridad": "media", "dificultad": "media"}]
+        tareas = [{"id": 2, "titulo": "Entrega hoy", "tipo": "entrega",
+                   "fecha_limite": "2026-11-23", "minutos_estimados": 120,
+                   "minutos_semanales": 0}]
+
+        plan = generar_semana("2026-11-23", materias, tareas, [], [],
+                             hora_inicio="16:00", hora_fin="19:00", duracion=60, descanso=0)
+
+        sesiones = plan["dias"][0]["sesiones"]
+        self.assertEqual([sesion["actividad"] for sesion in sesiones],
+                         ["Entrega hoy", None, "Entrega hoy"])
+
+    def test_actividad_extra_con_plazo_mas_cercano_se_planifica_primero(self):
+        actividades = [
+            {"id": 1, "titulo": "Entrega posterior", "tipo": "entrega",
+             "fecha_limite": "2026-11-29", "minutos_estimados": 60, "minutos_semanales": 0},
+            {"id": 2, "titulo": "Tarea urgente", "tipo": "tarea",
+             "fecha_limite": "2026-11-23", "minutos_estimados": 60, "minutos_semanales": 0},
+        ]
+
+        plan = generar_semana("2026-11-23", [], actividades, [], [],
+                             hora_inicio="16:00", hora_fin="17:00", duracion=60, descanso=0)
+
+        self.assertEqual(plan["dias"][0]["sesiones"][0]["actividad"], "Tarea urgente")
+
     def test_examen_no_añade_horas_al_objetivo(self):
         materias = [{"id": 1, "nombre": "Álgebra", "minutos_semanales": 120,
                      "prioridad": "media", "dificultad": "media"}]
@@ -92,6 +160,8 @@ class ExamenApiTests(unittest.TestCase):
         self.assertEqual(creado.json["minutos_semanales"], 0)
         self.assertEqual(self.client.patch("/api/tareas/" + str(creado.json["id"]),
                                            json={"minutos_semanales": 60}).status_code, 400)
+        self.assertEqual(self.client.patch("/api/tareas/" + str(creado.json["id"]),
+                                           json={"asignatura_id": None}).status_code, 400)
 
     def test_no_puedo_asignar_examen_a_materia_ajena(self):
         with self.client.session_transaction() as sesion:

@@ -64,6 +64,21 @@ class ObjetivosSemanalesTests(unittest.TestCase):
         self.assertEqual(actualizado.json["minutos_semanales"], 180)
         self.assertEqual(self.client.get("/api/tareas").json[0]["minutos_semanales"], 180)
 
+    def test_tarea_puede_quedarse_sin_asignatura_al_editarla(self):
+        asignatura = self.client.post("/api/asignaturas", json={"nombre": "Álgebra"}).json["id"]
+        fecha = (backend.hoy_planificador() + timedelta(days=3)).isoformat()
+        creado = self.client.post("/api/tareas", json={
+            "titulo": "Entrega", "tipo": "entrega", "fecha_limite": fecha,
+            "minutos_estimados": 60, "asignatura_id": asignatura,
+        })
+
+        actualizado = self.client.patch(f"/api/tareas/{creado.json['id']}",
+                                        json={"asignatura_id": None})
+
+        self.assertEqual(actualizado.status_code, 200)
+        self.assertIsNone(actualizado.json["asignatura_id"])
+        self.assertIsNone(self.client.get("/api/tareas").json[0]["asignatura_id"])
+
     def test_plan_respeta_objetivo_semanal_de_asignatura(self):
         materias = [{"id": 1, "nombre": "Álgebra", "prioridad": "alta",
                      "dificultad": "alta", "minutos_semanales": 120}]
@@ -99,6 +114,25 @@ class ObjetivosSemanalesTests(unittest.TestCase):
                              hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=0)
         self.assertEqual(plan["minutos_por_actividad"][7], 120)
         self.assertEqual(plan["total_sesiones"], 2)
+
+    def test_api_planifica_tarea_urgente_antes_de_completar_objetivo_de_asignatura(self):
+        fecha = backend.hoy_planificador().isoformat()
+        self.client.post("/api/asignaturas", json={
+            "nombre": "Álgebra", "minutos_semanales": 10080,
+        })
+        self.client.post("/api/tareas", json={
+            "titulo": "Entrega hoy", "tipo": "entrega", "fecha_limite": fecha,
+            "minutos_estimados": 60,
+        })
+
+        respuesta = self.client.post("/api/plan/semana", json={
+            "inicio": fecha, "desde": "16:00", "hasta": "17:00",
+            "duracion": 60, "descanso": 0,
+        })
+
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.json["dias"][0]["sesiones"][0]["actividad"], "Entrega hoy")
+        self.assertEqual(respuesta.json["dias"][0]["sesiones"][0]["tipo"], "entrega")
 
 
 if __name__ == "__main__":
