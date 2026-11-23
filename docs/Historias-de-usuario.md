@@ -131,46 +131,48 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 - **Alcance:** La visualización del intervalo horario (`HH:MM–HH:MM`) es un elemento inseparable de cada sesión en el calendario semanal; queda absorbida en `CA02` de `HU07` sin duplicar estimación.
 - **Evidencias:** Verificado en la vista semanal de `HU07` (`static/plan.js`, `tests/plan.test.js`).
 
-## HU10 - Edición manual de sesiones
+## HU10 — Edición manual de sesiones
 
-[Issue #10](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/10)
+- **Issue:** [Issue #10](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/10)
+- **Estado:** Propuesta (Abierta — requiere persistencia individual de sesiones en SQLite)
+- **Historia:** Como estudiante, quiero mover o modificar sesiones planificadas cuando tenga un imprevisto para adaptar mi horario.
+- **Alcance:** Incluye el cambio de fecha, hora de inicio/fin o duración de una sesión individual persistida en SQLite, validando conflictos y conservando los cambios al regenerar otras partes del plan. No cubre el bloqueo previo de franjas antes de generar (ya resuelto en `HU06`).
+- **Valor y prioridad:** Alto. Aporta flexibilidad tras generar el plan; prioridad media-alta para el incremento de seguimiento de sesiones.
+- **Estimación:** 2 días (orientativa; incluye modelo persistente de sesiones en SQLite, validación de solapamientos y actualización en `HU07`).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede cambiar la fecha, hora de inicio o duración de una sesión propia existente.
+  - **CA02:** El sistema comprueba conflictos con clases (`HU05`), descansos (`HU11`) u otras sesiones y rechaza o advierte antes de guardar solapamientos inválidos.
+  - **CA03:** La modificación persiste en SQLite por usuario y se refleja inmediatamente en el calendario semanal (`HU07`), protegiendo las sesiones editadas o completadas frente a futuras regeneraciones.
+  - **CA04:** Un usuario no puede consultar ni modificar sesiones pertenecientes a otras cuentas.
+- **Evidencias:** Pendiente de implementación (actualmente las sesiones de `HU06`/`HU07` se almacenan solo como vista previa en `localStorage`).
+  
+## HU11 — Descansos entre sesiones
 
-**Historia:** Como usuario, quiero mover o modificar sesiones cuando tenga un imprevisto para adaptar mi planificación.
+- **Issue:** [Issue #11](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/11)
+- **Estado:** Terminada (Implementada y verificada en `main`; actualizar estado en GitHub)
+- **Historia:** Como estudiante, quiero configurar la duración de los descansos entre sesiones de estudio para adaptar el plan a mi ritmo.
+- **Alcance:** Incluye la selección de minutos de descanso entre bloques consecutivos de estudio en el formulario de planificación y su conservación en el navegador junto con los parámetros del plan. La inserción efectiva de los intervalos de separación entre sesiones corresponde al motor de `HU06`.
+- **Valor y prioridad:** Alto. Mejora la viabilidad y el realismo del horario generado; implementada junto al núcleo planificador.
+- **Estimación:** 1 día (orientativa; campo de configuración, validación de valores enteros no negativos y consumo por `HU06`).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede establecer la duración del descanso entre sesiones en minutos (admitiendo `0` para sesiones sin pausa y valores enteros válidos).
+  - **CA02:** El valor configurado se conserva en el navegador asociado al usuario actual y se envía al generador (`HU06`) para separar bloques consecutivos.
+  - **CA03:** Se rechazan valores negativos o no numéricos con mensajes comprensibles.
+- **Evidencias:** Implementado en `main` (`templates/index.html`, `static/plan.js`, `planificador.py`) y verificado en `tests/test_planificador.py` y `tests/plan.test.js`.
 
-**Valor:** Alto  
-**Estimación:** 2 días
+## HU12 — Dificultad y prioridad de asignaturas
 
-**Criterios de aceptación:**
-- Se puede cambiar el día u hora de una sesión.
-- La modificación se refleja en el calendario.
-
-## HU11 - Descansos entre sesiones
-
-[Issue #11](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/11)
-
-**Historia:** Como usuario, quiero configurar descansos entre sesiones para adaptar el plan a mi forma de estudiar.
-
-**Valor:** Alto  
-**Estimación:** 1 día
-
-**Criterios de aceptación:**
-- Se puede establecer una duración de descanso.
-- El plan introduce los descansos configurados.
-
-## HU12 - Dificultad y prioridad de asignaturas
-
-[Issue #12](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/12)
-
-**Historia:** Como usuario, quiero indicar la dificultad y la prioridad de mis asignaturas, así como la prioridad de mis tareas, para distribuir mejor el tiempo de estudio.
-
-**Valor:** Alto  
-**Estimación:** 1 día
-
-**Criterios de aceptación:**
-- Cada asignatura puede guardar una dificultad y una prioridad (baja, media o alta).
-- Las tareas conservan su propio campo de prioridad (baja, media o alta).
-- La API valida y devuelve ambos atributos de las asignaturas.
-- El generador recibe la dificultad y prioridad de las asignaturas, y la prioridad de las tareas.
+- **Issue:** [Issue #12](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/12)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Historia:** Como estudiante, quiero indicar la dificultad y prioridad de mis asignaturas para que el planificador distribuya mejor el tiempo de estudio disponible.
+- **Alcance:** Incluye la configuración y edición de los niveles de dificultad y prioridad en cada asignatura (`HU01`) guardados en SQLite por usuario. Las actividades académicas con plazo (`HU04`) se ordenan por proximidad de fecha límite sin campo de prioridad manual, y la prioridad de los To-Dos rápidos (`HU27`) es meramente visual y no interviene en el planificador. El reparto efectivo pertenece a `HU06`.
+- **Valor y prioridad:** Alto. Personaliza el reparto automático del tiempo sobrante entre materias; implementada en Sprint 4.
+- **Estimación:** 1 día (orientativa; campos en modelo SQLite de asignaturas, formulario y validación).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede asignar y modificar un nivel válido de dificultad y un nivel válido de prioridad al crear o editar cada asignatura propia.
+  - **CA02:** Los valores se persisten en SQLite asociados a la asignatura y al usuario autenticado, aplicando valores por defecto válidos si no se especifican.
+  - **CA03:** Se rechazan niveles fuera de la escala permitida y se impide modificar asignaturas de otros usuarios.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado en `tests/test_app.py`, `tests/editar-asignaturas.test.js` y `tests/test_reparto_horas.py`.
 
 ## HU13 - Horas deseadas por asignatura
 
