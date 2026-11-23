@@ -2144,7 +2144,14 @@ def api_sudoku_check():
     initial, solution = _sudoku_daily(date.today().isoformat())
     if any(initial[r][c] and board[r][c] != initial[r][c] for r in range(9) for c in range(9)):
         return jsonify({"error": "No se pueden modificar las pistas"}), 400
-    return jsonify({"completo": board == solution, "restantes": sum(x == 0 for row in board for x in row)})
+    expected = set(range(1, 10))
+    complete = all(set(row) == expected for row in board) and all(
+        {board[r][c] for r in range(9)} == expected for c in range(9)
+    ) and all(
+        {board[r][c] for r in range(br, br + 3) for c in range(bc, bc + 3)} == expected
+        for br in (0, 3, 6) for bc in (0, 3, 6)
+    )
+    return jsonify({"completo": complete, "restantes": sum(x == 0 for row in board for x in row)})
 
 
 @app.get("/api/juegos/configuracion")
