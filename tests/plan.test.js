@@ -83,6 +83,50 @@ test("el resumen suma la duración real de sesiones de diferente longitud", asyn
   expect(w.document.getElementById("plan-summary").textContent).toContain("1,25 horas planificadas");
 });
 
+test("muestra un descanso entre sesiones consecutivas con sus horas y etiqueta", async () => {
+  const days = Array.from({ length: 7 }, (_, i) => ({
+    dia: "lunes", fecha: "2026-11-" + (23 + i), libre: false,
+    sesiones: i === 0 ? [
+      { inicio: "16:00", fin: "17:00", asignatura: "Álgebra" },
+      { inicio: "17:15", fin: "18:15", asignatura: "Cálculo" },
+    ] : [],
+  }));
+  const w = setup({ ok: true, json: async () => ({ dias: days, total_sesiones: 2 }) });
+  w.document.getElementById("plan-descanso").value = "15";
+  w.document.getElementById("plan-form").dispatchEvent(
+    new w.Event("submit", { bubbles: true, cancelable: true }),
+  );
+  await new Promise(resolve => setImmediate(resolve));
+
+  const entries = Array.from(w.document.querySelectorAll(".plan-day .plan-session"));
+  expect(entries.map(entry => entry.querySelector(".plan-session-time").textContent))
+    .toEqual(["16:00–17:00", "17:00–17:15", "17:15–18:15"]);
+  const rest = w.document.querySelector(".plan-rest");
+  expect(rest).not.toBeNull();
+  expect(rest.classList.contains("plan-session")).toBe(true);
+  expect(rest.querySelector("strong").textContent).toBe("Descanso");
+});
+
+test("no muestra descanso entre sesiones si después de una hay un bloqueo", async () => {
+  const days = Array.from({ length: 7 }, (_, i) => ({
+    dia: "lunes", fecha: "2026-11-" + (23 + i), libre: false,
+    sesiones: i === 0 ? [
+      { inicio: "16:00", fin: "17:00", asignatura: "Álgebra" },
+      { inicio: "18:00", fin: "19:00", asignatura: "Cálculo" },
+    ] : [],
+    bloqueos: i === 0 ? [
+      { fecha: "2026-11-23", inicio: "17:00", fin: "18:00", motivo: "Entrenamiento" },
+    ] : [],
+  }));
+  const w = setup({ ok: true, json: async () => ({ dias, total_sesiones: 2 }) });
+  w.document.getElementById("plan-form").dispatchEvent(
+    new w.Event("submit", { bubbles: true, cancelable: true }),
+  );
+  await new Promise(resolve => setImmediate(resolve));
+
+  expect(w.document.querySelector(".plan-rest")).toBeNull();
+});
+
 test("no restaura un horario guardado con menos de siete días", () => {
   const w = setup({ ok: true, json: async () => ({}) });
   w.localStorage.setItem("studyplan:plan-semanal:v1:test@example.com",
