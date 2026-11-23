@@ -177,3 +177,13 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 - Se actualizan las variables CSS globales del tema claro, el encabezado de bienvenida, avatar, navegación activa y hover, badges, estados del planificador, bordes y enfoque por teclado.
 - Se conservan colores semánticos de errores (rojo), éxito (verde) y avisos (ámbar) para que sigan siendo distinguibles; no se cambia el modo oscuro ni la lógica JavaScript.
 - Archivo: `static/style.css`. Pendiente validación visual en navegador y revisión de contraste en todas las vistas.
+
+
+### 23/11/2026 — HU06/HU07: plan semanal visible al final de Inicio
+
+- Se añade en la parte inferior del dashboard **Mi plan de estudio semanal**, debajo de los módulos existentes, con tarjetas para los siete días, asignaturas, actividades y horas de las sesiones.
+- Si no existe un plan válido guardado para el usuario en el navegador, aparece **«Aún no has generado tu plan de estudio»** y un botón para abrir Plan de Estudio.
+- Se reutiliza la clave existente `studyplan:plan-semanal:v1:<correo>` en localStorage; no se duplica la persistencia ni se realizan peticiones extra. La vista de Inicio se actualiza al generar y al restaurar el plan tras recargar.
+- El botón Ver plan completo abre la sección original, donde se sigue editando y generando. Diseño responsive con paleta del tema claro y variables compartidas del oscuro.
+- Archivos: `templates/index.html`, `static/plan.js`, `static/style.css`, `tests/plan.test.js` (dos casos añadidos: estado vacío y generación/restauración).
+- Pendiente: ejecutar pruebas automatizadas y comprobación visual en navegador.
