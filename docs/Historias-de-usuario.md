@@ -69,19 +69,20 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA04:** Todas las operaciones validan la propiedad en el servidor (SQLite) y rechazan asociaciones o modificaciones sobre asignaturas o actividades de otros usuarios.
 - **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado en la ejecución de pruebas (`157` Jest / `178` Python), incluyendo `tests/test_app.py`, `tests/test_objetivos_semanales.py` y `tests/examenes-form.test.js`.
   
-## HU05 - Horario de clases
+## HU05 — Horario de clases
 
-[Issue #5](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/5)
-
-**Historia:** Como usuario, quiero introducir mi horario de clases para evitar que se planifiquen sesiones durante mis clases.
-
-**Valor:** Muy alto  
-**Estimación:** 1 día
-
-**Criterios de aceptación:**
-- Se pueden registrar clases por día y franja horaria.
-- Se pueden modificar o eliminar.
-- No se generan sesiones de estudio durante las clases.
+- **Issue:** [Issue #5](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/5)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Historia:** Como estudiante, quiero introducir mi horario de clases para registrar mis horas lectivas ocupadas.
+- **Alcance:** Incluye el alta, consulta, edición y borrado de franjas de clases semanales recurrentes (de lunes a domingo) y de días o períodos no lectivos (festivos o vacaciones) en SQLite por cuenta. La exclusión efectiva de estas franjas al generar sesiones corresponde al motor de `HU06`.
+- **Valor y prioridad:** Muy alto. Define las restricciones académicas fijas del estudiante; prioridad alta.
+- **Estimación:** 1 día (orientativa; abarca cuadrícula semanal, gestión de períodos libres, validación de intervalos y persistencia).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede registrar clases indicando asignatura, día de la semana, hora de inicio y hora de fin, y consultarlas en la vista semanal.
+  - **CA02:** El usuario puede editar o eliminar clases existentes, así como registrar y eliminar días o períodos no lectivos (festivos o vacaciones).
+  - **CA03:** El sistema valida que la hora de fin sea posterior a la de inicio (`fin > inicio`) y rechaza clases que se solapen en el mismo día.
+  - **CA04:** Los datos persisten en SQLite asociados exclusivamente al usuario autenticado.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py` y `tests/test_planificador.py`.
 
 ## HU06 - Generación automática del plan de estudio
 
