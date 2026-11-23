@@ -5,6 +5,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const source = fs.readFileSync("static/plan.js", "utf8");
+const stylesheet = fs.readFileSync("static/style.css", "utf8");
 let dom;
 
 test("el módulo del planificador tiene sintaxis JavaScript válida", () => {
@@ -92,6 +93,9 @@ test("muestra un descanso entre sesiones consecutivas con sus horas y etiqueta",
     ] : [],
   }));
   const w = setup({ ok: true, json: async () => ({ dias: days, total_sesiones: 2 }) });
+  const style = w.document.createElement("style");
+  style.textContent = stylesheet;
+  w.document.head.append(style);
   w.document.getElementById("plan-descanso").value = "15";
   w.document.getElementById("plan-form").dispatchEvent(
     new w.Event("submit", { bubbles: true, cancelable: true }),
@@ -105,6 +109,12 @@ test("muestra un descanso entre sesiones consecutivas con sus horas y etiqueta",
   expect(rest).not.toBeNull();
   expect(rest.classList.contains("plan-session")).toBe(true);
   expect(rest.querySelector("strong").textContent).toBe("Descanso");
+  const regularStyle = w.getComputedStyle(entries[0]);
+  const restStyle = w.getComputedStyle(rest);
+  expect(Number.parseFloat(restStyle.paddingTop))
+    .toBeLessThan(Number.parseFloat(regularStyle.paddingTop));
+  expect(restStyle.paddingLeft).toBe(regularStyle.paddingLeft);
+  expect(restStyle.backgroundColor).not.toBe(regularStyle.backgroundColor);
 });
 
 test("no muestra descanso entre sesiones si después de una hay un bloqueo", async () => {
@@ -164,6 +174,9 @@ test("un compromiso se envía y aparece en orden cronológico junto a las sesion
     bloqueos: i === 0 ? [{ fecha: "2026-11-23", inicio: "17:00", fin: "18:00", motivo: "Partido de fútbol" }] : []
   }));
   const w = setup({ ok: true, json: async () => ({ dias: days, total_sesiones: 2 }) });
+  const style = w.document.createElement("style");
+  style.textContent = stylesheet;
+  w.document.head.append(style);
   w.document.getElementById("plan-fecha").value = "2026-11-23";
   w.document.getElementById("plan-fecha").dispatchEvent(new w.Event("change"));
   w.document.getElementById("plan-block-date").value = "2026-11-23";
@@ -181,6 +194,9 @@ test("un compromiso se envía y aparece en orden cronológico junto a las sesion
   expect(occupied.querySelector(".plan-session-time").textContent).toBe("17:00–18:00");
   expect(occupied.querySelector("strong").textContent).toBe("Partido de fútbol");
   expect(occupied.textContent).not.toContain("Ocupado");
+  const session = w.document.querySelector(".plan-session:not(.plan-block-result)");
+  expect(w.getComputedStyle(occupied).borderRadius)
+    .toBe(w.getComputedStyle(session).borderRadius);
   expect(Array.from(w.document.querySelectorAll(".plan-day .plan-session-time"))
     .map(time => time.textContent))
     .toEqual(["16:00–17:00", "17:00–18:00", "18:00–19:00"]);

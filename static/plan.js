@@ -193,6 +193,11 @@
     return node;
   }
 
+  function minutosDeHora(hora) {
+    const [horas, minutos] = hora.split(":").map(Number);
+    return horas * 60 + minutos;
+  }
+
   function render(plan) {
     week.replaceChildren();
     summary.textContent = plan.total_sesiones
@@ -215,7 +220,9 @@
         ...day.sesiones.map(session => ({ inicio: session.inicio, session })),
         ...(day.bloqueos || []).map(block => ({ inicio: block.inicio, block })),
       ].sort((a, b) => a.inicio.localeCompare(b.inicio));
-      for (const entry of entries) {
+      const descanso = Number(document.getElementById("plan-descanso").value);
+      for (let index = 0; index < entries.length; index += 1) {
+        const entry = entries[index];
         const block = document.createElement("div");
         if (entry.block) {
           block.className = "plan-session plan-block-result";
@@ -228,6 +235,20 @@
           if (entry.session.actividad) block.append(text("small", entry.session.tipo + ": " + entry.session.actividad));
         }
         card.append(block);
+
+        const siguiente = entries[index + 1];
+        if (
+          entry.session
+          && siguiente?.session
+          && descanso > 0
+          && minutosDeHora(siguiente.session.inicio) - minutosDeHora(entry.session.fin) === descanso
+        ) {
+          const rest = document.createElement("div");
+          rest.className = "plan-session plan-rest";
+          rest.append(text("span", entry.session.fin + "–" + siguiente.session.inicio, "plan-session-time"));
+          rest.append(text("strong", "Descanso"));
+          card.append(rest);
+        }
       }
       week.append(card);
     }
