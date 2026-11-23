@@ -175,7 +175,7 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "primary-btn";
-      button.dataset.openTab = "planificador";
+      button.addEventListener("click", () => document.querySelector('.tab-btn[data-tab="planificador"]')?.click());
       button.textContent = "Generar mi plan";
       empty.append(button);
       homeContent.append(empty);
