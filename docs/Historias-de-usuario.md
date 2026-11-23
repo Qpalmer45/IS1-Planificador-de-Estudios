@@ -587,7 +587,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:** Como estudiante que utiliza el teclado, quiero acceder y manejar las funciones principales sin ratón para poder usar el planificador con autonomía.
+- **Historia:** Como usuario, quiero acceder y manejar las funciones principales mediante el teclado para poder usar el planificador con autonomía sin depender del ratón.
 
 - **Alcance:** Incluye el recorrido lógico mediante teclado y foco visible en las pantallas principales: menú lateral, autenticación (`HU20`, `HU21`), gestión de asignaturas (`HU01`), actividades (`HU04`), lista de To-Dos (`HU27`) y calendario semanal (`HU07`).
 
@@ -608,7 +608,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:** Como estudiante que utiliza un lector de pantalla, quiero que los controles y mensajes tengan nombres y estructura semántica comprensibles para utilizar el planificador.
+- **Historia:** Como usuario, quiero que los controles y mensajes tengan nombres accesibles y una estructura semántica comprensible para poder utilizar el planificador mediante un lector de pantalla
 
 - **Alcance:** Incluye la incorporación de etiquetas asociadas, jerarquía de encabezados, regiones ARIA de navegación y anuncios de estado en las vistas principales (acceso, asignaturas, tareas, To-Dos y calendario), sin alterar la lógica de negocio.
 
@@ -629,7 +629,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:** Como estudiante con dificultades de visión, quiero activar un modo de alto contraste para distinguir claramente textos, bordes y controles.
+- **Historia:**Como usuario, quiero activar un modo de alto contraste para distinguir con claridad todos los textos, bordes y controles de la interfaz.
 
 - **Alcance:** Incluye un selector accesible de modo de alto contraste aplicado a las vistas principales, formularios y calendario, conservando la preferencia en el navegador (`localStorage`) y coexistiendo con los temas claro y oscuro de `HU40`.
 
@@ -650,7 +650,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:** Como estudiante con baja visión, quiero ampliar el texto o el zoom del navegador sin perder información ni funciones para leer cómodamente el horario y las tareas.
+- **Historia:** Como usuario, quiero poder ampliar el texto o el zoom del navegador sin perder información ni funciones para leer cómodamente el horario y las tareas.
 
 - **Alcance:** Incluye el ajuste responsivo de contenedores, formularios, listas y calendario semanal (`HU07`) para soportar ampliación hasta el 200 % sin recortes ni solapamientos.
 
@@ -671,7 +671,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:** Como estudiante sensible a las animaciones, quiero que la interfaz reduzca los movimientos y transiciones para utilizarla sin distracciones ni molestias.
+- **Historia:** Como usuario, quiero que la interfaz reduzca los movimientos y transiciones visuales cuando así lo tenga configurado para utilizarla sin distracciones ni molestias.
 
 - **Alcance:** Incluye la detección de la preferencia del sistema operativo (`prefers-reduced-motion: reduce`) en las hojas de estilo de la aplicación para desactivar animaciones decorativas y transiciones no esenciales.
 
@@ -692,7 +692,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:** Como estudiante, quiero recibir mensajes claros y accesibles cuando introduzco datos incorrectos en un formulario para saber cómo corregirlos sin perder lo escrito.
+- **Historia:** Como usuario, quiero recibir mensajes claros y accesibles cuando introduzco datos incorrectos en un formulario para saber cómo corregirlos sin perder lo escrito.
 
 - **Alcance:** Incluye la validación comprensible y vinculación accesible de mensajes de error en los formularios principales (registro, inicio de sesión, asignaturas, horarios, tareas/exámenes y To-Dos).
 
