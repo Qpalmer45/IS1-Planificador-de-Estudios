@@ -9,7 +9,9 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   * *Evolución técnica:* En la fase inicial de generación y visualización (`HU06`, `HU07`, `HU09`), las sesiones se calculan dinámicamente a partir de las restricciones del usuario. Para soportar edición manual (`HU10`), registro de cumplimiento (`HU14`), replanificación (`HU15`) y estadísticas (`HU18`), cada sesión requiere persistencia individual en SQLite con tres estados explícitos: `pendiente`, `completada` y `no_realizada`.
   * 
 * **Disponibilidad semanal neta:** Tiempo útil real disponible para estudiar en una semana concreta. Se obtiene restando a la disponibilidad bruta recurrente del usuario (`HU02`) tanto su horario fijo de clases (`HU05`) como sus compromisos puntuales bloqueados para esa semana (`HU06`).
-* 
+
+* **Formulario:** Un formulario (en el contexto de vuestra aplicación web) es simplemente cualquier pantalla, cuadro o conjunto de campos donde el usuario escribe o selecciona datos y pulsa un botón para guardarlos o enviarlos.
+  
 * **Hitos académicos vs. Objetivos de estudio:**
   * Las **asignaturas** (`HU01`) tienen un objetivo semanal de minutos deseados (`HU13`), dificultad y prioridad (`HU12`).
   * Las **tareas y entregas** (`HU04`) tienen fecha límite y minutos estimados propios.
@@ -707,194 +709,265 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Evidencias:** Pendiente de implementación.
   
-## HU36 — Exportación ICS
+## HU36 — Exportación del calendario a archivo ICS
 
-[Issue #44](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/44)
+- **Issue:** [Issue #44](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/44).
 
-**Alcance y criterios principales:** Exportar sesiones propias en calendario interoperable.
+- **Estado:** Preparada (Abierta).
+
+- **Historia:** Como usuario, quiero descargar mi planificación en formato ICS para consultarla en mi aplicación de calendario habitual.
+
+- **Alcance:** Incluye la exportación unidireccional de las sesiones de estudio programadas en el período seleccionado a un archivo estándar `.ics`, sin sincronización bidireccional ni edición externa.
+
+- **Valor y prioridad:** Medio. Facilita consultar el horario desde calendarios externos (Google Calendar, Apple Calendar, Outlook) sin duplicar la planificación; prioridad media.
+
+- **Estimación:** 2 días (orientativa; serialización iCalendar, selección de período, descarga y prueba de importación).
+
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede descargar un archivo `.ics` válido con las sesiones de estudio de su plan para el período seleccionado.
+  - **CA02:** Cada evento exportado incluye título de asignatura/actividad, fecha, hora de inicio y hora de fin con zona horaria consistente.
+  - **CA03:** El archivo generado puede importarse sin errores en aplicaciones compatibles con el estándar ICS y contiene únicamente datos del usuario autenticado (generando un calendario vacío válido si no hay sesiones).
+
+- **Evidencias:** Pendiente de implementación.
 
 ## HU37 — Exportación de datos personales
 
-[Issue #45](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/45)
+- **Issue:** [Issue #45](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/45)
 
-**Alcance y criterios principales:** Descargar JSON propio sin credenciales ni datos de terceros.
+- **Estado:** Preparada (Abierta)
 
-## HU38 — Deshacer eliminación de To-Do
+- **Historia:** Como usuario, quiero descargar mis asignaturas, tareas, exámenes y sesiones en un archivo estructurado para conservar una copia de mis datos.
 
-[Issue #46](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/46)
+- **Alcance:** Incluye la exportación y descarga de los registros propios del usuario en formato JSON estructurado y versionado (asignaturas, clases, actividades académicas, To-Dos y sesiones disponibles). No incluye importación ni restauración automática.
 
-**Alcance y criterios principales:** Recuperar eliminación accidental durante al menos diez segundos.
+- **Valor y prioridad:** Medio. Garantiza portabilidad y control del usuario sobre su información académica; prioridad media.
 
-## HU39 — Confirmación de cambios sin guardar
+- **Estimación:** 2 días (orientativa; recopilación de entidades relacionadas, serialización JSON y verificación de privacidad).
 
-[Issue #47](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/47)
+- **Criterios de aceptación:**
+  - **CA01:** El usuario autenticado puede descargar un archivo JSON con sus propias asignaturas, clases, actividades, To-Dos y sesiones registradas.
+  - **CA02:** El archivo sigue una estructura documentada con fechas y estados consistentes, generando colecciones vacías válidas cuando el usuario no tiene registros.
+  - **CA03:** La exportación excluye cualquier dato de otros usuarios así como contraseñas, hashes o tokens internos.
 
-**Alcance y criterios principales:** Avisar antes de descartar formularios modificados.
+- **Evidencias:** Pendiente de implementación[cite: 39].
 
-## HU40 — Modo claro y oscuro
+## HU38 — Deshacer eliminación de una tarea rápida
 
-[Issue #50](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/50)
+- **Issue:** [Issue #46](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/46).
 
-**Alcance y criterios principales:** Alternar tema, persistir elección y respetar preferencia del sistema.
+- **Estado:** Preparada (Abierta).
 
-## HU41 — Aprovechamiento del ancho del panel
+- **Historia:** Como usuario, quiero deshacer inmediatamente la eliminación accidental de un To-Do para recuperar una tarea borrada por error.
 
-[Issue #51](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/51)
+- **Alcance:** Incluye un mecanismo temporal de recuperación tras eliminar un elemento en la lista rápida de To-Dos (`HU27`), sin implementar una papelera general para el resto de entidades del sistema.
 
-**Alcance y criterios principales:** Diseño adaptable que aprovecha el espacio y distribuye las tarjetas.
+- **Valor y prioridad:** Medio. Evita la pérdida accidental de notas rápidas mediante una acción reversible sencilla; prioridad media-baja.
 
-## HU42 — Horario semanal automático
+- **Estimación:** 2 días (orientativa; ventana temporal de reversión, restauración en SQLite y pruebas de concurrencia/permisos).
 
-[Issue #52](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/52)
+- **Criterios de aceptación:**
+  - **CA01:** Al eliminar un To-Do, se muestra un aviso visible con la opción «Deshacer» durante al menos 10 segundos.
+  - **CA02:** Si el usuario pulsa «Deshacer» dentro del plazo, el To-Do se restaura en SQLite con su título y estado (`pendiente` o `completada`) previos; si expira el plazo, la eliminación queda definitiva.
+  - **CA03:** Solo pueden restaurarse To-Dos pertenecientes al usuario autenticado, gestionando correctamente múltiples borrados seguidos o recargas de página.
 
-**Alcance y criterios principales:** Issue cerrada como duplicada de HU06, HU07, HU09 y HU11; no duplicar desarrollo.
+- **Evidencias:** Pendiente de implementación.
+
+## HU39 — Confirmación antes de descartar cambios
+
+- **Issue:** [Issue #47](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/47).
+
+- **Estado:** Preparada (Abierta).
+
+- **Historia:** Como usuario, quiero recibir un aviso antes de salir de un formulario con cambios sin guardar para no perder accidentalmente mi trabajo.
+
+- **Alcance:** Incluye la detección de modificaciones pendientes en los formularios principales de creación y edición (asignaturas `HU01`, actividades `HU04` y clases `HU05`), sin implementar autoguardado automático.
+
+- **Valor y prioridad:** Medio. Previene pérdidas accidentales de datos al editar formularios; prioridad media-baja.
+
+- **Estimación:** 1 día (orientativa; seguimiento de estado modificado en formularios y diálogo reutilizable de confirmación).
+
+- **Criterios de aceptación:**
+  - **CA01:** Si el usuario modifica algún campo de un formulario y trata de cancelarlo o cambiar de sección en la aplicación, se muestra un diálogo de confirmación antes de descartar los datos.
+  - **CA02:** El usuario puede optar por seguir editando (conservando todos los valores introducidos) o confirmar el descarte para salir.
+  - **CA03:** Cuando no existen cambios sin guardar o tras guardar correctamente el formulario, no se muestra ningún aviso innecesario.
+
+- **Evidencias:** Pendiente de implementación.
+
+## HU40 — Elegir entre modo claro y oscuro
+
+- **Issue:** [Issue #50](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/50).
+
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada).
+
+- **Historia:** Como usuario, quiero alternar entre un tema claro y uno oscuro para utilizar el planificador cómodamente en distintas condiciones de iluminación.
+
+- **Alcance:** Incluye un control accesible en el menú lateral para cambiar instantáneamente entre tema claro y oscuro en todas las vistas principales, formularios, calendario y pantallas de acceso, conservando la preferencia en `localStorage` del navegador.
+
+- **Valor y prioridad:** Medio. Mejora el confort visual y la personalización de la interfaz sin alterar la lógica del planificador.
+
+- **Estimación:** 1 día (orientativa; variables de color CSS, control accesible y persistencia en navegador).
+
+- **Criterios de aceptación:**
+  - **CA01:** Existe un botón accesible en la navegación que permite alternar entre modo claro y oscuro sin recargar la página, anunciando su estado.
+  - **CA02:** La preferencia seleccionada se conserva en `localStorage` al navegar y al volver a abrir la aplicación en el mismo navegador (respetando la preferencia del sistema si no hay elección previa).
+  - **CA03:** Todos los textos, formularios, tarjetas, calendario y pantallas de inicio de sesión/registro mantienen legibilidad y contraste adecuados en ambos temas.
+
+- **Evidencias:** Implementado en `main` (`templates/index.html`, `static/style.css`, `static/app.js`) y verificado mediante pruebas frontend y revisión visual en navegador.
+
+## HU41 — Aprovechar el ancho disponible del panel principal
+
+- **Issue:** [Issue #51](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/51).
+
+- **Estado:** En revisión (Abierta — estilos aplicados en `main`, pendiente de verificación responsiva completa).
+
+- **Historia:** Como usuario, quiero que el panel principal aproveche el espacio libre a la derecha del menú lateral para consultar las métricas, calendario y herramientas sin grandes franjas vacías.
+
+- **Alcance:** Incluye el ajuste de diseño fluido y rejillas adaptables en el área principal a la derecha de la barra lateral (panel *Inicio*, calendario, listas y formularios) para escritorio, tableta y móvil, sin modificar la lógica de datos ni el ancho fijo de la barra lateral en escritorio.
+
+- **Valor y prioridad:** Medio-alto. Aprovecha el espacio útil en pantalla y mejora la lectura de tarjetas y columnas del calendario semanal.
+
+- **Estimación:** 0,5 días (orientativa; reglas CSS de rejilla fluida y comprobación en distintos anchos de ventana).
+
+- **Criterios de aceptación:**
+  - **CA01:** En pantallas de escritorio, el contenido principal ocupa el ancho disponible a la derecha del menú lateral con márgenes uniformes y sin límites artificiales estrechos.
+  - **CA02:** Las tarjetas y módulos del panel se reorganizan de forma adaptable (varias columnas en escritorio, dos en anchuras intermedias y una en móvil) sin solapamientos ni recortes.
+  - **CA03:** El diseño mantiene coherencia visual tanto en modo claro como en modo oscuro (`HU40`) y conserva la barra lateral fija en escritorio
+- **Evidencias:** Estilos base integrados en `main` (`static/style.css`); pendiente de completar pruebas automatizadas de distribución y verificación visual en múltiples resoluciones.
+
+## HU42 — Generar y visualizar el horario semanal de estudio automático
+
+- **Issue:** [Issue #52](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/52).
+
+- **Estado:** Absorbida (Cerrada como duplicada de [HU06](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6), [HU07](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7) y [HU11](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/11)).
+
+- **Historia:** Como usuario, quiero generar y visualizar mi horario semanal automático respetando descansos y horas de inicio y fin.
+
+- **Alcance:** Historia duplicada cuyo alcance ya está cubierto íntegramente por `HU06` (generación automática), `HU07` (calendario semanal con horas de inicio y fin absorbidas de `HU09`) y `HU11` (descansos entre sesiones). No se estima ni desarrolla por separado.
+
+- **Evidencias:** Consolidada en `HU06` (`#6`), `HU07` (`#7`) y `HU11` (`#11`).
 
 ## HU43 — Recuperación segura de contraseña
 
-[Issue #53](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/53)
+- **Issue:** [Issue #53](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/53).
 
-**Alcance y criterios principales:** Solicitud de enlace de un solo uso, caducidad, protección contra enumeración de cuentas y restablecimiento.
+- **Estado:** Preparada (Abierta — pendiente de definir proveedor SMTP e implementar)
 
-## HU44 — Reto diario de ajedrez
+- **Historia:** Como usuario, quiero solicitar un enlace temporal de un solo uso por correo electrónico cuando olvide mi contraseña para establecer una nueva y recuperar el acceso sin perder mis datos.
 
-[Issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54)
+- **Alcance:** Incluye el flujo completo de restablecimiento desde la pantalla de inicio de sesión (`HU21`): solicitud por correo sin revelar existencia de cuenta, envío de enlace con token criptográfico seguro de un solo uso y caducidad de 30 minutos, formulario de nueva contraseña con hash seguro e invalidación de sesiones previas.
 
-**Alcance y criterios principales:** Tablero 8×8; cinco ejercicios diarios de mate en una jugada; pistas, reintentos y progreso local por usuario y fecha. La sección actual se llama **Ajedrez**. Flask obtiene problemas de Chess Puzzle API y mantiene cinco puzzles locales de reserva si el servicio falla o devuelve datos incompletos; las soluciones no se envían al navegador.
+- **Valor y prioridad:** Alto. Evita la pérdida permanente de acceso a cuentas con datos académicos guardados; prioridad alta tras las funciones centrales.
 
-## Cambios funcionales relacionados, sin HU nueva
+- **Estimación:** 3 días (orientativa; gestión de tokens con caducidad, integración SMTP, limitación de frecuencia y pruebas de seguridad).
 
-- **HU02/HU06/HU07:** selección interactiva de franjas horarias bloqueadas, generación y recuperación del horario semanal (`static/plan.js`, `tests/plan.test.js`).
-- **HU04:** validación de fechas límite y distinción entre tareas y exámenes (bug [#48](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/48)).
-- **HU16:** avatar personalizable con banderas y escudos de equipos de LaLiga Primera y Segunda, Premier League, Bundesliga, Serie A y Ligue 1 (`static/avatar-flags.js`, `app.py`; `tests/avatar-flags.test.js`, `tests/test_escudos.py`). Los escudos dependen de un proveedor externo.
-- **HU40:** ajustes de la paleta roja del tema claro.
-- **HU44:** reto diario disponible en la pestaña Ajedrez; `tests/daily-chess.test.js` contiene pruebas con respuestas simuladas.
+- **Criterios de aceptación:**
+  - **CA01:** Desde el inicio de sesión (`¿Has olvidado tu contraseña?`), el usuario puede introducir un correo válido y recibe siempre una respuesta genérica sin revelar si la cuenta existe.
+  - **CA02:** Si el correo está registrado, se envía un enlace con token aleatorio seguro (almacenado mediante hash en servidor) que caduca a los 30 minutos y queda invalidado tras un único uso.
+  - **CA03:** Al establecer una contraseña válida y confirmarla, se actualiza su hash en SQLite, se invalidan sesiones anteriores, deja de funcionar la contraseña antigua y se conservan intactos todos los datos académicos de la cuenta (rechazando tokens caducados, alterados o reutilizados).
 
-**Verificación:** tras integrar los cambios del dashboard, `npm.cmd run test:all` pasó el 23/11/2026: 157 pruebas Jest y 178 Python. **Reejecución posterior, tras corregir el reparto de horas extra y el módulo de tareas/entregas (23/11/2026):** 157 pruebas Jest y 178 Python. **Última reejecución, tras permitir desvincular tareas y equilibrar su planificación con los objetivos de las asignaturas (23/11/2026):** 157 pruebas Jest y 178 Python. La API externa no se probó en vivo y no se hizo una revisión visual completa en navegador; además, el test frontend titulado «fallo de la API se muestra al usuario» no tiene aserciones.
+- **Evidencias:** Pendiente de configuración de proveedor de correo e implementación.
 
+## HU44 — Resolver retos diarios de ajedrez para activar la mente
 
-## Actualización de estados — 22/11/2026
+- **Issue:** [Issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54)
 
-Se han marcado como **Completed** en GitHub las historias con implementación incorporada a `main`:
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-- **HU07 — Calendario semanal:** [issue #7](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7).
-- **HU40 — Modo claro y oscuro:** [issue #50](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/50).
-- **HU44 — Reto diario de ajedrez:** [issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54).
+- **Historia:** Como usuario, quiero resolver una serie diaria de ejercicios de táctica de ajedrez (mate en una jugada) desde la sección de juegos mentales para activar mi concentración antes de estudiar.
 
-El cierre indica que se ha incorporado la funcionalidad; **no certifica una ejecución satisfactoria de la batería de pruebas ni una revisión manual**. HU06, HU13 y HU41 conservan su estado abierto por verificaciones o criterios pendientes; las propuestas no implementadas no se marcan como completadas.
+- **Alcance:** Incluye la presentación de 5 retos diarios de mate en una jugada dentro de la sección *Juegos mentales* (`#ajedrez`), obtenidos desde Flask mediante Chess Puzzle API (dataset Lichess) con caché diaria en memoria y cinco puzzles locales de reserva si el servicio externo falla o devuelve datos incompletos. Incluye tablero `8x8`, validación de jugadas en el servidor (`/api/ajedrez/comprobar`) sin exponer soluciones al cliente, pistas, reinicio por ejercicio y progreso diario (`0/5` a `5/5`) persistido en `localStorage` por usuario y fecha (`studyplan:chess-daily:api:v1`).
 
+- **Valor y prioridad:** Bajo-medio. Herramienta opcional de activación cognitiva integrada en la aplicación.
 
-### 22/11/2026 — HU44: cinco ejercicios diarios y corrección de «Reintentar»
+- **Estimación:** 2 días (orientativa; tablero interactivo `8x8`, endpoints backend con caché/reserva local, progreso diario y pruebas).
 
-- Se amplía el reto a **cinco ejercicios diarios** de mate en una jugada, resueltos consecutivamente, con progreso visible de 0/5 a 5/5 y orden dependiente de la fecha.
-- Se corrige el botón **Reintentar**: reinicia la posición y permite repetir incluso tras completar los cinco, conservando los ejercicios anteriores; el ejercicio repetido se descuenta hasta volver a resolverlo.
-- Se utiliza `localStorage` con clave versión `v2`, separada por correo y fecha, para guardar el conjunto de ejercicios completados.
-- En esa entrega se documentaron siete pruebas frontend. El archivo ha cambiado desde entonces; consultar la suite actual y la verificación posterior de 23/11/2026.
-- Cambios en `static/daily-chess.js` y `tests/daily-chess.test.js`; [HU44 #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54) permanece cerrada como implementada, sin afirmar validación de pruebas.
+- **Criterios de aceptación:**
+  - **CA01:** Dentro de la pestaña *Juegos mentales*, el usuario visualiza un tablero `8x8` con los 5 retos diarios de mate en una jugada y el marcador de progreso (`0/5` a `5/5`), cargándose los datos correctamente sin requerir peticiones extra al iniciar la sesión en *Inicio*.
+  - **CA02:** El usuario puede seleccionar pieza y casilla de destino, validándose la jugada en el servidor sin exponer las soluciones en el navegador; una jugada correcta muestra su notación/explicación y una incorrecta permite reintentar.
+  - **CA03:** El usuario dispone de botón «Pista» y botón «Reintentar» (que reinicia solo el ejercicio seleccionado descontándolo hasta volver a resolverlo), guardándose el avance en `localStorage` por usuario y fecha local, y funcionando mediante 5 puzzles locales de respaldo si falla la API externa.
 
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/daily-chess.js`, `static/style.css`) y verificado mediante `tests/test_chess_api.py` y `tests/daily-chess.test.js` (dentro de la suite `npm run test:all`: 157 pruebas Jest y 178 Python; pendiente validación en vivo frente a la API externa).
 
-## 22/11/2026 — HU44: migración del ajedrez a API externa
+  # HU45 — Resolver reto diario de Sudoku
 
-**Cambio:** las cinco posiciones ya no están definidas en `static/daily-chess.js`. Flask consulta [Chess Puzzle API](https://github.com/mauricioulloa/chess-puzzle-api), basada en la base abierta de puzzles de Lichess (CC0), solicitando cinco problemas con tema `mateIn1`. La fuente entrega `positionFen` y el color del jugador; las soluciones se consultan por ID mediante `/v1/puzzles/{id}/solution`. La API externa no requiere clave según su documentación pública.
+- **Issue:** Pendiente de vincular en GitHub (implementado en `main` el 23/11/2026)
 
-**Arquitectura:** navegador → `GET /api/ajedrez/diario` (Flask) → Chess Puzzle API; navegador → `POST /api/ajedrez/comprobar` → Flask. Las soluciones se guardan únicamente en la caché del backend y no se incluyen en la respuesta que carga el tablero. Caché en memoria por día, sin persistencia en base de datos; progreso de los cinco ejercicios en `localStorage` por usuario y fecha (`studyplan:chess-daily:api:v1`).
+- **Estado:** Terminada (Implementada en `main`; pendiente verificar integración en `npm run test:frontend`)
 
-**Comportamiento inicial (antes del cambio de reserva local registrado más abajo):** tablero 8×8, cinco mates en una jugada, pistas, validación en el servidor y botón Reintentar. En esa primera versión, una indisponibilidad del proveedor podía producir 503 y no había puzzles de reserva. La implementación posterior añadió cinco puzzles locales para ese caso.
+- **Historia:** Como usuario, quiero resolver un Sudoku diario desde la sección de juegos mentales para ejercitar el razonamiento lógico en mis descansos de estudio.
 
-**Archivos:** `app.py`, `static/daily-chess.js`, `tests/daily-chess.test.js` y `tests/test_chess_api.py`. Las pruebas usan respuestas simuladas y no dependen de Internet. La integración externa real no está certificada por esas pruebas.
+- **Alcance:** Incluye una tarjeta interactiva de Sudoku `9x9` dentro de *Juegos mentales*, generada de forma determinista por fecha en Flask (`GET /api/juegos/sudoku/diario`, eliminando 45 celdas sin enviar la solución al cliente), validación de solución en el servidor (`POST /api/juegos/sudoku/comprobar`, respetando pistas inmutables y reglas de filas, columnas y bloques `3x3`) y guardado de progreso en `localStorage` por usuario y fecha.
 
-**Servicios utilizados en el proyecto:** países y banderas → [FlagCDN](https://flagcdn.com/) (CDN de imágenes PNG por código ISO, no API JSON); fútbol → [ESPN](https://site.api.espn.com/) (API JSON de equipos y escudos, consultada desde Flask); ajedrez → [Chess Puzzle API](https://chess.mauriulloa.com/) (API JSON de problemas basada en datos de Lichess).
+- **Valor y prioridad:** Bajo. Complemento opcional de descanso cognitivo sin dependencias de APIs externas.
 
+- **Estimación:** 1,5 días (orientativa; generador determinista SHA-256, validación de reglas en servidor, tablero interactivo y persistencia local).
 
-## 22/11/2026 — HU44: pestaña propia de Ajedrez
+- **Criterios de aceptación:**
+  - **CA01:** El usuario accede desde *Juegos mentales* al Sudoku correspondiente a la fecha actual con las celdas iniciales bloqueadas como pistas inmutables.
+  - **CA02:** Al comprobar el tablero, el servidor valida formato, respeto a las pistas iniciales y cumplimiento de las reglas de filas, columnas y subcuadrículas `3x3` (admitiendo cualquier solución válida).
+  - **CA03:** El avance del tablero se conserva en `localStorage` separado por usuario y fecha sin alterar los datos académicos de la cuenta.
 
-- Se retira el tablero del panel **Inicio** y se añade **Ajedrez** a la navegación principal (`data-tab="ajedrez"`, `id="tab-ajedrez"`). Inicio vuelve a priorizar el saludo, las métricas y los módulos de estudio.
-- El tablero, las pistas, Reintentar y el progreso 0/5–5/5 se mantienen dentro de la nueva sección. No se cambian los endpoints Flask ni el proveedor externo.
-- **Carga diferida:** la API solo se consulta al abrir la sección Ajedrez; se conserva el acceso directo mediante `#ajedrez` y la lógica de pestañas existente.
-- Archivos: `templates/index.html`, `static/daily-chess.js`, `tests/daily-chess.test.js` (caso añadido para evitar llamadas desde Inicio).
-- Pendiente ejecutar pruebas y verificar visualmente la navegación, incluido acceso por URL y dispositivos móviles.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/mini-games.js`, `static/style.css`) con pruebas en `tests/test_mini_games.py` y `tests/mini-games.test.js`.
 
+## HU46 — Jugar partida de 2048 en descansos
 
-### 22/11/2026 — Corrección del tablero vacío en la pestaña Ajedrez
+- **Issue:** Pendiente de vincular en GitHub (implementado en `main` el 23/11/2026)
 
-- **Síntoma:** se veían las 64 casillas, pero no aparecían piezas ni se iniciaba la carga de los cinco ejercicios.
-- **Causa:** el listener de `static/daily-chess.js` comprobaba `tab-ajedrez.active` durante el clic, antes de que `static/app.js` terminara de activar la pestaña. La condición de carga diferida impedía ejecutar `init()`.
-- **Solución:** programar la comprobación con `setTimeout(activate, 0)` para que ocurra después de los listeners del clic. Se mantiene la carga diferida y se evita pedir dos veces los ejercicios.
-- **Prueba de regresión:** `tests/daily-chess.test.js` comprueba que al pasar de Inicio a Ajedrez se realiza una única petición y se dibujan las piezas. **Ejecución de tests y consulta real a la API pendientes de verificar.**
+- **Estado:** Terminada (Implementada en `main`; pendiente verificar integración en `npm run test:frontend`)
 
+- **Historia:** Como usuario, quiero jugar partidas rápidas de 2048 desde la sección de juegos mentales para despejar la mente entre bloques de estudio.
 
-### 22/11/2026 — Corrección definitiva del tablero completamente blanco
+- **Alcance:** Incluye un tablero `4x4` de 2048 dentro de *Juegos mentales* implementado con Web APIs estándar del navegador, soporte para teclado y controles táctiles, reglas expuestas desde `GET /api/juegos/configuracion`, reinicio de partida y persistencia del estado y puntuación máxima en `localStorage` por usuario.
 
-Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anterior introdujo secuencias de texto literales `\\n` dentro del listener de la pestaña, fuera de cadenas. El navegador detenía toda la ejecución del archivo, de modo que ni siquiera se generaban las 64 casillas. Se sustituyeron por saltos de línea reales y se comprobó que el JavaScript resultante se puede compilar con `new Function(...)` sin errores de sintaxis. La verificación de la API real y de las pruebas completas sigue pendiente.
+- **Valor y prioridad:** Bajo. Minijuego ligero ejecutado en cliente sin impacto en el motor de planificación.
 
+- **Estimación:** 1 día (orientativa; lógica de desplazamiento/fusión de fichas, controles y persistencia local por usuario).
 
-### 22/11/2026 — HU44: evitar tablero sin piezas cuando falla Chess Puzzle API
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede desplazar fichas en las cuatro direcciones mediante teclado o flechas táctiles, fusionándose cada ficha como máximo una vez por movimiento y apareciendo nuevas fichas (`2` o `4`) en casillas libres.
+  - **CA02:** El marcador actualiza la puntuación actual y conserva la mejor puntuación y el estado de la partida en `localStorage` por usuario.
+  - **CA03:** El usuario puede iniciar una nueva partida en cualquier momento y la interfaz se adapta correctamente a escritorio y móvil.
 
-- Se mantiene Chess Puzzle API como proveedor principal de los cinco problemas de mate en una jugada.
-- Si la API no responde, agota el tiempo o devuelve un lote incompleto, `app.py` utiliza **cinco posiciones locales de reserva** con FEN y solución UCI. El contrato de `/api/ajedrez/diario` y `/api/ajedrez/comprobar` permanece idéntico y las soluciones siguen ocultas al cliente.
-- Esto evita que la indisponibilidad de la API externa deje el tablero sin piezas. La reserva se almacena en la caché diaria en memoria; el progreso del usuario continúa en `localStorage`.
-- Se añade prueba backend `test_external_api_down_uses_five_local_puzzles` con API simulada caída. La integración externa real y la ejecución de la batería completa siguen pendientes de verificación.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/mini-games.js`, `static/style.css`) con pruebas en `tests/test_mini_games.py` y `tests/mini-games.test.js`.
 
+## HU47 — Jugar reto de memoria secuencial (Simon)
 
-### 22/11/2026 — HU44: restauración de carga inicial del ajedrez
+- **Issue:** Pendiente de vincular en GitHub (implementado en `main` el 23/11/2026)
 
-- Tras mover el módulo de Inicio a una pestaña propia, se había añadido una condición de carga diferida dependiente de `tab-ajedrez.active`. Ante el reporte persistente de tablero sin piezas, se elimina esa dependencia.
-- `static/daily-chess.js` vuelve a ejecutar `init()` al cargar el documento, igual que cuando el ajedrez estaba en Inicio. La sección sigue siendo independiente y oculta hasta seleccionarla, pero el tablero se rellena en segundo plano.
-- `tests/daily-chess.test.js` sustituye los casos de carga diferida por una regresión que comprueba la obtención de piezas aun cuando la pestaña no esté activa.
-- No se cambia el proveedor Chess Puzzle API ni los endpoints Flask; se mantiene el respaldo local si falla el proveedor.
-- En ese momento quedaba pendiente ejecutar las pruebas y comprobar el comportamiento en un navegador; el resultado posterior se registra a continuación.
+- **Estado:** Terminada (Implementada en `main`; pendiente verificar integración en `npm run test:frontend`)
 
-### 23/11/2026 — Verificación posterior de HU44
+- **Historia:** Como usuario, quiero entrenar mi memoria a corto plazo mediante secuencias progresivas de colores (Simon) en la sección de juegos mentales.
 
-- `npm.cmd run test:all` pasó con 157 pruebas Jest y 178 pruebas Python tras integrar los cambios del dashboard.
-- Reejecución posterior, tras corregir el reparto de horas extra y el módulo de tareas/entregas: 157 pruebas Jest y 178 pruebas Python.
-- Última reejecución tras corregir la desvinculación y el reparto de tiempo de las tareas: 157 pruebas Jest y 178 pruebas Python.
-- La suite incluye una prueba backend con fallo externo simulado que comprueba los cinco puzzles locales de reserva.
-- No se hizo una petición de verificación al proveedor externo real; su disponibilidad queda fuera del resultado de la suite.
+- **Alcance:** Incluye un tablero interactivo de cuatro colores dentro de *Juegos mentales* que reproduce secuencias crecientes, verifica las pulsaciones del usuario, permite reiniciar ante fallo y conserva la ronda máxima alcanzada en `localStorage` por usuario.
 
-### 23/11/2026 — HU40: rediseño visual del modo claro (Ocean)
+- **Valor y prioridad:** Bajo. Minijuego opcional de memoria ejecutado en navegador sin servicios externos.
 
-- Se sustituye la paleta de marca rojo granate por azul marino, azul eléctrico y turquesa; fondos blanco y gris azulado, tipografía oscura de alto contraste.
-- Se actualizan las variables CSS globales del tema claro, el encabezado de bienvenida, avatar, navegación activa y hover, badges, estados del planificador, bordes y enfoque por teclado.
-- Se conservan colores semánticos de errores (rojo), éxito (verde) y avisos (ámbar); no se cambia el modo oscuro ni la lógica JavaScript.
-- Archivo: `static/style.css`. Pendiente validación visual en navegador y revisión de contraste en todas las vistas.
+- **Estimación:** 1 día (orientativa; generación y reproducción temporizada de secuencias, validación de entrada y récord local).
 
-### 23/11/2026 — HU06/HU07: resumen semanal del plan en Inicio
+- **Criterios de aceptación:**
+  - **CA01:** Al iniciar el juego, la interfaz reproduce visualmente una secuencia de colores que incrementa en un paso cada vez que el usuario la repite correctamente.
+  - **CA02:** Si el usuario pulsa un color incorrecto, se informa del fallo y se permite iniciar un nuevo intento conservando el récord alcanzado.
+  - **CA03:** La mejor ronda alcanzada se guarda en `localStorage` asociada al usuario autenticado.
 
-- Se añade al final del dashboard **Mi plan de estudio semanal**, con tarjetas para los siete días y las sesiones.
-- Si no hay un plan válido guardado para el usuario en el navegador, aparece **«Aún no has generado tu plan de estudio»** y un botón para abrir Plan de Estudio.
-- Se reutiliza la clave `studyplan:plan-semanal:v1:<correo>` de `localStorage`; Inicio muestra el plan al generarlo y al restaurarlo, sin peticiones adicionales.
-- El botón «Ver plan completo» abre la sección donde se genera el horario. La vista se adapta a pantallas pequeñas y a ambos temas.
-- Archivos: `templates/index.html`, `static/plan.js`, `static/style.css` y `tests/plan.test.js`.
-- Las pruebas automatizadas pasaron tras resolver el merge: 157 pruebas Jest y 178 Python. En la reejecución posterior a las correcciones de reparto y tareas/entregas, pasaron 157 pruebas Jest y 178 Python; la última reejecución, tras los cambios de desvinculación y reparto de tareas, pasó 157 pruebas Jest y 178 Python. Queda pendiente la comprobación visual manual.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/mini-games.js`, `static/style.css`) con pruebas en `tests/test_mini_games.py` y `tests/mini-games.test.js`.
 
+## HU48 — Ranking privado de horas reales de estudio con amigos
 
-## 23/11/2026 — Minijuegos junto al ajedrez: Sudoku diario, 2048 y Simon
+- **Issue:** [Issue #55](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/55)
 
-**Alcance:** sección de navegación «Juegos mentales» (antigua «Ajedrez»), que conserva el reto de cinco problemas de ajedrez y añade tres tarjetas responsive.
+- **Estado:** Propuesta (Abierta — pendiente de dividir en historias atómicas antes de planificar en sprint)
 
-**Sudoku diario (API REST propia Flask):** `GET /api/juegos/sudoku/diario` devuelve fecha y cuadrícula 9×9 sin solución; `POST /api/juegos/sudoku/comprobar` recibe la cuadrícula, valida formato y pistas inmutables y comprueba filas, columnas y bloques 3×3. El tablero se genera de manera determinista con fecha y SHA-256; el progreso se guarda en `localStorage` por usuario y fecha. El generador elimina 45 celdas de una solución válida; **no garantiza unicidad de solución**, por lo que el servidor acepta cualquier solución válida que respete las pistas. Sin API externa ni clave.
+- **Historia:** Como usuario, quiero conectar con amigos aprobados y consultar un ranking privado de nuestras horas reales de estudio para comparar nuestro avance y motivarnos respetando la privacidad de cada cuenta.
 
-**2048 (Web APIs estándar):** implementación propia de desplazamiento y fusión de fichas (cada ficha se fusiona como máximo una vez por movimiento), generación de fichas 2/4 con `crypto.getRandomValues` cuando está disponible, teclado/flechas táctiles, puntuación, nueva partida y persistencia por usuario con `localStorage`. No necesita API externa ni acceso a red. La ruta `GET /api/juegos/configuracion` expone reglas de 2048 y Simon.
+- **Alcance:** Incluye tres capacidades diferenciadas pendientes de subdividir antes de su desarrollo: (1) gestión de solicitudes de amistad entre usuarios registrados, (2) registro en SQLite de sesiones reales de estudio cronometradas con control de pausas (sin contar horas meramente planificadas en `HU06`/`HU07`), y (3) clasificación privada semanal, mensual y acumulada únicamente entre amistades aceptadas que otorguen consentimiento explícito de visibilidad.
 
-**Simon (Web APIs estándar):** cuatro colores, secuencia aleatoria con Web Crypto cuando está disponible, reproducción con `setTimeout`, verificación de pulsaciones, incremento de rondas, reintento y récord por usuario en `localStorage`. Sin API externa ni claves.
+- **Valor y prioridad:** Bajo-medio. Funcionalidad social opcional de motivación; prioridad baja frente al cierre y estabilización del núcleo académico.
 
-**Legalidad y atribución:** todo el código nuevo es original; se usan APIs estándar del navegador y endpoints propios del backend, no se copian recursos de terceros. El servicio de ajedrez mantiene su integración externa separada. El uso de APIs públicas del navegador no requiere licencia comercial adicional ni API key.
+- **Estimación:** 5 días (orientativa global; requiere descomponerse en tres historias independientes antes de comprometer en sprint: gestión de amistades, cronómetro real de estudio y ranking privado).
 
-**Archivos:** `templates/index.html`, `static/mini-games.js`, `static/style.css`, `app.py`, `package.json`, `tests/mini-games.test.js`, `tests/test_mini_games.py`.
+- **Criterios de aceptación:**
+  - **CA01:** Un usuario autenticado puede enviar, aceptar o rechazar solicitudes de amistad, y solo los usuarios con amistad aceptada y consentimiento activo aparecen en el ranking privado.
+  - **CA02:** El tiempo contabilizado en el ranking procede exclusivamente de sesiones reales finalizadas en SQLite, descontando los intervalos en pausa y excluyendo las horas planificadas no ejecutadas.
+  - **CA03:** La clasificación calcula correctamente los totales semanal, mensual y acumulado en el servidor (resolviendo empates de forma determinista y mostrando estado vacío si no hay amigos o datos), y retira inmediatamente la visibilidad de un usuario si revoca su consentimiento o elimina la amistad.
 
-**Pruebas escritas:** cinco casos frontend (sintaxis, Sudoku, 2048 tablero, movimiento, Simon) y siete backend (generación determinista, reglas de Sudoku, contrato, validación, pistas, solución, configuración). **Pendiente ejecutar las baterías y revisión visual**; no se afirma que estén pasando.
-
-**Criterios de aceptación:** acceso desde Juegos mentales; ajedrez preservado; Sudoku estable en el mismo día con validación del servidor; 2048 fusiona correctamente y conserva puntuación; Simon reproduce y comprueba secuencias; interfaz adaptable a móvil; estado conservado por usuario.
-
-
-## HU55 — Ranking privado de horas de estudio con amigos (pendiente)
-
-**Como** estudiante registrado, **quiero** añadir amigos y consultar un ranking de las horas reales que hemos estudiado, **para** comparar nuestro progreso y motivarnos.
-
-**GitHub:** https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/55
-
-**Resumen:** solicitudes de amistad, registro de sesiones reales con pausas, clasificación privada semanal/mensual/acumulada, consentimiento para compartir estadísticas, estados vacíos y diseño responsive. El servidor debe calcular los minutos efectivos y verificar la autorización de cada consulta; las horas planificadas no cuentan como estudiadas.
-
-**Aceptación:** autenticación; amistad aceptada; sesiones finalizadas y sin pausas; cálculo correcto por periodo; empates; privacidad; retirada de consentimiento; pruebas unitarias backend y frontend.
-
-**Estado:** pendiente de desarrollo. No se ha modificado la aplicación.
+- **Evidencias:** Pendiente de descomposición e implementación (no se ha modificado la aplicación).
