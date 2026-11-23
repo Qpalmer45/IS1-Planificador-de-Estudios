@@ -497,56 +497,89 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Evidencias:** Absorbida documentalmente en `HU18` (`#18`).
   
-## HU26 - Gestión del temario por asignatura
+## HU26 — Gestión del temario por asignatura
 
-[Issue #27](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/27)
+- **Issue:** [Issue #27](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/27)
 
-**Historia:** Como usuario, quiero añadir y gestionar el temario pendiente de cada asignatura para saber qué contenidos tengo que estudiar.
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-**Valor:** Alto  
-**Estimación:** 1 día
+- **Historia:** Como estudiante, quiero añadir y gestionar el temario de cada asignatura marcando los temas pendientes o estudiados para controlar los contenidos que me faltan por preparar.
 
-**Criterios de aceptación:**
-- El usuario puede añadir temas o contenidos a una asignatura.
-- El usuario puede editar el temario añadido.
-- El usuario puede eliminar temas o contenidos.
-- Se puede consultar qué contenidos están pendientes de estudiar.
-- Cada tema o contenido queda asociado a la asignatura correspondiente.
+- **Alcance:** Incluye el alta, consulta, edición, borrado y cambio de estado (`pendiente` / `estudiado`, con posibilidad de reversión) de los temas asociados a cada asignatura propia dentro de su apartado individual (`HU23`) en SQLite.
 
-## HU27 - Lista de To-Dos
+- **Valor y prioridad:** Alto. Permite desglosar el contenido de cada materia y seguir su avance; implementada en Sprint 2 / Sprint 4.
 
-[Issue #29](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/29)
+- **Estimación:** 1 día (orientativa; operaciones CRUD de temas vinculados a asignaturas, estado y validación de pertenencia).
 
-**Historia:** Como usuario, quiero disponer de una lista de To-Dos sencilla para anotar y gestionar tareas pendientes de forma rápida.
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede añadir, editar y eliminar temas o contenidos dentro de cualquiera de sus asignaturas propias.
+  - **CA02:** El usuario puede marcar cada tema como estudiado o devolverlo a pendiente, consultando claramente qué contenidos quedan por estudiar.
+  - **CA03:** El sistema rechaza títulos vacíos y garantiza en SQLite que ningún usuario pueda consultar o modificar el temario de asignaturas ajenas.
 
-**Valor:** Medio  
-**Estimación:** 1 día
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py`.
 
-**Criterios de aceptación:**
-- El usuario puede añadir un nuevo To-Do.
-- El usuario puede marcar un To-Do como completado.
-- El usuario puede desmarcar un To-Do completado.
-- El usuario puede editar un To-Do.
-- El usuario puede eliminar un To-Do.
-- Se diferencian visualmente los To-Dos pendientes de los completados.
+## HU27 — Lista de To-Dos
 
----
+- **Issue:** [Issue #29](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/29)
 
-# Ampliación del Product Backlog — 22/11/2026
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpora las historias creadas después. **Los resúmenes no sustituyen los criterios de aceptación completos de las issues enlazadas.** La implementación no equivale a pruebas superadas.
+- **Historia:** Como estudiante, quiero disponer de una lista rápida de To-Dos para anotar y gestionar tareas pendientes sueltas sin fecha límite obligatoria.
+
+- **Alcance:** Incluye el alta, edición, borrado y cambio de estado (`pendiente` / `completada`, reversible) de notas rápidas persistidas en SQLite por usuario en la vista *To-Dos Rápidos*. No incluye fechas límite ni planificación automática en el calendario (cubiertas por `HU04` y `HU06`).
+
+- **Valor y prioridad:** Medio. Facilita anotar recordatorios o tareas rápidas del día a día sin sobrecargar el planificador académico; implementada en Sprint 1.
+
+- **Estimación:** 1 día (orientativa; operaciones CRUD de To-Dos, cambio de estado y persistencia por usuario).
+
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede crear un nuevo To-Do con título válido, editar su texto y eliminarlo.
+  - **CA02:** El usuario puede marcar un To-Do como completado o desmarcarlo a pendiente, diferenciándose visualmente ambos estados.
+  - **CA03:** La API valida las entradas (rechazando títulos vacíos o valores no booleanos en el estado, y devolviendo `404` si el elemento no existe o pertenece a otra cuenta) y persiste los datos en SQLite por usuario.
+
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py` (incluidas las validaciones de `#34` y `#35`).
 
 ## HU28 — Filtrar To-Dos por estado
 
-[Issue #36](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/36)
+- **Issue:** [Issue #36](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/36)
 
-**Alcance y criterios principales:** Filtrar todas, pendientes o completadas, sin alterar los datos ni mostrar To-Dos ajenos.
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+
+- **Historia:** Como estudiante, quiero filtrar mi lista de To-Dos entre todas, pendientes y completadas para centrarme en las tareas que requieren atención.
+
+- **Alcance:** Incluye el filtrado visual en la vista *To-Dos Rápidos* (`HU27`) para mostrar todas las tareas, solo las pendientes o solo las completadas del usuario activo, sin alterar los registros almacenados en SQLite.
+
+- **Valor y prioridad:** Medio. Mejora la claridad cuando la lista rápida acumula varias tareas; implementada en Sprint 3.
+
+- **Estimación:** 1 día (orientativa; lógica de filtrado por estado, manejo de lista vacía y aislamiento por usuario).
+
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede alternar entre visualizar todas las tareas rápidas, únicamente las pendientes o únicamente las completadas.
+  - **CA02:** Aplicar o cambiar el filtro es una operación de consulta que no modifica ni elimina los datos persistidos en SQLite.
+  - **CA03:** Cuando no existen tareas que coincidan con el filtro seleccionado, se muestra un estado vacío sin errores y respetando el aislamiento entre usuarios.
+
+- **Evidencias:** Implementado en `main` (`templates/index.html`, `static/app.js`) y verificado en `tests/test_app.py`.
 
 ## HU29 — Buscar To-Dos por título
 
-[Issue #37](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/37)
+- **Issue:** [Issue #37](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/37)
 
-**Alcance y criterios principales:** Búsqueda parcial sin distinguir mayúsculas, con aislamiento por usuario.
+- **Estado:** Preparada (Abierta)
+
+- **Historia:** Como estudiante, quiero buscar tareas de mi lista de To-Dos por palabras de su título para localizar rápidamente una anotación cuando tenga muchas.
+
+- **Alcance:** Incluye un campo de búsqueda por texto sobre los títulos de la lista *To-Dos Rápidos* (`HU27`). No busca sobre las actividades académicas de `HU04`.
+
+- **Valor y prioridad:** Medio. Agiliza localizar notas rápidas en listas extensas sin bloquear el uso básico de `HU27`; prioridad media-baja.
+
+- **Estimación:** 1 día (orientativa; filtrado por coincidencia parcial de texto y pruebas con filtro combinado).
+
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede filtrar sus To-Dos escribiendo texto parcial contenido en el título, sin distinguir entre mayúsculas y minúsculas.
+  - **CA02:** La búsqueda puede combinarse con el filtro de estado (`HU28`) y muestra un resultado vacío sin errores cuando no hay coincidencias.
+  - **CA03:** La consulta no modifica los datos almacenados y opera exclusivamente sobre los To-Dos del usuario autenticado.
+
+- **Evidencias:** Pendiente de implementación.
 
 ## HU30 — Navegación mediante teclado
 
