@@ -123,18 +123,13 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 - **Alcance:** Regla interna de ordenación y reparto consolidada íntegramente dentro del motor de `HU06`. No se contabiliza estimación separada.
 - **Evidencias:** Consolidada en `HU06` (`#6`).
 
-## HU09 - Horas de inicio y fin de las sesiones
+## HU09 — Horas de inicio y fin de las sesiones
 
-[Issue #9](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/9)
-
-**Historia:** Como usuario, quiero ver la hora de inicio y fin de cada sesión de estudio para seguir el horario generado.
-
-**Valor:** Alto  
-**Estimación:** 1 día
-
-**Criterios de aceptación:**
-- Cada sesión muestra hora de inicio.
-- Cada sesión muestra hora de fin.
+- **Issue:** [Issue #9](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/9)
+- **Estado:** Absorbida (Funcionalidad integrada en [HU07](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7))
+- **Historia:** Como estudiante, quiero ver la hora de inicio y fin de cada sesión de estudio para seguir el horario generado.
+- **Alcance:** La visualización del intervalo horario (`HH:MM–HH:MM`) es un elemento inseparable de cada sesión en el calendario semanal; queda absorbida en `CA02` de `HU07` sin duplicar estimación.
+- **Evidencias:** Verificado en la vista semanal de `HU07` (`static/plan.js`, `tests/plan.test.js`).
 
 ## HU10 - Edición manual de sesiones
 
