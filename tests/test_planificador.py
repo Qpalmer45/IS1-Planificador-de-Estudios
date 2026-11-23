@@ -40,6 +40,7 @@ class GeneradorSemanalTests(unittest.TestCase):
         lunes = plan["dias"][0]["sesiones"]
         self.assertTrue(lunes)
         self.assertEqual(lunes[0]["inicio"], "18:00")
+        self.assertTrue(all(minutos(s["inicio"]) >= 1080 for s in lunes))
         self.assertTrue(all(not (minutos(s["inicio"]) < 1080 and minutos(s["fin"]) > 990) for s in lunes))
 
     def test_periodos_bloqueados_no_generan_sesiones(self):

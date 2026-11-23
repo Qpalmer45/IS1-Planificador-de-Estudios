@@ -564,8 +564,10 @@ def update_todo(todo_id):
         params.append(titulo)
 
     if "completada" in data:
+        if type(data["completada"]) is not bool:
+            return jsonify({"error": "El estado completada debe ser booleano."}), 400
         updates.append("completada = ?")
-        params.append(1 if data["completada"] else 0)
+        params.append(int(data["completada"]))
 
     if "prioridad" in data:
         prio_val = data["prioridad"]

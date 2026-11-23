@@ -71,14 +71,6 @@ con Jest.
 - Temas y apuntes por asignatura: contrato TDD de creación, listado y filtro de pendientes, edición, estado estudiado, borrado, validación, aislamiento, autenticación y respuestas tardías en la interfaz.
 - Frontend: API HTTP simulada, navegación, feedback, listado/filtros/contadores de tareas, operaciones CRUD de tareas y asignaturas, diálogo accesible y carga inicial.
 
-## Casos pendientes conocidos
-
-En la suite de Python hay **1 prueba marcada con `@unittest.expectedFailure`**:
-
-1. Rechazar valores de `completada` que no sean booleanos (por ejemplo, `2`).
-
-La suite actual no marca como fallidos esperados los casos de edición/borrado de tareas ajenas ni la actualización de tareas inexistentes: esos comportamientos cuentan con pruebas ordinarias. El caso pendiente de `completada` seguirá apareciendo como fallo esperado hasta que se implemente la validación en el backend y se retire el decorador.
-
 ## Pruebas de asignaturas
 
 Las pruebas de asignaturas verifican el contrato de la API implementada en `app.py`. Comprueban creación, listado, detalle, edición, borrado, validación de entradas, autenticación y aislamiento por usuario.

@@ -75,14 +75,15 @@ class ObjetivosSemanalesTests(unittest.TestCase):
     def test_objetivo_no_multiplo_de_sesion_es_exacto(self):
         materias = [{"id": 1, "nombre": "Álgebra", "prioridad": "media",
                      "dificultad": "media", "minutos_semanales": 95}]
-        plan = generar_semana("2026-11-23", materias, [], [], [],
-                             hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15)
-        self.assertGreaterEqual(plan["minutos_por_asignatura"][1], 95)
+        periodos = [{"fecha_inicio": "2026-11-24", "fecha_fin": "2026-11-29"}]
+        plan = generar_semana("2026-11-23", materias, [], [], periodos,
+                             hora_inicio="16:00", hora_fin="18:00", duracion=60, descanso=15)
+        self.assertEqual(plan["minutos_por_asignatura"][1], 95)
         self.assertEqual(plan["total_sesiones"], 2)
         self.assertTrue(any(s["fin"] == "17:50" for d in plan["dias"] for s in d["sesiones"]))
 
     def test_actividad_sin_asignatura_puede_planificarse(self):
-        tareas = [{"id": 3, "titulo": "Preparar examen", "tipo": "examen",
+        tareas = [{"id": 3, "titulo": "Preparar entrega", "tipo": "entrega",
                    "fecha_limite": "2026-11-27", "minutos_estimados": 95,
                    "minutos_semanales": 95}]
         plan = generar_semana("2026-11-23", [], tareas, [], [],

@@ -127,6 +127,8 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
                         for a in pendientes:
                             if a["_fecha"] >= fecha and a["_restante"] > 0 and not a.get("minutos_semanales"):
                                 candidatos.append((1, a["fecha_limite"], 0, a["id"], "actividad", a, a["_restante"], None))
+                    capacidad = final_franja - cursor
+                    candidatos = [c for c in candidatos if min(duracion, c[6]) <= capacidad]
                     if not candidatos:
                         break
                     # En fase de extras se escoge la materia menos favorecida

@@ -773,18 +773,19 @@ class TestStudyPlannerApp(unittest.TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    @unittest.expectedFailure
     def test_update_todo_rechaza_estado_que_no_es_booleano(self):
-        """Caso pendiente: update_todo debería rechazar completada=2 con HTTP 400."""
+        """update_todo rechaza estados no booleanos sin modificar la nota."""
         self.registrar()
         todo_id = self.crear_todo().get_json()["id"]
 
-        response = self.client.patch(
-            f"/api/todos/{todo_id}",
-            json={"completada": 2},
-        )
-
-        self.assertEqual(response.status_code, 400)
+        for value in (2, "true", None):
+            with self.subTest(value=value):
+                response = self.client.patch(
+                    f"/api/todos/{todo_id}",
+                    json={"completada": value},
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(self.client.get("/api/todos").get_json()[0]["completada"], False)
 
     # ------------------------------------------------------------------
     # delete_todo elimina una nota perteneciente al usuario autenticado y
@@ -1789,9 +1790,13 @@ class TestStudyPlannerApp(unittest.TestCase):
 
     def test_hu04_ciclo_completo_de_los_tres_tipos(self):
         self.registrar()
+        asignatura_id = self.crear_asignatura().get_json()["id"]
         for tipo in ("tarea", "entrega", "examen"):
             with self.subTest(tipo=tipo):
-                creada = self.crear_actividad(tipo=tipo)
+                creada = self.crear_actividad(
+                    tipo=tipo,
+                    **({"asignatura_id": asignatura_id} if tipo == "examen" else {}),
+                )
                 ruta = f"/api/tareas/{creada['id']}"
                 self.assertEqual(self.client.get("/api/tareas").get_json(), [creada])
                 cambios = dict(titulo="Nuevo título", tipo="entrega" if tipo == "tarea" else "tarea",
@@ -1873,14 +1878,16 @@ class TestStudyPlannerApp(unittest.TestCase):
         hoy = main_app.hoy_planificador()
         ayer = (hoy - timedelta(days=1)).isoformat()
         manana = (hoy + timedelta(days=1)).isoformat()
+        asignatura_id = self.crear_asignatura().get_json()["id"]
         for tipo in ("tarea", "entrega", "examen"):
             with self.subTest(tipo=tipo):
-                datos = {**ACTIVIDAD_HU04, "tipo": tipo, "fecha_limite": ayer}
+                extra = {"asignatura_id": asignatura_id} if tipo == "examen" else {}
+                datos = {**ACTIVIDAD_HU04, **extra, "tipo": tipo, "fecha_limite": ayer}
                 rechazo = self.client.post("/api/tareas", json=datos)
                 self.assertEqual(rechazo.status_code, 400)
                 self.assertIn("hoy", rechazo.get_json()["error"])
-                self.crear_actividad(tipo=tipo, fecha_limite=hoy.isoformat())
-                creada = self.crear_actividad(tipo=tipo, fecha_limite=manana)
+                self.crear_actividad(tipo=tipo, fecha_limite=hoy.isoformat(), **extra)
+                creada = self.crear_actividad(tipo=tipo, fecha_limite=manana, **extra)
                 ruta = f"/api/tareas/{creada['id']}"
                 for fecha, estado in ((ayer, 400), (hoy.isoformat(), 200), (manana, 200)):
                     self.assertEqual(self.client.patch(ruta, json={"fecha_limite": fecha}).status_code, estado)
@@ -1904,7 +1911,9 @@ class TestStudyPlannerApp(unittest.TestCase):
 
     def test_hu04_examen_en_plan_y_recordatorios(self):
         self.registrar()
-        examen = self.crear_actividad(tipo="examen", fecha_limite=main_app.hoy_planificador().isoformat())
+        asignatura_id = self.crear_asignatura().get_json()["id"]
+        examen = self.crear_actividad(tipo="examen", asignatura_id=asignatura_id,
+                                      fecha_limite=main_app.hoy_planificador().isoformat())
         plan = self.client.get("/api/plan/datos").get_json()
         self.assertEqual(plan["tareas_planificadas"], [examen])
         avisos = self.client.get("/api/recordatorios").get_json()["recordatorios"]
@@ -1930,8 +1939,10 @@ class TestStudyPlannerApp(unittest.TestCase):
         main_app.initialize_database()
         antiguas = self.client.get("/api/tareas").get_json()
         self.assertEqual(antiguas, [dict(id=5, titulo="Antigua", tipo="entrega",
-                                         fecha_limite="2020-01-01", minutos_estimados=40)])
-        self.assertGreater(self.crear_actividad(tipo="examen")["id"], 12)
+                                         fecha_limite="2020-01-01", minutos_estimados=40,
+                                         minutos_semanales=0, asignatura_id=None)])
+        asignatura_id = self.crear_asignatura().get_json()["id"]
+        self.assertGreater(self.crear_actividad(tipo="examen", asignatura_id=asignatura_id)["id"], 12)
 
     def test_hu04_rechaza_peticiones_invalidas_sin_escribir(self):
         self.registrar()
