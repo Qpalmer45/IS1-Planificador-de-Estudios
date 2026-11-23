@@ -110,12 +110,16 @@ test("un error al regenerar no borra el horario anterior", async () => {
   expect(w.document.getElementById("plan-feedback").textContent).toBe("Sin conexión");
 });
 
-test("un compromiso se envía al generar y aparece en el calendario", async () => {
+test("un compromiso se envía y aparece en orden cronológico junto a las sesiones", async () => {
   const days = Array.from({ length: 7 }, (_, i) => ({
-    dia: "lunes", fecha: "2026-11-" + (23 + i), libre: false, sesiones: [],
-    bloqueos: i === 0 ? [{ fecha: "2026-11-23", inicio: "17:00", fin: "19:00", motivo: "Partido de fútbol" }] : []
+    dia: "lunes", fecha: "2026-11-" + (23 + i), libre: false,
+    sesiones: i === 0 ? [
+      { inicio: "16:00", fin: "17:00", asignatura: "Álgebra" },
+      { inicio: "18:00", fin: "19:00", asignatura: "Cálculo" },
+    ] : [],
+    bloqueos: i === 0 ? [{ fecha: "2026-11-23", inicio: "17:00", fin: "18:00", motivo: "Partido de fútbol" }] : []
   }));
-  const w = setup({ ok: true, json: async () => ({ dias: days, total_sesiones: 0 }) });
+  const w = setup({ ok: true, json: async () => ({ dias: days, total_sesiones: 2 }) });
   w.document.getElementById("plan-fecha").value = "2026-11-23";
   w.document.getElementById("plan-fecha").dispatchEvent(new w.Event("change"));
   w.document.getElementById("plan-block-date").value = "2026-11-23";
@@ -130,9 +134,12 @@ test("un compromiso se envía al generar y aparece en el calendario", async () =
   expect(JSON.parse(options.body).bloqueos[0].motivo).toBe("Partido de fútbol");
   const occupied = w.document.querySelector(".plan-block-result");
   expect(occupied.classList.contains("plan-session")).toBe(true);
-  expect(occupied.querySelector(".plan-session-time").textContent).toBe("17:00–19:00");
+  expect(occupied.querySelector(".plan-session-time").textContent).toBe("17:00–18:00");
   expect(occupied.querySelector("strong").textContent).toBe("Partido de fútbol");
   expect(occupied.textContent).not.toContain("Ocupado");
+  expect(Array.from(w.document.querySelectorAll(".plan-day .plan-session-time"))
+    .map(time => time.textContent))
+    .toEqual(["16:00–17:00", "17:00–18:00", "18:00–19:00"]);
 });
 
 test("la cuadrícula muestra siete días y permite seleccionar una franja", () => {

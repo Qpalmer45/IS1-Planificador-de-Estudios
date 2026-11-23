@@ -210,20 +210,23 @@
       card.className = "plan-day";
       card.append(text("h3", day.dia + " · " + day.fecha));
       if (day.libre) card.append(text("p", "Día bloqueado en tu horario", "plan-empty"));
-      for (const b of (day.bloqueos || [])) {
-        const block = document.createElement("div");
-        block.className = "plan-session plan-block-result";
-        block.append(text("span", b.inicio + "–" + b.fin, "plan-session-time"));
-        block.append(text("strong", b.motivo));
-        card.append(block);
-      }
       if (!day.libre && !day.sesiones.length) card.append(text("p", "Sin sesiones", "plan-empty"));
-      for (const session of day.sesiones) {
+      const entries = [
+        ...day.sesiones.map(session => ({ inicio: session.inicio, session })),
+        ...(day.bloqueos || []).map(block => ({ inicio: block.inicio, block })),
+      ].sort((a, b) => a.inicio.localeCompare(b.inicio));
+      for (const entry of entries) {
         const block = document.createElement("div");
-        block.className = "plan-session";
-        block.append(text("span", session.inicio + "–" + session.fin, "plan-session-time"));
-        block.append(text("strong", session.asignatura));
-        if (session.actividad) block.append(text("small", session.tipo + ": " + session.actividad));
+        if (entry.block) {
+          block.className = "plan-session plan-block-result";
+          block.append(text("span", entry.block.inicio + "–" + entry.block.fin, "plan-session-time"));
+          block.append(text("strong", entry.block.motivo));
+        } else {
+          block.className = "plan-session";
+          block.append(text("span", entry.session.inicio + "–" + entry.session.fin, "plan-session-time"));
+          block.append(text("strong", entry.session.asignatura));
+          if (entry.session.actividad) block.append(text("small", entry.session.tipo + ": " + entry.session.actividad));
+        }
         card.append(block);
       }
       week.append(card);
