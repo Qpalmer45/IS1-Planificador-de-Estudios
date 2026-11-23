@@ -594,3 +594,22 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 - El botón «Ver plan completo» abre la sección donde se genera el horario. La vista se adapta a pantallas pequeñas y a ambos temas.
 - Archivos: `templates/index.html`, `static/plan.js`, `static/style.css` y `tests/plan.test.js`.
 - Las pruebas automatizadas pasaron tras resolver el merge: 157 pruebas Jest y 178 Python. En la reejecución posterior a las correcciones de reparto y tareas/entregas, pasaron 157 pruebas Jest y 178 Python; la última reejecución, tras los cambios de desvinculación y reparto de tareas, pasó 157 pruebas Jest y 178 Python. Queda pendiente la comprobación visual manual.
+
+
+## 23/11/2026 — Minijuegos junto al ajedrez: Sudoku diario, 2048 y Simon
+
+**Alcance:** sección de navegación «Juegos mentales» (antigua «Ajedrez»), que conserva el reto de cinco problemas de ajedrez y añade tres tarjetas responsive.
+
+**Sudoku diario (API REST propia Flask):** `GET /api/juegos/sudoku/diario` devuelve fecha y cuadrícula 9×9 sin solución; `POST /api/juegos/sudoku/comprobar` recibe la cuadrícula, valida formato y pistas inmutables y comprueba contra la solución del día. El tablero se genera de manera determinista con fecha y SHA-256; el progreso se guarda en `localStorage` por usuario y fecha. El generador elimina 45 celdas de una solución válida; **no garantiza unicidad de solución**, por lo que el servidor compara contra su solución de referencia. Sin API externa ni clave.
+
+**2048 (Web APIs estándar):** implementación propia de desplazamiento y fusión de fichas (cada ficha se fusiona como máximo una vez por movimiento), generación de fichas 2/4 con `crypto.getRandomValues` cuando está disponible, teclado/flechas táctiles, puntuación, nueva partida y persistencia por usuario con `localStorage`. No necesita API externa ni acceso a red. La ruta `GET /api/juegos/configuracion` expone reglas de 2048 y Simon.
+
+**Simon (Web APIs estándar):** cuatro colores, secuencia aleatoria con Web Crypto cuando está disponible, reproducción con `setTimeout`, verificación de pulsaciones, incremento de rondas, reintento y récord por usuario en `localStorage`. Sin API externa ni claves.
+
+**Legalidad y atribución:** todo el código nuevo es original; se usan APIs estándar del navegador y endpoints propios del backend, no se copian recursos de terceros. El servicio de ajedrez mantiene su integración externa separada. El uso de APIs públicas del navegador no requiere licencia comercial adicional ni API key.
+
+**Archivos:** `templates/index.html`, `static/mini-games.js`, `static/style.css`, `app.py`, `package.json`, `tests/mini-games.test.js`, `tests/test_mini_games.py`.
+
+**Pruebas escritas:** cinco casos frontend (sintaxis, Sudoku, 2048 tablero, movimiento, Simon) y siete backend (generación determinista, reglas de Sudoku, contrato, validación, pistas, solución, configuración). **Pendiente ejecutar las baterías y revisión visual**; no se afirma que estén pasando.
+
+**Criterios de aceptación:** acceso desde Juegos mentales; ajedrez preservado; Sudoku estable en el mismo día con validación del servidor; 2048 fusiona correctamente y conserva puntuación; Simon reproduce y comprueba secuencias; interfaz adaptable a móvil; estado conservado por usuario.
