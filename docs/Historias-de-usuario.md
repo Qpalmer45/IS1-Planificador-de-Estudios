@@ -15,19 +15,21 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   * Los **exámenes** (`HU03`, `HU04`) actúan como hitos temporales vinculados a una asignatura: no añaden minutos propios al cálculo, sino que incrementan la urgencia de estudiar su asignatura asociada conforme se acerca su fecha.
 * **Independencia y trazabilidad (INVEST):** Aunque las funcionalidades siguen un flujo lógico de datos (gestión de cuenta $\rightarrow$ asignaturas y restricciones $\rightarrow$ motor de planificación $\rightarrow$ visualización y seguimiento), cada historia se especifica y verifica de forma autocontenida mediante datos de prueba aislados, evitando mezclar criterios de aceptación entre historias distintas.
 
-## HU01 - Gestión de asignaturas
+## HU01 — Gestión de asignaturas
 
-[Issue #1](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/1)
+- **Issue:** [Issue #1](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/1)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Historia:** Como estudiante, quiero añadir, editar y eliminar asignaturas para indicar qué materias tengo que estudiar.
+- **Alcance:** Incluye el alta, consulta, edición y borrado de asignaturas propias del usuario.
+- **Valor y prioridad:** Muy alto. Es la entidad raíz del planificador sobre la que se vinculan clases, exámenes, temas y sesiones; prioridad máxima de ejecución (Sprint 1).
+- **Estimación:** 1 día (orientativa; operaciones CRUD básicas con validaciones y aislamiento por cuenta).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede crear asignaturas indicando un nombre válido.
+  - **CA02:** El usuario puede editar el nombre.
+  - **CA03:** El usuario puede eliminar una asignatura existente
+  - **CA04:** Cada usuario visualiza y gestiona únicamente sus propias asignaturas.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py` y `tests/editar-asignaturas.test.js`.
 
-**Historia:** Como usuario, quiero añadir, editar y eliminar asignaturas para indicar qué materias tengo que estudiar.
-
-**Valor:** Muy alto  
-**Estimación:** 1 día
-
-**Criterios de aceptación:**
-- Se pueden añadir asignaturas.
-- Se pueden editar asignaturas existentes.
-- Se pueden eliminar asignaturas.
 
 ## HU02 - Disponibilidad semanal
 
