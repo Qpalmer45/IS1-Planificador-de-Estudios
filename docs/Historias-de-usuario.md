@@ -23,7 +23,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
   
-- **Historia:** Como estudiante, quiero añadir, editar y eliminar asignaturas para indicar qué materias tengo que estudiar.
+- **Historia:** Como usuario, quiero añadir, editar y eliminar asignaturas para indicar qué materias tengo que estudiar.
   
 - **Alcance:** Incluye el alta, consulta, edición y borrado de asignaturas propias del usuario.
  
@@ -46,7 +46,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Preparada (Abierta — pendiente de implementar disponibilidad recurrente por día de la semana)
  
-- **Historia:** Como estudiante, quiero definir mi disponibilidad semanal recurrente mediante franjas horarias por día de la semana para que la aplicación sepa cuándo puedo estudiar habitualmente.
+- **Historia:** Como usuario, quiero definir mi disponibilidad semanal recurrente mediante franjas horarias por día de la semana para que la aplicación sepa cuándo puedo estudiar habitualmente.
  
 - **Alcance:** Incluye la configuración de un patrón semanal recurrente (de lunes a domingo) con una o varias franjas horarias disponibles por día en SQLite, evolucionando el selector global único `Desde`/`Hasta` actual del generador. No incluye clases (`HU05`) ni bloqueos puntuales por fecha (`HU06`).
  
@@ -80,7 +80,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
   
-- **Historia:** Como estudiante, quiero registrar, editar y eliminar tareas, entregas y exámenes para integrarlos en mi planificación.
+- **Historia:** Como usuario, quiero registrar, editar y eliminar tareas, entregas y exámenes para integrarlos en mi planificación.
   
 - **Alcance:** Incluye el CRUD completo de actividades académicas en SQLite por usuario: tareas y entregas (con o sin asignatura asociada, fecha límite, minutos estimados totales y objetivo semanal editable) y exámenes (vinculados obligatoriamente a una asignatura propia y con fecha de examen, sin objetivo de minutos independiente). No incluye prioridad manual por actividad (la urgencia se determina por fecha límite/proximidad) ni la lista rápida de To-Dos (`HU27`).
   
@@ -101,7 +101,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
   
-- **Historia:** Como estudiante, quiero introducir mi horario de clases para registrar mis horas lectivas ocupadas.
+- **Historia:** Como usuario, quiero introducir mi horario de clases para registrar mis horas lectivas ocupadas.
   
 - **Alcance:** Incluye el alta, consulta, edición y borrado de franjas de clases semanales recurrentes (de lunes a domingo) y de días o períodos no lectivos (festivos o vacaciones) en SQLite por cuenta. La exclusión efectiva de estas franjas al generar sesiones corresponde al motor de `HU06`.
   
@@ -123,7 +123,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
   
-- **Historia:** Como estudiante, quiero generar automáticamente un plan de estudio semanal de 7 días que respete mis restricciones y reparta mis objetivos según prioridad, dificultad y plazos.
+- **Historia:** Como usuario, quiero generar automáticamente un plan de estudio semanal de 7 días que respete mis restricciones y reparta mis objetivos según prioridad, dificultad y plazos.
   
 - **Alcance:** Incluye el cálculo automático de sesiones para una ventana de 7 días desde la fecha de inicio elegida, respetando el rango horario configurado (`Desde`/`Hasta`), duración de sesión, descansos (`HU11`), clases y festivos (`HU05`), y bloqueos puntuales por fecha guardados en `localStorage` del navegador. Genera una vista previa semanal persistida en `localStorage` por cuenta (no guarda sesiones individuales en SQLite).
   
@@ -146,7 +146,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
   
-- **Historia:** Como estudiante, quiero visualizar mi planificación mediante un calendario semanal con las horas de inicio y fin de cada sesión para saber qué debo estudiar en cada momento.
+- **Historia:** Como usuario, quiero visualizar mi planificación mediante un calendario semanal con las horas de inicio y fin de cada sesión para saber qué debo estudiar en cada momento.
   
 - **Alcance:** Incluye la vista semanal de 7 días de las sesiones de estudio generadas por `HU06` (mostrada en *Plan de Estudio* y resumida en el bloque *Mi plan de estudio semanal* de *Inicio*), indicando en cada tarjeta su hora de inicio, hora de fin y asignatura o actividad asociada, así como los compromisos puntuales bloqueados. Absorbe los criterios de `HU09` (*Horas de inicio y fin de las sesiones*). La persistencia individual de sesiones en SQLite para seguimiento pertenece a `HU14`.
   
@@ -168,7 +168,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Absorbida (Cerrada como duplicada de [HU06](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6))
   
-- **Historia:** Como estudiante, quiero que el planificador priorice automáticamente según proximidad de exámenes, plazos y dificultad/prioridad para optimizar mi estudio.
+- **Historia:** Como usuario, quiero que el planificador priorice automáticamente según proximidad de exámenes, plazos y dificultad/prioridad para optimizar mi estudio.
   
 - **Alcance:** Regla interna de ordenación y reparto consolidada íntegramente dentro del motor de `HU06`. No se contabiliza estimación separada.
   
@@ -180,7 +180,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Absorbida (Funcionalidad integrada en [HU07](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7))
   
-- **Historia:** Como estudiante, quiero ver la hora de inicio y fin de cada sesión de estudio para seguir el horario generado.
+- **Historia:** Como usuario, quiero ver la hora de inicio y fin de cada sesión de estudio para seguir el horario generado.
   
 - **Alcance:** La visualización del intervalo horario (`HH:MM–HH:MM`) es un elemento inseparable de cada sesión en el calendario semanal; queda absorbida en `CA02` de `HU07` sin duplicar estimación.
   
@@ -192,7 +192,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Propuesta (Abierta — requiere persistencia individual de sesiones en SQLite)
   
-- **Historia:** Como estudiante, quiero mover o modificar sesiones planificadas cuando tenga un imprevisto para adaptar mi horario.
+- **Historia:** Como usuario, quiero mover o modificar sesiones planificadas cuando tenga un imprevisto para adaptar mi horario.
   
 - **Alcance:** Incluye el cambio de fecha, hora de inicio/fin o duración de una sesión individual persistida en SQLite, validando conflictos y conservando los cambios al regenerar otras partes del plan. No cubre el bloqueo previo de franjas antes de generar (ya resuelto en `HU06`).
   
@@ -214,7 +214,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Implementada y verificada en `main`; actualizar estado en GitHub)
   
-- **Historia:** Como estudiante, quiero configurar la duración de los descansos entre sesiones de estudio para adaptar el plan a mi ritmo.
+- **Historia:** Como usuario, quiero configurar la duración de los descansos entre sesiones de estudio para adaptar el plan a mi ritmo.
   
 - **Alcance:** Incluye la selección de minutos de descanso entre bloques consecutivos de estudio en el formulario de planificación y su conservación en el navegador junto con los parámetros del plan. La inserción efectiva de los intervalos de separación entre sesiones corresponde al motor de `HU06`.
   
@@ -234,7 +234,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
   
-- **Historia:** Como estudiante, quiero indicar la dificultad y prioridad de mis asignaturas para que el planificador distribuya mejor el tiempo de estudio disponible.
+- **Historia:** Como usuario, quiero indicar la dificultad y prioridad de mis asignaturas para que el planificador distribuya mejor el tiempo de estudio disponible.
   
 - **Alcance:** Incluye la configuración y edición de los niveles de dificultad y prioridad en cada asignatura (`HU01`) guardados en SQLite por usuario. Las actividades académicas con plazo (`HU04`) se ordenan por proximidad de fecha límite sin campo de prioridad manual, y la prioridad de los To-Dos rápidos (`HU27`) es meramente visual y no interviene en el planificador. El reparto efectivo pertenece a `HU06`.
   
@@ -254,7 +254,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
   
-- **Historia:** Como estudiante, quiero fijar y cambiar los minutos semanales deseados de cada asignatura para que el planificador reserve esa dedicación.
+- **Historia:** Como usuario, quiero fijar y cambiar los minutos semanales deseados de cada asignatura para que el planificador reserve esa dedicación.
   
 - **Alcance:** Incluye el campo de objetivo semanal en minutos (`0` a `10080`) al crear o editar una asignatura en SQLite, donde `0` indica reparto automático según tiempo disponible y prioridad/dificultad. Los exámenes vinculados (`HU04`) toman su tiempo de este objetivo sin sumar horas duplicadas. La asignación de bloques corresponde a `HU06`.
   
@@ -275,7 +275,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Propuesta (Abierta — requiere persistencia individual de sesiones en SQLite)
   
-- **Historia:** Como estudiante, quiero registrar el resultado de mis sesiones de estudio como completadas o no realizadas para llevar un seguimiento real de mi planificación.
+- **Historia:** Como usuario, quiero registrar el resultado de mis sesiones de estudio como completadas o no realizadas para llevar un seguimiento real de mi planificación.
   
 - **Alcance:** Incluye el cambio de estado de cada sesión individual persistida en SQLite entre `pendiente`, `completada` y `no_realizada` (así como la reversión de estado en caso de error), reflejándose visualmente en el calendario (`HU07`). Requiere incorporar la persistencia individual de sesiones en SQLite en este incremento.
   
@@ -297,7 +297,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Propuesta (Abierta)
   
-- **Historia:** Como estudiante, quiero replanificar mis sesiones vencidas no realizadas en futuras franjas disponibles para recuperar el estudio pendiente.
+- **Historia:** Como usuario, quiero replanificar mis sesiones vencidas no realizadas en futuras franjas disponibles para recuperar el estudio pendiente.
   
 - **Alcance:** Incluye la detección explícita de sesiones en estado `no_realizada` o vencidas en estado `pendiente` (excluyendo sesiones futuras aún no llegadas) y su recolocación automática en huecos disponibles futuros respetando clases (`HU05`), disponibilidad (`HU02`), descansos (`HU11`) y fechas límite (`HU04`).
   
@@ -319,7 +319,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Propuesta (Abierta)
   
-- **Historia:** Como estudiante, quiero configurar un perfil de aprendizaje con mis preferencias de estudio para personalizar la generación de mis sesiones.
+- **Historia:** Como usuario, quiero configurar un perfil de aprendizaje con mis preferencias de estudio para personalizar la generación de mis sesiones.
   
 - **Alcance:** Incluye la configuración en SQLite por usuario de parámetros académicos de estudio: duración estándar preferida por bloque de estudio (en minutos) y franja horaria preferente de concentración (mañana, tarde o noche), sin duplicar la configuración de descansos (`HU11`) ni mezclarse con la personalización visual del avatar. Su aplicación efectiva en el reparto pertenece a `HU06`.
   
@@ -340,7 +340,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Propuesta (Abierta)
   
-- **Historia:** Como estudiante, quiero subir una imagen de mi horario académico para que la aplicación detecte mis clases y pueda confirmarlas sin introducirlas una a una.
+- **Historia:** Como usuario, quiero subir una imagen de mi horario académico para que la aplicación detecte mis clases y pueda confirmarlas sin introducirlas una a una.
   
 - **Alcance:** Incluye la subida de una imagen (PNG/JPG/WebP), la extracción asistida de propuestas de asignaturas, días y franjas horarias, y una pantalla de revisión manual antes de guardarlas en el horario de clases (`HU05`). No garantiza reconocimiento automático sin confirmación del usuario.
   
@@ -361,7 +361,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Propuesta (Abierta)
   
-- **Historia:** Como estudiante, quiero consultar un resumen semanal de mi actividad de estudio para conocer el tiempo dedicado por asignatura y mi grado de cumplimiento.
+- **Historia:** Como usuario, quiero consultar un resumen semanal de mi actividad de estudio para conocer el tiempo dedicado por asignatura y mi grado de cumplimiento.
   
 - **Alcance:** Incluye un panel semanal (de lunes a domingo según fecha local) con cuatro indicadores calculados a partir de las sesiones persistidas en SQLite: tiempo total planificado en sesiones `completadas`, desglose por asignatura (agrupando tareas sin materia bajo «Sin asignatura»), recuento de sesiones `completadas` frente a `no_realizada`, y número y nombres de asignaturas distintas estudiadas. No incluye cronómetro de tiempo real (`#55`), gráficos avanzados ni históricos multianuales. Absorbe `HU22`, `HU24` y `HU25`.
   
@@ -382,7 +382,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
   
-- **Historia:** Como estudiante, quiero recibir recordatorios dentro de la aplicación sobre mis próximos exámenes, tareas y entregas para no olvidar fechas importantes.
+- **Historia:** Como usuario, quiero recibir recordatorios dentro de la aplicación sobre mis próximos exámenes, tareas y entregas para no olvidar fechas importantes.
   
 - **Alcance:** Incluye la generación y visualización de avisos internos en el panel *Inicio* para tareas, entregas y exámenes (`HU04`) próximos según el margen de antelación configurado por el usuario en SQLite (selector rápido en interfaz de mismo día, `1`, `3`, `7`, `14`, `30` o `60` días; validación en API entre `0` y `365` días; valor por defecto `7` días). No incluye notificaciones push, correos electrónicos ni recordatorios de sesiones de estudio individuales.
   
@@ -404,7 +404,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-- **Historia:** Como estudiante, quiero poder registrarme con una cuenta propia para guardar mi planificación y acceder a ella posteriormente.
+- **Historia:** Como usuario, quiero poder registrarme con una cuenta propia para guardar mi planificación y acceder a ella posteriormente.
 
 - **Alcance:** Incluye el alta de nuevas cuentas mediante nombre/usuario, correo electrónico y contraseña en SQLite, habilitando el aislamiento de todos los datos académicos y de planificación por usuario. No incluye recuperación de contraseña (`HU43`).
 
@@ -425,7 +425,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-- **Historia:** Como estudiante registrado, quiero iniciar y cerrar sesión para acceder de forma privada a mi cuenta y a mi planificación guardada.
+- **Historia:** Como usuario, quiero iniciar y cerrar sesión para acceder de forma privada a mi cuenta y a mi planificación guardada.
 
 - **Alcance:** Incluye la autenticación mediante credenciales registradas, gestión de sesión de usuario en Flask, cierre de sesión y bloqueo de acceso a vistas y endpoints privados para usuarios no autenticados.
 
@@ -446,7 +446,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Absorbida (Cerrada como duplicada de [HU18](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18))
 
-- **Historia:** Como estudiante, quiero consultar el total de horas estudiadas durante la semana para evaluar mi dedicación.
+- **Historia:** Como usuario, quiero consultar el total de horas estudiadas durante la semana para evaluar mi dedicación.
 
 - **Alcance:** Indicador consolidado íntegramente como criterio de aceptación dentro del panel semanal de `HU18` (*Estadísticas y seguimiento del estudio*). No se estima ni desarrolla por separado.
 
@@ -458,7 +458,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-- **Historia:** Como estudiante, quiero disponer de un apartado individual para cada asignatura para consultar y organizar de forma separada la información de cada materia.
+- **Historia:** Como usuario, quiero disponer de un apartado individual para cada asignatura para consultar y organizar de forma separada la información de cada materia.
 
 - **Alcance:** Incluye una vista de detalle filtrada por asignatura accesible desde la lista de materias (`HU01`), mostrando sus parámetros configurados (`HU12`, `HU13`), temario (`HU26`) y actividades o exámenes vinculados (`HU04`).
 
@@ -479,7 +479,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Absorbida (Cerrada como duplicada de [HU18](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18))
 
-- **Historia:** Como estudiante, quiero ver cuántas sesiones he completado y cuántas no he realizado en la semana para medir mi cumplimiento.
+- **Historia:** Como usuario, quiero ver cuántas sesiones he completado y cuántas no he realizado en la semana para medir mi cumplimiento.
 
 - **Alcance:** Recuento de sesiones `completadas` y `no_realizada` consolidado dentro de `HU18` (*Estadísticas y seguimiento del estudio*), apoyándose en el registro de estado de `HU14`. No se estima por separado.
 
@@ -491,7 +491,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Absorbida (Cerrada como duplicada de [HU18](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18))
 
-- **Historia:** Como estudiante, quiero consultar el número y nombre de las asignaturas distintas estudiadas en la semana para comprobar si reparto bien mi estudio.
+- **Historia:** Como usuario, quiero consultar el número y nombre de las asignaturas distintas estudiadas en la semana para comprobar si reparto bien mi estudio.
 
 - **Alcance:** Indicador consolidado íntegramente dentro de `HU18` (*Estadísticas y seguimiento del estudio*). No se estima ni desarrolla por separado.
 
@@ -503,7 +503,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-- **Historia:** Como estudiante, quiero añadir y gestionar el temario de cada asignatura marcando los temas pendientes o estudiados para controlar los contenidos que me faltan por preparar.
+- **Historia:** Como usuario, quiero añadir y gestionar el temario de cada asignatura marcando los temas pendientes o estudiados para controlar los contenidos que me faltan por preparar.
 
 - **Alcance:** Incluye el alta, consulta, edición, borrado y cambio de estado (`pendiente` / `estudiado`, con posibilidad de reversión) de los temas asociados a cada asignatura propia dentro de su apartado individual (`HU23`) en SQLite.
 
@@ -524,7 +524,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-- **Historia:** Como estudiante, quiero disponer de una lista rápida de To-Dos para anotar y gestionar tareas pendientes sueltas sin fecha límite obligatoria.
+- **Historia:** Como usuario, quiero disponer de una lista rápida de To-Dos para anotar y gestionar tareas pendientes sueltas sin fecha límite obligatoria.
 
 - **Alcance:** Incluye el alta, edición, borrado y cambio de estado (`pendiente` / `completada`, reversible) de notas rápidas persistidas en SQLite por usuario en la vista *To-Dos Rápidos*. No incluye fechas límite ni planificación automática en el calendario (cubiertas por `HU04` y `HU06`).
 
@@ -545,7 +545,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-- **Historia:** Como estudiante, quiero filtrar mi lista de To-Dos entre todas, pendientes y completadas para centrarme en las tareas que requieren atención.
+- **Historia:** Como usuario, quiero filtrar mi lista de To-Dos entre todas, pendientes y completadas para centrarme en las tareas que requieren atención.
 
 - **Alcance:** Incluye el filtrado visual en la vista *To-Dos Rápidos* (`HU27`) para mostrar todas las tareas, solo las pendientes o solo las completadas del usuario activo, sin alterar los registros almacenados en SQLite.
 
@@ -566,7 +566,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Estado:** Preparada (Abierta)
 
-- **Historia:** Como estudiante, quiero buscar tareas de mi lista de To-Dos por palabras de su título para localizar rápidamente una anotación cuando tenga muchas.
+- **Historia:** Como usuario, quiero buscar tareas de mi lista de To-Dos por palabras de su título para localizar rápidamente una anotación cuando tenga muchas.
 
 - **Alcance:** Incluye un campo de búsqueda por texto sobre los títulos de la lista *To-Dos Rápidos* (`HU27`). No busca sobre las actividades académicas de `HU04`.
 
