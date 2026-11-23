@@ -398,90 +398,105 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
     
 - **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_configuracion_recordatorios.py`, `tests/test_app.py` y `tests/examenes-form.test.js`.
 
-## HU20 - Registro
+## HU20 — Registro de usuario
 
-[Issue #20](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/20)
+- **Issue:** [Issue #20](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/20)
 
-**Historia:** Como usuario, quiero poder registrarme para guardar mi planificación y acceder a ella posteriormente.
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-**Valor:** Bajo  
-**Estimación:** 2 días
+- **Historia:** Como estudiante, quiero poder registrarme con una cuenta propia para guardar mi planificación y acceder a ella posteriormente.
 
-**Criterios de aceptación:**
-- Se puede crear una cuenta.
-- Los datos del usuario quedan asociados a su cuenta.
+- **Alcance:** Incluye el alta de nuevas cuentas mediante nombre/usuario, correo electrónico y contraseña en SQLite, habilitando el aislamiento de todos los datos académicos y de planificación por usuario. No incluye recuperación de contraseña (`HU43`).
 
-## HU21 - Inicio de sesión
+- **Valor y prioridad:** Alto (base transversal). Aunque no es una función específica de estudio, resulta indispensable para persistir y aislar los datos de cada estudiante; implementada en Sprint 1.
 
-[Issue #22](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/22)
+- **Estimación:** 2 días (orientativa; formulario, validaciones de correo/contraseña y almacenamiento seguro en SQLite).
 
-**Historia:** Como usuario, quiero iniciar sesión para acceder a mi cuenta y a mi planificación guardada.
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede crear una cuenta nueva introduciendo datos válidos (usuario, correo con formato válido y contraseña conforme a la política de la aplicación).
+  - **CA02:** El sistema rechaza correos ya registrados o campos vacíos/inválidos mostrando mensajes comprensibles sin crear duplicados.
+  - **CA03:** Las credenciales se almacenan de forma segura (hash de contraseña, nunca en texto plano) y todos los registros posteriores quedan vinculados exclusivamente a esa cuenta.
 
-**Valor:** Bajo  
-**Estimación:** 1 día
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/login.html` / `templates/register.html`) y verificado mediante `tests/test_app.py`.
 
-**Criterios de aceptación:**
-- Se puede iniciar sesión con credenciales válidas.
-- Si las credenciales son incorrectas, se informa al usuario.
-- Al iniciar sesión correctamente, el usuario puede acceder a los datos asociados a su cuenta.
+## HU21 — Inicio de sesión
 
-## HU22 - Horas estudiadas semanalmente
+- **Issue:** [Issue #22](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/22)
 
-[Issue #23](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/23)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-**Historia:** Como usuario, quiero consultar cuántas horas he estudiado durante la semana para conocer el tiempo total dedicado al estudio.
+- **Historia:** Como estudiante registrado, quiero iniciar y cerrar sesión para acceder de forma privada a mi cuenta y a mi planificación guardada.
 
-**Valor:** Medio  
-**Estimación:** 1 día
+- **Alcance:** Incluye la autenticación mediante credenciales registradas, gestión de sesión de usuario en Flask, cierre de sesión y bloqueo de acceso a vistas y endpoints privados para usuarios no autenticados.
 
-**Criterios de aceptación:**
-- Se muestran las horas totales estudiadas durante la semana.
-- El cálculo se realiza a partir de las sesiones de estudio registradas.
-- La información se actualiza cuando se completan nuevas sesiones.
+- **Valor y prioridad:** Alto (base transversal). Permite recuperar y proteger los datos privados de cada cuenta; implementada en Sprint 1.
 
-## HU23 - Apartado individual por asignatura
+- **Estimación:** 1 día (orientativa; verificación de credenciales, sesión activa y control de acceso).
 
-[Issue #24](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/24)
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede iniciar sesión con sus credenciales válidas y acceder a sus asignaturas, horarios, tareas y planificación.
+  - **CA02:** Ante credenciales incorrectas o inexistentes, el sistema deniega el acceso e informa mediante un mensaje claro sin exponer datos internos.
+  - **CA03:** El usuario puede cerrar sesión en cualquier momento; las rutas y APIs privadas rechazan peticiones sin sesión autenticada.
 
-**Historia:** Como usuario, quiero disponer de un apartado individual para cada asignatura para consultar y organizar de forma separada la información de cada materia.
+- **Evidencias:** Implementado en `main` (`app.py`, `static/app.js`) y verificado mediante `tests/test_app.py`.
 
-**Valor:** Alto  
-**Estimación:** 1 día
+## HU22 — Horas estudiadas semanalmente
 
-**Criterios de aceptación:**
-- Cada asignatura dispone de su propio apartado.
-- El usuario puede acceder al apartado de una asignatura desde su lista de asignaturas.
-- La información mostrada queda asociada únicamente a la asignatura correspondiente.
+- **Issue:** [Issue #23](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/23)
 
-## HU24 - Seguimiento de sesiones de estudio
+- **Estado:** Absorbida (Cerrada como duplicada de [HU18](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18))
 
-[Issue #25](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/25)
+- **Historia:** Como estudiante, quiero consultar el total de horas estudiadas durante la semana para evaluar mi dedicación.
 
-**Historia:** Como usuario, quiero consultar cuántas sesiones de estudio he completado y cuántas me he saltado durante la semana para conocer mi cumplimiento de la planificación.
+- **Alcance:** Indicador consolidado íntegramente como criterio de aceptación dentro del panel semanal de `HU18` (*Estadísticas y seguimiento del estudio*). No se estima ni desarrolla por separado.
 
-**Valor:** Medio  
-**Estimación:** 1 día
+- **Evidencias:** Absorbida documentalmente en `HU18` (`#18`).
 
-**Criterios de aceptación:**
-- Se muestra el número de sesiones completadas durante la semana.
-- Se muestra el número de sesiones saltadas o no realizadas durante la semana.
-- Los datos se actualizan según el estado de las sesiones de estudio.
+## HU23 — Apartado individual por asignatura
 
-## HU25 - Asignaturas estudiadas semanalmente
+- **Issue:** [Issue #24](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/24)
 
-[Issue #26](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/26)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
 
-**Historia:** Como usuario, quiero consultar cuántas asignaturas distintas he estudiado durante la semana y cuáles son para conocer cómo he distribuido mi estudio.
+- **Historia:** Como estudiante, quiero disponer de un apartado individual para cada asignatura para consultar y organizar de forma separada la información de cada materia.
 
-**Valor:** Medio  
-**Estimación:** 1 día
+- **Alcance:** Incluye una vista de detalle filtrada por asignatura accesible desde la lista de materias (`HU01`), mostrando sus parámetros configurados (`HU12`, `HU13`), temario (`HU26`) y actividades o exámenes vinculados (`HU04`).
 
-**Criterios de aceptación:**
-- Se muestra el número de asignaturas distintas estudiadas durante la semana.
-- Se muestra cuáles son las asignaturas estudiadas.
-- Una asignatura se considera estudiada cuando existe al menos una sesión de estudio completada asociada a ella.
-- Los datos se actualizan a partir de las sesiones registradas.
+- **Valor y prioridad:** Alto. Facilita organizar el contenido y seguimiento específico de cada materia; implementada en Sprint 2.
 
+- **Estimación:** 1 día (orientativa; navegación por asignatura y consultas filtradas por materia y usuario).
+
+- **Criterios de aceptación:**
+  - **CA01:** Cada asignatura creada dispone de su propio apartado o vista individual accesible desde la lista de asignaturas.
+  - **CA02:** El apartado muestra exclusivamente la información, temas y actividades asociadas a la asignatura seleccionada.
+  - **CA03:** El usuario solo puede acceder a los apartados de sus propias asignaturas, rechazándose el acceso a materias de otras cuentas.
+
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py`.
+
+## HU24 — Seguimiento de sesiones de estudio
+
+- **Issue:** [Issue #25](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/25)
+
+- **Estado:** Absorbida (Cerrada como duplicada de [HU18](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18))
+
+- **Historia:** Como estudiante, quiero ver cuántas sesiones he completado y cuántas no he realizado en la semana para medir mi cumplimiento.
+
+- **Alcance:** Recuento de sesiones `completadas` y `no_realizada` consolidado dentro de `HU18` (*Estadísticas y seguimiento del estudio*), apoyándose en el registro de estado de `HU14`. No se estima por separado.
+
+- **Evidencias:** Absorbida documentalmente en `HU18` (`#18`).
+
+## HU25 — Asignaturas estudiadas semanalmente
+
+- **Issue:** [Issue #26](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/26)
+
+- **Estado:** Absorbida (Cerrada como duplicada de [HU18](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18))
+
+- **Historia:** Como estudiante, quiero consultar el número y nombre de las asignaturas distintas estudiadas en la semana para comprobar si reparto bien mi estudio.
+
+- **Alcance:** Indicador consolidado íntegramente dentro de `HU18` (*Estadísticas y seguimiento del estudio*). No se estima ni desarrolla por separado.
+
+- **Evidencias:** Absorbida documentalmente en `HU18` (`#18`).
+  
 ## HU26 - Gestión del temario por asignatura
 
 [Issue #27](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/27)
