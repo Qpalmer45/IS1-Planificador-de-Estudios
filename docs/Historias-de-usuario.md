@@ -570,3 +570,11 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 - `tests/daily-chess.test.js` sustituye los casos de carga diferida por una regresión que comprueba la obtención de piezas aun cuando la pestaña no esté activa.
 - No se cambia el proveedor Chess Puzzle API ni los endpoints Flask; se mantiene el respaldo local si falla el proveedor.
 - **Pendiente:** ejecución de tests y comprobación real en el navegador. Si continúa vacío, revisar consola JavaScript y respuesta de `/api/ajedrez/diario` antes de atribuirlo a la API.
+
+
+### 23/11/2026 — HU40: rediseño visual del modo claro (Ocean)
+
+- Se sustituye la paleta de marca rojo granate por azul marino, azul eléctrico y turquesa; fondos blanco y gris azulado, tipografía oscura de alto contraste.
+- Se actualizan las variables CSS globales del tema claro, el encabezado de bienvenida, avatar, navegación activa y hover, badges, estados del planificador, bordes y enfoque por teclado.
+- Se conservan colores semánticos de errores (rojo), éxito (verde) y avisos (ámbar) para que sigan siendo distinguibles; no se cambia el modo oscuro ni la lógica JavaScript.
+- Archivo: `static/style.css`. Pendiente validación visual en navegador y revisión de contraste en todas las vistas.
