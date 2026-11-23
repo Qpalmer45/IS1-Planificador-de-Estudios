@@ -2102,6 +2102,58 @@ def api_ajedrez_comprobar():
         return jsonify({"error": "Ejercicio no disponible hoy"}), 404
     return jsonify({"correcto": move.lower() == puzzle["move"].lower()})
 
+
+# Juegos mentales: API REST propia de Sudoku diario, 2048 y Simon.
+# Sin proveedores externos ni claves. Generación determinista y validación del servidor.
+def _sudoku_daily(date_string):
+    import hashlib
+    import random
+    seed = int.from_bytes(hashlib.sha256(date_string.encode("utf-8")).digest()[:8], "big")
+    rng = random.Random(seed)
+    base = [1, 2, 3]
+    def shuffled_bands():
+        groups = rng.sample(base, 3)
+        return [g * 3 + x for g in groups for x in rng.sample(base, 3)]
+    rows, cols = shuffled_bands(), shuffled_bands()
+    digits = rng.sample(range(1, 10), 9)
+    solution = [[digits[(rows[r] * 3 + rows[r] // 3 + cols[c]) % 9] for c in range(9)] for r in range(9)]
+    board = [row[:] for row in solution]
+    for pos in rng.sample(range(81), 45):
+        board[pos // 9][pos % 9] = 0
+    return board, solution
+
+
+@app.get("/api/juegos/sudoku/diario")
+def api_sudoku_daily():
+    from datetime import date
+    today = date.today().isoformat()
+    board, _ = _sudoku_daily(today)
+    return jsonify({"fecha": today, "tablero": board})
+
+
+@app.post("/api/juegos/sudoku/comprobar")
+def api_sudoku_check():
+    from datetime import date
+    data = request.get_json(silent=True) or {}
+    board = data.get("tablero")
+    if not isinstance(board, list) or len(board) != 9 or any(
+        not isinstance(row, list) or len(row) != 9 or any(type(x) is not int or not 0 <= x <= 9 for x in row)
+        for row in board
+    ):
+        return jsonify({"error": "Tablero inválido"}), 400
+    initial, solution = _sudoku_daily(date.today().isoformat())
+    if any(initial[r][c] and board[r][c] != initial[r][c] for r in range(9) for c in range(9)):
+        return jsonify({"error": "No se pueden modificar las pistas"}), 400
+    return jsonify({"completo": board == solution, "restantes": sum(x == 0 for row in board for x in row)})
+
+
+@app.get("/api/juegos/configuracion")
+def api_games_config():
+    # API interna versionada: reglas compartidas por cliente y tests.
+    return jsonify({"version": 1, "2048": {"tamano": 4, "objetivo": 2048},
+                    "simon": {"colores": 4, "max_rondas": 99}})
+
+
 if __name__ == "__main__":
     # Permite ejecutar este módulo directamente para desarrollo local.
     app.run(debug=True)
