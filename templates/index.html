@@ -90,7 +90,7 @@
         </button>
         <button type="button" class="tab-btn" data-tab="ajedrez">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"></circle><path d="M9.5 8.5c0 1.5.9 2.5 1.5 3.5-1.6 1.2-2.7 2.6-2.7 4h7.4c0-1.4-1.1-2.8-2.7-4 .6-1 1.5-2 1.5-3.5"></path><path d="M7 18h10l1 3H6l1-3Z"></path></svg>
-          <span>Ajedrez</span>
+          <span>Juegos mentales</span>
         </button>
       </nav>
 
@@ -796,6 +796,35 @@
           </div>
         </div>
       </section>
+      <div class="mini-games-grid">
+        <section class="mini-game-card" aria-labelledby="sudoku-title">
+          <h3 id="sudoku-title">Sudoku diario</h3>
+          <p>Un tablero cada día. Completa las casillas vacías.</p>
+          <div id="sudoku-status" role="status" aria-live="polite">Cargando…</div>
+          <div id="sudoku-board" class="sudoku-board" role="group" aria-label="Sudoku 9 por 9"></div>
+          <div class="mini-game-actions"><button id="sudoku-check" type="button" class="primary-btn">Comprobar</button><button id="sudoku-reset" type="button" class="secondary-btn">Reiniciar</button></div>
+        </section>
+        <section class="mini-game-card" aria-labelledby="game2048-title">
+          <h3 id="game2048-title">2048</h3>
+          <p>Usa las flechas o los botones para combinar números iguales.</p>
+          <div id="game2048-score" role="status">Puntuación: 0</div>
+          <div id="game2048-board" class="game2048-board" role="group" aria-label="Tablero 2048"></div>
+          <div class="mini-game-actions mini-game-arrows">
+            <button type="button" data-move="up" aria-label="Arriba">↑</button><button type="button" data-move="left" aria-label="Izquierda">←</button><button type="button" data-move="down" aria-label="Abajo">↓</button><button type="button" data-move="right" aria-label="Derecha">→</button>
+          </div>
+          <button id="game2048-new" type="button" class="secondary-btn">Nueva partida</button>
+        </section>
+        <section class="mini-game-card" aria-labelledby="simon-title">
+          <h3 id="simon-title">Simon</h3>
+          <p>Memoriza y repite la secuencia de colores.</p>
+          <div id="simon-status" role="status" aria-live="polite">Pulsa Empezar.</div>
+          <div id="simon-board" class="simon-board" role="group" aria-label="Simon de cuatro colores">
+            <button type="button" data-simon="0" aria-label="Verde"></button><button type="button" data-simon="1" aria-label="Rojo"></button>
+            <button type="button" data-simon="2" aria-label="Amarillo"></button><button type="button" data-simon="3" aria-label="Azul"></button>
+          </div>
+          <button id="simon-start" type="button" class="primary-btn">Empezar / Reintentar</button>
+        </section>
+      </div>
     </section>
 
   </main>
@@ -804,5 +833,6 @@
   <script src="{{ url_for('static', filename='horario.js') }}"></script>
   <script src="{{ url_for('static', filename='plan.js') }}"></script>
   <script src="{{ url_for('static', filename='daily-chess.js') }}"></script>
+  <script src="{{ url_for('static', filename='mini-games.js') }}"></script>
 </body>
 </html>
