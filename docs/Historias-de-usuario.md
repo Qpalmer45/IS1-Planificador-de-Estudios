@@ -84,20 +84,21 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA04:** Los datos persisten en SQLite asociados exclusivamente al usuario autenticado.
 - **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py` y `tests/test_planificador.py`.
 
-## HU06 - Generación automática del plan de estudio
+## HU06 — Generación automática del plan de estudio
 
-[Issue #6](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6)
-
-**Historia:** Como usuario, quiero que la aplicación genere automáticamente un plan de estudio según mi disponibilidad, asignaturas, exámenes y tareas.
-
-**Valor:** Muy alto  
-**Estimación:** 3 días
-
-**Criterios de aceptación:**
-- Solo utiliza horas disponibles.
-- No coloca sesiones durante clases.
-- Tiene en cuenta exámenes y entregas.
-- Genera sesiones con hora de inicio y fin.
+- **Issue:** [Issue #6](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Historia:** Como estudiante, quiero generar automáticamente un plan de estudio semanal de 7 días que respete mis restricciones y reparta mis objetivos según prioridad, dificultad y plazos.
+- **Alcance:** Incluye el cálculo automático de sesiones para una ventana de 7 días desde la fecha de inicio elegida, respetando el rango horario configurado (`Desde`/`Hasta`), duración de sesión, descansos (`HU11`), clases y festivos (`HU05`), y bloqueos puntuales por fecha guardados en `localStorage` del navegador. Genera una vista previa semanal persistida en `localStorage` por cuenta (no guarda sesiones individuales en SQLite).
+- **Valor y prioridad:** Muy alto. Es el núcleo funcional de la aplicación; prioridad máxima (Sprint 2 / Sprint 4).
+- **Estimación:** 3 días (orientativa; historia integradora que combina motor de reparto en backend y gestión de bloqueos puntuales en frontend).
+- **Criterios de aceptación:**
+  - **CA01:** El generador asigna primero los objetivos semanales explícitos de asignaturas (`HU13`) y tareas/entregas (`HU04`), evitando clases, días libres (`HU05`), bloqueos puntuales y solapamientos.
+  - **CA02:** Los exámenes vinculados (`HU04`) no añaden minutos propios, pero su proximidad adelanta la preparación de su asignatura; el tiempo libre sobrante se reparte alternando materias y actividades según prioridad/dificultad de asignatura (`HU12`) y urgencia de fecha límite.
+  - **CA03:** Antes de generar, el usuario puede añadir o eliminar franjas ocupadas puntuales (con fecha dentro de los 7 días, inicio, fin y motivo), conservándose en `localStorage` por usuario y mostrándose identificadas en el horario resultante.
+  - **CA04:** Se respetan la duración de sesión y el descanso entre bloques (`HU11`), mostrando un aviso de déficit de minutos cuando los objetivos superan el tiempo disponible.
+  - **CA05:** El último plan generado y sus parámetros se conservan en `localStorage` separados por correo del usuario, aislando los datos entre cuentas en el backend.
+- **Evidencias:** Implementado en `main` (`app.py`, `planificador.py`, `static/plan.js`, `templates/index.html`) y verificado en `tests/test_planificador.py`, `tests/test_reparto_horas.py`, `tests/test_objetivos_semanales.py` y `tests/plan.test.js`.
 
 ## HU07 - Calendario semanal
 
