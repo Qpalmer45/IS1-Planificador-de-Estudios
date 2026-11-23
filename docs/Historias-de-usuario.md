@@ -100,19 +100,20 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA05:** El último plan generado y sus parámetros se conservan en `localStorage` separados por correo del usuario, aislando los datos entre cuentas en el backend.
 - **Evidencias:** Implementado en `main` (`app.py`, `planificador.py`, `static/plan.js`, `templates/index.html`) y verificado en `tests/test_planificador.py`, `tests/test_reparto_horas.py`, `tests/test_objetivos_semanales.py` y `tests/plan.test.js`.
 
-## HU07 - Calendario semanal
+## HU07 — Calendario semanal
 
-[Issue #7](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7)
-
-**Historia:** Como usuario, quiero visualizar mi planificación mediante un calendario semanal para saber qué debo estudiar en cada momento.
-
-**Valor:** Muy alto  
-**Estimación:** 2 días
-
-**Criterios de aceptación:**
-- Muestra los días de la semana.
-- Muestra las sesiones planificadas.
-- Cada sesión identifica la asignatura o tarea correspondiente.
+- **Issue:** [Issue #7](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7) · Issue absorbida: [Issue #9 (`HU09`)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/9)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Historia:** Como estudiante, quiero visualizar mi planificación mediante un calendario semanal con las horas de inicio y fin de cada sesión para saber qué debo estudiar en cada momento.
+- **Alcance:** Incluye la vista semanal de 7 días de las sesiones de estudio generadas por `HU06` (mostrada en *Plan de Estudio* y resumida en el bloque *Mi plan de estudio semanal* de *Inicio*), indicando en cada tarjeta su hora de inicio, hora de fin y asignatura o actividad asociada, así como los compromisos puntuales bloqueados. Absorbe los criterios de `HU09` (*Horas de inicio y fin de las sesiones*). La persistencia individual de sesiones en SQLite para seguimiento pertenece a `HU14`.
+- **Valor y prioridad:** Muy alto. Permite consultar de forma clara y ordenada las sesiones de estudio de la semana; prioridad máxima (Sprint 2 / Sprint 4).
+- **Estimación:** 2 días (orientativa; abarca vista semanal de 7 días, formateo horario de sesiones, estado vacío y lectura desde almacenamiento local).
+- **Criterios de aceptación:**
+  - **CA01:** Dado un plan de 7 días, el calendario muestra cada fecha con sus sesiones de estudio ordenadas cronológicamente tanto en *Plan de Estudio* como en el resumen de *Inicio*.
+  - **CA02:** Cada sesión muestra de forma visible su hora de inicio, hora de fin y la asignatura o actividad correspondiente (indicando el examen o entrega vinculada cuando aplique, o identificando la actividad si no tiene asignatura).
+  - **CA03:** Cuando no existe un plan guardado para el usuario activo, se muestra un estado vacío informativo con acceso directo para generarlo, sin representar sesiones ficticias.
+  - **CA04:** La consulta del calendario no modifica el plan y muestra únicamente los datos de la cuenta autenticada.
+- **Evidencias:** Implementado en `main` (`templates/index.html`, `static/plan.js`, `static/style.css`) y verificado mediante `tests/plan.test.js`.
 
 ## HU08 - Priorización automática
 
