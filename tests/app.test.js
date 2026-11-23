@@ -1005,7 +1005,11 @@ describe("listado y apartado individual de asignaturas", () => {
     expect(context.document.querySelector(".subject-detail-description")).toBeNull();
     expect(context.document.querySelector(".subject-detail-placeholder")).toBeNull();
     expect(context.document.querySelector("#subject-detail").children)
-      .toHaveLength(1);
+      .toHaveLength(2);
+    expect(context.document.querySelector("#subject-detail .subject-dialog-meta"))
+      .not.toBeNull();
+    expect(context.document.querySelector("#subject-detail .topic-manager"))
+      .not.toBeNull();
     expect(context.document.activeElement.id).toBe("subject-dialog-close");
 
     context.document.querySelector("#subject-dialog-close").click();
@@ -1200,6 +1204,7 @@ describe("eventos y operaciones de asignaturas", () => {
       nombre: "Geología",
       dificultad: "alta",
       prioridad: "baja",
+      minutos_semanales: 0,
     });
     expect(context.document.querySelector("#subject-name").value).toBe("");
     expect(context.document.querySelector("#subject-difficulty").value).toBe("media");
@@ -1267,53 +1272,55 @@ describe("eventos y operaciones de asignaturas", () => {
     expect(context.fetchMock.mock.calls[1][1].method).toBe("PATCH");
     expect(JSON.parse(context.fetchMock.mock.calls[1][1].body)).toEqual({
       nombre: "Análisis",
-    });
-
-    it("permite editar dificultad y prioridad de una asignatura", async () => {
-      const context = createContext();
-      setupInterface(context);
-      queueResponse(context, [{
-        id: 35,
-        nombre: "Biología",
-        dificultad: "baja",
-        prioridad: "media",
-      }]);
-      await context.window.loadAsignaturas();
-      queueResponse(context, {
-        id: 35,
-        nombre: "Biología",
-        dificultad: "alta",
-        prioridad: "alta",
-      });
-      queueResponse(context, [{
-        id: 35,
-        nombre: "Biología",
-        dificultad: "alta",
-        prioridad: "alta",
-      }]);
-
-      subjectItem(context).querySelector(".action-btn.edit").click();
-      const form = subjectItem(context).querySelector("form");
-      form.querySelector(".difficulty-select").value = "alta";
-      form.querySelector(".priority-select").value = "alta";
-      form.dispatchEvent(new context.window.Event("submit", {
-        bubbles: true,
-        cancelable: true,
-      }));
-      await settlePromises();
-
-      expect(JSON.parse(context.fetchMock.mock.calls[1][1].body)).toEqual({
-        nombre: "Biología",
-        dificultad: "alta",
-        prioridad: "alta",
-      });
-      expect(subjectItem(context).querySelector(".difficulty-badge").textContent)
-        .toBe("Dificultad: Alta");
-      expect(subjectItem(context).querySelector(".priority-badge").textContent)
-        .toBe("Prioridad: Alta");
+      minutos_semanales: 0,
     });
     expect(subjectItem(context).querySelector(".subject-list-name").textContent)
       .toBe("Análisis");
+  });
+
+  it("permite editar dificultad y prioridad de una asignatura", async () => {
+    const context = createContext();
+    setupInterface(context);
+    queueResponse(context, [{
+      id: 35,
+      nombre: "Biología",
+      dificultad: "baja",
+      prioridad: "media",
+    }]);
+    await context.window.loadAsignaturas();
+    queueResponse(context, {
+      id: 35,
+      nombre: "Biología",
+      dificultad: "alta",
+      prioridad: "alta",
+    });
+    queueResponse(context, [{
+      id: 35,
+      nombre: "Biología",
+      dificultad: "alta",
+      prioridad: "alta",
+    }]);
+
+    subjectItem(context).querySelector(".action-btn.edit").click();
+    const form = subjectItem(context).querySelector("form");
+    form.querySelector(".difficulty-select").value = "alta";
+    form.querySelector(".priority-select").value = "alta";
+    form.dispatchEvent(new context.window.Event("submit", {
+      bubbles: true,
+      cancelable: true,
+    }));
+    await settlePromises();
+
+    expect(JSON.parse(context.fetchMock.mock.calls[1][1].body)).toEqual({
+      nombre: "Biología",
+      minutos_semanales: 0,
+      dificultad: "alta",
+      prioridad: "alta",
+    });
+    expect(subjectItem(context).querySelector(".difficulty-badge").textContent)
+      .toBe("Dificultad: Alta");
+    expect(subjectItem(context).querySelector(".priority-badge").textContent)
+      .toBe("Prioridad: Alta");
   });
 
   it("muestra el error devuelto por la API si falla la edición", async () => {
@@ -1356,6 +1363,7 @@ describe("eventos y operaciones de asignaturas", () => {
 
     expect(JSON.parse(context.fetchMock.mock.calls[1][1].body)).toEqual({
       nombre: "  Química orgánica  ",
+      minutos_semanales: 0,
     });
     expect(subjectItem(context).querySelector(".subject-list-name").textContent)
       .toBe("Química orgánica");

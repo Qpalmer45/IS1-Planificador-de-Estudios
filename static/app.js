@@ -900,15 +900,6 @@ function startEditingTopic(tema, item) {
   titleInput.value = tema.titulo;
   titleInput.setAttribute("aria-label", `Título de ${tema.titulo}`);
 
-  const weeklyInput = document.createElement("input");
-  weeklyInput.type = "number";
-  weeklyInput.min = "0";
-  weeklyInput.max = "10080";
-  weeklyInput.step = "1";
-  weeklyInput.required = true;
-  weeklyInput.value = String(asignatura.minutos_semanales ?? 0);
-  weeklyInput.setAttribute("aria-label", `Minutos semanales para ${asignatura.nombre}`);
-
   const saveButton = document.createElement("button");
   saveButton.type = "submit";
   saveButton.className = "action-btn save";
