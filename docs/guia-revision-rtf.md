@@ -1,5 +1,7 @@
 # Guía de Revisión Técnica Formal (RTF) — IS1 Planificador de Estudios
 
+> Recorrido actualizado el 23 de noviembre de 2026. La disponibilidad del proveedor externo de ajedrez no se considera validada por esta guía.
+
 ## 1. Propósito del documento
 
 Esta guía tiene como objetivo facilitar la verificación funcional y técnica de la aplicación **IS1 - Planificador de Estudios** durante la Revisión Técnica Formal (RTF). Describe cómo poner en marcha el entorno local, las credenciales de prueba recomendadas, el recorrido de validación por las funcionalidades implementadas y los resultados esperados en cada paso.
@@ -58,7 +60,9 @@ A continuación se detalla el flujo de comprobación ordenado por módulos funci
 | **4** | **Horario de Clases** (`HU05`) | Acceder a la sección de horario y registrar una clase (ej. *Lunes de 10:00 a 12:00*). Intentar añadir otra clase en el mismo día de *11:00 a 13:00*. | La primera franja se dibuja en la cuadrícula semanal. El sistema impide guardar la segunda franja por solapamiento horario. |
 | **5** | **Panel de Recordatorios** (`HU19`) | Regresar al **Dashboard** principal tras registrar tareas y fechas próximas. | El panel muestra de forma visible los recordatorios de próximas entregas y eventos ordenados por cercanía. |
 | **6** | **Lista de To-Dos Rápidos** (`HU27`) | Añadir una nota rápida en la lista de To-Dos, marcarla como completada, probar los filtros de estado y eliminarla. | Todas las operaciones CRUD y de filtrado responden al instante y los cambios se mantienen al recargar la página (`F5`). |
-| **7** | **Cierre de Sesión y Seguridad** (`HU21`) | Pulsar en **Cerrar sesión** e intentar acceder manualmente a la ruta principal (`http://127.0.0.1:5000/`). | La sesión se destruye correctamente y cualquier intento de acceso sin autenticar redirige a la pantalla de inicio de sesión. |
+| **7** | **Plan de estudio** (`HU06`, `HU07`) | Elegir una semana y una franja diaria; generar el plan. Añadir un bloqueo puntual y volver a generarlo. | Se muestra una vista previa de siete días con sesiones ordenadas por hora; el bloqueo aparece en naranja y los descansos entre sesiones en verde. La vista se conserva en el mismo navegador, no como sesiones en SQLite. |
+| **8** | **Reto diario de ajedrez** (`HU44`) | Abrir **Ajedrez**, comprobar que hay cinco ejercicios y usar una pista, una respuesta incorrecta y una correcta. | Se dibuja el tablero, una respuesta incorrecta no aumenta el progreso y una correcta avanza el ejercicio. El cliente no recibe la solución. El fallback por caída de la API se comprueba mediante `tests/test_chess_api.py`, no provocando una caída real del proveedor. |
+| **9** | **Cierre de Sesión y Seguridad** (`HU21`) | Pulsar en **Cerrar sesión** e intentar acceder manualmente a la ruta principal (`http://127.0.0.1:5000/`). | La sesión se destruye correctamente y cualquier intento de acceso sin autenticar redirige a la pantalla de inicio de sesión. |
 
 ---
 
@@ -70,14 +74,14 @@ Para verificar la integridad del código mediante las baterías de pruebas unita
 ```powershell
 .\.venv\Scripts\python.exe -m unittest discover -s tests -p "test_*.py" -v
 ```
-**Resultado esperado:** Ejecución completa de los tests de rutas, autenticación, asignaturas, tareas y horarios con estado final `OK`.
+**Resultado esperado:** Ejecución de todos los módulos `test_*.py`, incluidos planificación, recordatorios, escudos y ajedrez, con estado final `OK`.
 
 ### Pruebas del Frontend (`Jest` + `jsdom`)
 ```powershell
 npm.cmd install --no-package-lock
 npm.cmd run test:frontend
 ```
-**Resultado esperado:** Todas las suites de interfaz superadas (`PASS`) sin errores en consola.
+**Resultado esperado:** Ocho suites Jest superadas (`PASS`). Las respuestas del frontend están simuladas; esto no comprueba proveedores externos en vivo.
 
 ---
 

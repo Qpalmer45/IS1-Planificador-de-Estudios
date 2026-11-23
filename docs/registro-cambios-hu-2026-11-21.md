@@ -1,7 +1,7 @@
 # Registro de cambios de historias de usuario — 21/11/2026
 
 > Documento de trabajo para incorporar al próximo documento de Sprint. **No es la Wiki ni el Sprint Doc definitivo.**
-> Rama: `main`. Las pruebas se han añadido al repositorio, pero **no se ha confirmado su ejecución satisfactoria**. No confundir «código subido» con «historia validada».
+> Rama: `main`. El estado de pruebas de cada entrada corresponde al momento en que se escribió. **Actualización 23/11/2026:** `npm.cmd run test:all` pasó con 151 pruebas Jest y 171 Python; la integración externa de ajedrez no se verificó en vivo.
 
 ## Historias existentes afectadas
 
@@ -103,7 +103,7 @@
 - **HU41:** cambios de diseño del panel principal para utilizar mejor el ancho disponible; issue #51.
 - **HU42:** issue #52 cerrada como duplicada de HU06/HU07/HU09/HU11; no se cuenta como funcionalidad independiente.
 - **HU43:** recuperación segura de contraseña, issue #53, documentada como pendiente de implementación; no se declara completada.
-- **HU44:** [issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54), reto diario de ajedrez en Inicio. Tablero de 64 casillas, mate en una jugada, cinco ejercicios diarios, ordenados por fecha, pistas, reintentos, explicación y progreso en localStorage. Archivos: `static/daily-chess.js`, `templates/index.html`, `static/style.css`. Cinco pruebas en `tests/daily-chess.test.js`, añadidas al script `test:frontend` de `package.json`.
+- **HU44:** [issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54), reto diario de ajedrez, inicialmente mostrado en Inicio y trasladado después a su pestaña propia. Tablero de 64 casillas, cinco ejercicios diarios, pistas, reintentos y progreso en `localStorage`. Archivos: `static/daily-chess.js`, `templates/index.html`, `static/style.css`; suite incluida en `test:frontend`.
 
 **Documentación:** se amplía `docs/Historias-de-usuario.md` con HU28–HU44, preservando HU01–HU27. Las HU de accesibilidad, exportación y otras propuestas se documentan sin afirmar que están implementadas.
 
@@ -115,7 +115,7 @@
 - Se amplía el reto a **cinco ejercicios diarios** de mate en una jugada, resueltos consecutivamente, con progreso visible de 0/5 a 5/5 y orden dependiente de la fecha.
 - Se corrige el botón **Reintentar**: reinicia la posición y permite repetir incluso tras completar los cinco, conservando los ejercicios anteriores; el ejercicio repetido se descuenta hasta volver a resolverlo.
 - Se utiliza `localStorage` con clave versión `v2`, separada por correo y fecha, para guardar el conjunto de ejercicios completados.
-- Se amplía `tests/daily-chess.test.js` a **siete pruebas**; falta ejecutar la batería y realizar verificación manual.
+- En esa entrega se documentaron siete pruebas frontend; el archivo se amplió después. La ejecución posterior consta en la actualización inicial de este documento.
 - Cambios en `static/daily-chess.js` y `tests/daily-chess.test.js`; [HU44 #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54) permanece cerrada como implementada, sin afirmar validación de pruebas.
 
 
@@ -125,7 +125,7 @@
 
 **Arquitectura:** navegador → `GET /api/ajedrez/diario` (Flask) → Chess Puzzle API; navegador → `POST /api/ajedrez/comprobar` → Flask. Las soluciones se guardan únicamente en la caché del backend y no se incluyen en la respuesta que carga el tablero. Caché en memoria por día, sin persistencia en base de datos; progreso de los cinco ejercicios en `localStorage` por usuario y fecha (`studyplan:chess-daily:api:v1`).
 
-**Comportamiento:** tablero 8×8, blancas o negras según la posición, cinco mates en una jugada, pista genérica, validación en el servidor y botón Reintentar que permite repetir el ejercicio sin perder los otros cuatro. En caso de indisponibilidad de la API se muestra un mensaje y Flask devuelve 503; no se inventan puzzles de respaldo.
+**Comportamiento inicial:** tablero 8×8, cinco mates en una jugada, pistas, validación en el servidor y botón Reintentar. En esa primera versión, una indisponibilidad del proveedor podía producir 503 y no había puzzles de reserva; una entrada posterior documenta la incorporación de cinco puzzles locales.
 
 **Archivos:** `app.py`, `static/daily-chess.js`, `tests/daily-chess.test.js` y nuevo `tests/test_chess_api.py`. Pruebas con respuestas simuladas, sin depender de Internet. **Pendiente:** ejecutar ambas baterías y comprobar en vivo que la API devuelve cinco problemas `mateIn1` compatibles con el formato documentado; no se declara validada la integración externa.
 

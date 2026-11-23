@@ -1,12 +1,14 @@
 # API del backend
 
+> Contratos contrastados con `app.py` el 23 de noviembre de 2026.
+
 ## 1. Cómo hablamos con el servidor
 
 La interfaz manda peticiones HTTP al servidor Flask. Para crear o modificar información envía objetos JSON con `Content-Type: application/json`. La respuesta suele ser otro JSON.
 
 Los endpoints protegidos dependen de la sesión de Flask. Cuando no hay una sesión iniciada, responden con error 401. No se envía `usuario_id` en las peticiones para elegir el propietario: el servidor lo toma de la sesión.
 
-Este documento refleja las rutas de `app.py` revisadas el 6 de noviembre de 2026.
+Las rutas de datos privados requieren una sesión autenticada. Recordatorios comprueba la sesión manualmente y los endpoints de ajedrez y escudos no tienen el decorador de autenticación.
 
 ## 2. Páginas HTML
 
@@ -53,13 +55,14 @@ Un To-Do tiene esta forma:
   "usuario_id": 1,
   "titulo": "Repasar el tema 1",
   "completada": false,
+  "prioridad": "media",
   "fecha_creacion": "2026-11-06 10:00:00"
 }
 ```
 
 La fecha es solo un ejemplo de formato. El título para crear To-Dos debe tener de 1 a 200 caracteres después de eliminar espacios exteriores. Las operaciones de edición o borrado sobre un recurso no disponible devuelven 404.
 
-**Limitación pendiente:** al actualizar `completada`, la implementación convierte el valor recibido según su verdad o falsedad. Falta rechazar explícitamente números y otros tipos que no sean `true` o `false` en JSON; no debe confundirse con un criterio ya validado.
+Al actualizar `completada`, la API exige un booleano JSON (`true` o `false`); números y otros tipos se rechazan.
 
 ## 5. Asignaturas (requieren sesión)
 
@@ -71,10 +74,10 @@ La fecha es solo un ejemplo de formato. El título para crear To-Dos debe tener 
 | `PATCH /api/asignaturas/<id>` | Cambiar el nombre | 200, asignatura actualizada |
 | `DELETE /api/asignaturas/<id>` | Eliminar asignatura | 200, mensaje |
 
-Una asignatura se devuelve con `id`, `usuario_id` y `nombre`:
+Una asignatura devuelve identificador, propietario, nombre, dificultad, prioridad y objetivo semanal:
 
 ```json
-{"id": 5, "usuario_id": 1, "nombre": "Cálculo Diferencial"}
+{"id": 5, "usuario_id": 1, "nombre": "Cálculo Diferencial", "dificultad": "media", "prioridad": "media", "minutos_semanales": 0}
 ```
 
 Para crear y modificar se exige un objeto JSON con `nombre` de tipo texto no vacío. Las asignaturas inexistentes o ajenas dan 404.
@@ -86,7 +89,7 @@ Para crear y modificar se exige un objeto JSON con `nombre` de tipo texto no vac
 | `GET /api/horarios` | Listar bloques del horario semanal ordenados por día y hora | 200, lista JSON de bloques de clase |
 | `POST /api/horarios` | Registrar nueva clase (soporta `asignatura_id` o `asignatura_nombre`) | 201, bloque creado |
 | `GET /api/horarios/<id>` | Detalle de un bloque de horario propio | 200, bloque |
-| `PATCH /api/horarios/<id>` | Actualizar día, hora, asignatura o aula | 200, bloque actualizado |
+| `PATCH` o `PUT /api/horarios/<id>` | Actualizar día, hora, asignatura o aula | 200, bloque actualizado |
 | `DELETE /api/horarios/<id>` | Eliminar bloque del horario | 200, mensaje |
 
 Validaciones aplicadas:
@@ -115,7 +118,7 @@ Ejemplo de bloque de clase:
 | `GET /api/periodos-libres` | Listar días y rangos libres ordenados por fecha | 200, lista JSON |
 | `POST /api/periodos-libres` | Crear período (`fecha_inicio`, `fecha_fin`, `motivo`) | 201, período creado |
 | `GET /api/periodos-libres/<id>` | Detalle de un período libre propio | 200, período |
-| `PATCH /api/periodos-libres/<id>` | Modificar fechas o motivo | 200, período modificado |
+| `PATCH` o `PUT /api/periodos-libres/<id>` | Modificar fechas o motivo | 200, período modificado |
 | `DELETE /api/periodos-libres/<id>` | Eliminar día o período libre | 200, mensaje |
 
 Validaciones aplicadas:
@@ -133,25 +136,62 @@ Ejemplo de período libre:
 }
 ```
 
-## 8. Funciones de Arquitectura y Disponibilidad
+## 8. Temas, tareas y planificación (requieren sesión)
 
-Disponibles en el backend para el futuro motor de planificación automática de estudio:
-- `obtener_intervalos_ocupados(usuario_id, fecha_objetivo)`: Determina si una fecha es festivo/día libre y calcula las clases lectivas de esa jornada.
-- `is_time_slot_available(usuario_id, target_datetime, duration_minutes)`: Evalúa si una franja candidata no se solapa con clases ni períodos no lectivos.
+| Método y ruta | Acción | Respuesta habitual |
+|---|---|---|
+| `GET /api/asignaturas/<id>/temas` | Listar temas de una asignatura propia | 200, lista |
+| `POST /api/asignaturas/<id>/temas` | Crear tema/apuntes | 201, tema |
+| `PATCH /api/temas/<id>` | Editar tema o estado estudiado | 200, tema |
+| `DELETE /api/temas/<id>` | Borrar tema propio | 200, mensaje |
+| `GET /api/tareas` | Listar tareas, entregas y exámenes planificables | 200, lista |
+| `POST /api/tareas` | Crear actividad con tipo, fecha y estimación | 201, actividad |
+| `PATCH /api/tareas/<id>` | Modificar actividad propia | 200, actividad |
+| `DELETE /api/tareas/<id>` | Borrar actividad propia | 204 |
+| `GET /api/plan/datos` | Obtener asignaturas, To-Dos y actividades del usuario | 200, objeto JSON |
+| `GET /api/plan/semana` | Generar vista previa con parámetros por query string | 200, plan semanal |
+| `POST /api/plan/semana` | Generar vista previa con un objeto JSON | 200, plan semanal |
 
-## 9. Errores y convenciones
+El cuerpo de `POST /api/plan/semana` admite `inicio` (fecha ISO), `desde`, `hasta` (`HH:MM`), `duracion` (25–180 minutos), `descanso` (0–60 minutos) y `bloqueos` (lista de `{fecha, inicio, fin, motivo}`). La ruta devuelve siete días, sesiones, bloqueos, déficits y `vista_previa: true`; no persiste sesiones. Si un examen está asociado a una asignatura, aumenta su prioridad de estudio, pero no crea horas de examen independientes.
+
+Las tareas y entregas tienen fecha límite y minutos estimados. Los exámenes requieren una asignatura y utilizan los objetivos de esa asignatura.
+
+## 9. Recordatorios (requieren sesión)
+
+| Método y ruta | Acción |
+|---|---|
+| `GET /api/recordatorios` | Calcular los recordatorios próximos según las actividades y la preferencia del usuario |
+| `GET /api/recordatorios/configuracion` | Consultar `dias_anticipacion` |
+| `PUT /api/recordatorios/configuracion` | Guardar `{ "dias_anticipacion": 0..365 }` |
+
+La preferencia predeterminada es 7 días. La autenticación se comprueba dentro de las rutas y una petición sin sesión devuelve 401.
+
+## 10. Escudos y ajedrez
+
+| Método y ruta | Acción | Respuesta habitual |
+|---|---|---|
+| `GET /api/perfil/escudos?liga=<código>` | Consultar equipos y escudos; códigos: `esp.1`, `esp.2`, `eng.1`, `ger.1`, `ita.1`, `fra.1` | 200; 400 para liga no válida; 503 si falla el proveedor y no hay caché |
+| `GET /api/ajedrez/diario` | Obtener cinco ejercicios del día, sin exponer las soluciones | 200; 503 si no se puede formar un lote |
+| `POST /api/ajedrez/comprobar` | Comprobar `{ "id": "...", "movimiento": "e2e4" }` en el servidor | 200 con `correcto`; 400 si la entrada es inválida; 404 si el ejercicio no está disponible |
+
+El ajedrez consulta Chess Puzzle API y mantiene una caché diaria en memoria. Si el proveedor falla, excede el tiempo de espera o devuelve un lote incompleto, Flask utiliza cinco puzzles locales de reserva. En el funcionamiento normal, un fallo externo por sí solo no implica una respuesta 503. La prueba automatizada cubre este fallback; no verifica el proveedor externo en vivo.
+
+## 11. Errores y convenciones
 
 - **200**: petición realizada.
 - **201**: recurso creado.
+- **204**: recurso eliminado sin cuerpo de respuesta.
 - **400**: datos inválidos, en los casos que valida el backend.
 - **401**: sin sesión o credenciales incorrectas.
 - **404**: recurso inexistente o no accesible para esa cuenta.
 - **409**: correo ya registrado.
+- **500**: error interno, por ejemplo durante la consulta de recordatorios.
+- **503**: servicio externo no disponible y sin respuesta de reserva aplicable.
 
-Las respuestas de error suelen utilizar `{"error":"mensaje" }`. No todos los casos mal formados se gestionan todavía con la misma precisión; la validación de tipos de entrada sigue siendo un punto de mejora.
+Las respuestas de error suelen utilizar `{"error":"mensaje"}`; las rutas de recordatorios también incluyen campos `status` o `mensaje`.
 
-## 10. Lo que todavía no tiene API
+## 12. Funciones que todavía no tienen API
 
-No existen en el backend actual rutas para calendario de sesiones de estudio, algoritmo de generación automática ni replanificación. Las añadiremos cuando implementemos las historias correspondientes (HU06, HU08, HU15). Hasta entonces no se deben publicar ejemplos de llamadas a esas rutas como si funcionaran.
+No existen rutas para guardar/completar sesiones generadas, mover una sesión concreta, replanificar sesiones no realizadas, importar un horario desde una imagen ni consultar estadísticas basadas en historial de estudio.
 
 Documentación relacionada: [Arquitectura](02-Arquitectura-y-diseno.md), [Base de datos](03-Base-de-datos.md) y [Pruebas](../../tests/README.md).

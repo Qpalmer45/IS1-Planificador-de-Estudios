@@ -22,6 +22,7 @@ El objetivo del proyecto es crear un planificador de estudios capaz de generar a
 - Generación automática del plan de estudio semanal.
 - Panel de recordatorios con antelación configurable por usuario.
 - Lista de To-Dos rápidos.
+- Reto diario de ajedrez con cinco puzzles externos y reserva local.
 
 ## Tecnologías
 
@@ -121,6 +122,7 @@ IS1-Planificador-de-Estudios/
 │   ├── horario.js        # Cuadrícula semanal de clases y días libres
 │   ├── plan.js           # Interfaz y persistencia local del plan de estudio
 │   ├── tareas.js         # Gestión de tareas, entregas y exámenes
+│   ├── daily-chess.js    # Reto diario de ajedrez
 │   ├── avatar-flags.js   # Selector visual de avatar y banderas
 │   ├── theme.js          # Gestión de tema claro/oscuro
 │   └── style.css         # Estilos visuales y diseño responsivo
@@ -159,7 +161,14 @@ Para la verificación funcional y pruebas paso a paso de la aplicación, consult
   - **HU12 - Dificultad y prioridad:** Configuración de dificultad y prioridad por asignatura y tarea.
   - **HU19 - Recordatorios:** Visualización de próximos eventos y entregas en el panel principal.
   - **HU26 - Temario por asignatura:** Gestión de temas pendientes dentro de cada materia.
-  - *(Pendiente de cierre: **HU07 - Calendario semanal**, aplazada tras priorizar el cierre del horario de clases).*
+  - **HU07 - Calendario semanal:** implementada posteriormente como vista previa de siete días; las sesiones generadas no se guardan en la base de datos.
+
+## Estado actual y límites
+
+- Los parámetros, bloqueos y la vista previa del plan se conservan en `localStorage` del navegador; no se sincronizan entre dispositivos.
+- Todavía no se pueden completar sesiones, editar una sesión generada individualmente ni replanificar sesiones no realizadas.
+- Chess Puzzle API es la fuente principal del reto diario. Si falla o no devuelve cinco ejercicios válidos, Flask utiliza cinco puzzles locales de reserva. La prueba automatizada simula esta caída; no valida el proveedor en vivo.
+- `app.py` está configurado para desarrollo local (`debug=True` y clave de sesión en el código); no desplegar públicamente sin cambiar esa configuración.
 
 ## Contexto académico
 

@@ -487,7 +487,7 @@ Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpo
 
 [Issue #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54)
 
-**Alcance y criterios principales:** Tablero 8×8; mate en una jugada; cinco ejercicios diarios en secuencia; pistas, reintentos, explicación y persistencia local por usuario y fecha. Pruebas en tests/daily-chess.test.js; ejecución pendiente.
+**Alcance y criterios principales:** Tablero 8×8; cinco ejercicios diarios de mate en una jugada; pistas, reintentos y progreso local por usuario y fecha. La sección actual se llama **Ajedrez**. Flask obtiene problemas de Chess Puzzle API y mantiene cinco puzzles locales de reserva si el servicio falla o devuelve datos incompletos; las soluciones no se envían al navegador.
 
 ## Cambios funcionales relacionados, sin HU nueva
 
@@ -495,9 +495,9 @@ Las HU01–HU27 se mantienen con su descripción original. Este apartado incorpo
 - **HU04:** validación de fechas límite y distinción entre tareas y exámenes (bug [#48](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/48)).
 - **HU16:** avatar personalizable con banderas y escudos de equipos de LaLiga Primera y Segunda, Premier League, Bundesliga, Serie A y Ligue 1 (`static/avatar-flags.js`, `app.py`; `tests/avatar-flags.test.js`, `tests/test_escudos.py`). Los escudos dependen de un proveedor externo.
 - **HU40:** ajustes de la paleta roja del tema claro.
-- **HU44:** reto de ajedrez incorporado a Inicio, con siete pruebas frontend escritas.
+- **HU44:** reto diario disponible en la pestaña Ajedrez; `tests/daily-chess.test.js` contiene pruebas con respuestas simuladas.
 
-**Verificación:** no consta una ejecución completa satisfactoria de las pruebas ni revisión manual de todos estos cambios; no se atribuye cierre funcional sin evidencias.
+**Verificación:** `npm.cmd run test:all` pasó el 23/11/2026: 151 pruebas Jest y 171 Python. La API externa no se probó en vivo y no se hizo una revisión visual completa en navegador; además, el test frontend titulado «fallo de la API se muestra al usuario» no tiene aserciones.
 
 
 ## Actualización de estados — 22/11/2026
@@ -516,7 +516,7 @@ El cierre indica que se ha incorporado la funcionalidad; **no certifica una ejec
 - Se amplía el reto a **cinco ejercicios diarios** de mate en una jugada, resueltos consecutivamente, con progreso visible de 0/5 a 5/5 y orden dependiente de la fecha.
 - Se corrige el botón **Reintentar**: reinicia la posición y permite repetir incluso tras completar los cinco, conservando los ejercicios anteriores; el ejercicio repetido se descuenta hasta volver a resolverlo.
 - Se utiliza `localStorage` con clave versión `v2`, separada por correo y fecha, para guardar el conjunto de ejercicios completados.
-- Se amplía `tests/daily-chess.test.js` a **siete pruebas**; falta ejecutar la batería y realizar verificación manual.
+- En esa entrega se documentaron siete pruebas frontend. El archivo ha cambiado desde entonces; consultar la suite actual y la verificación posterior de 23/11/2026.
 - Cambios en `static/daily-chess.js` y `tests/daily-chess.test.js`; [HU44 #54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54) permanece cerrada como implementada, sin afirmar validación de pruebas.
 
 
@@ -526,9 +526,9 @@ El cierre indica que se ha incorporado la funcionalidad; **no certifica una ejec
 
 **Arquitectura:** navegador → `GET /api/ajedrez/diario` (Flask) → Chess Puzzle API; navegador → `POST /api/ajedrez/comprobar` → Flask. Las soluciones se guardan únicamente en la caché del backend y no se incluyen en la respuesta que carga el tablero. Caché en memoria por día, sin persistencia en base de datos; progreso de los cinco ejercicios en `localStorage` por usuario y fecha (`studyplan:chess-daily:api:v1`).
 
-**Comportamiento:** tablero 8×8, blancas o negras según la posición, cinco mates en una jugada, pista genérica, validación en el servidor y botón Reintentar que permite repetir el ejercicio sin perder los otros cuatro. En caso de indisponibilidad de la API se muestra un mensaje y Flask devuelve 503; no se inventan puzzles de respaldo.
+**Comportamiento inicial (antes del cambio de reserva local registrado más abajo):** tablero 8×8, cinco mates en una jugada, pistas, validación en el servidor y botón Reintentar. En esa primera versión, una indisponibilidad del proveedor podía producir 503 y no había puzzles de reserva. La implementación posterior añadió cinco puzzles locales para ese caso.
 
-**Archivos:** `app.py`, `static/daily-chess.js`, `tests/daily-chess.test.js` y nuevo `tests/test_chess_api.py`. Pruebas con respuestas simuladas, sin depender de Internet. **Pendiente:** ejecutar ambas baterías y comprobar en vivo que la API devuelve cinco problemas `mateIn1` compatibles con el formato documentado; no se declara validada la integración externa.
+**Archivos:** `app.py`, `static/daily-chess.js`, `tests/daily-chess.test.js` y `tests/test_chess_api.py`. Las pruebas usan respuestas simuladas y no dependen de Internet. La integración externa real no está certificada por esas pruebas.
 
 **Servicios utilizados en el proyecto:** países y banderas → [FlagCDN](https://flagcdn.com/) (CDN de imágenes PNG por código ISO, no API JSON); fútbol → [ESPN](https://site.api.espn.com/) (API JSON de equipos y escudos, consultada desde Flask); ajedrez → [Chess Puzzle API](https://chess.mauriulloa.com/) (API JSON de problemas basada en datos de Lichess).
 
@@ -569,4 +569,10 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 - `static/daily-chess.js` vuelve a ejecutar `init()` al cargar el documento, igual que cuando el ajedrez estaba en Inicio. La sección sigue siendo independiente y oculta hasta seleccionarla, pero el tablero se rellena en segundo plano.
 - `tests/daily-chess.test.js` sustituye los casos de carga diferida por una regresión que comprueba la obtención de piezas aun cuando la pestaña no esté activa.
 - No se cambia el proveedor Chess Puzzle API ni los endpoints Flask; se mantiene el respaldo local si falla el proveedor.
-- **Pendiente:** ejecución de tests y comprobación real en el navegador. Si continúa vacío, revisar consola JavaScript y respuesta de `/api/ajedrez/diario` antes de atribuirlo a la API.
+- En ese momento quedaba pendiente ejecutar las pruebas y comprobar el comportamiento en un navegador; el resultado posterior se registra a continuación.
+
+### 23/11/2026 — Verificación posterior de HU44
+
+- `npm.cmd run test:all`: 151/151 pruebas Jest y 171/171 pruebas Python superadas.
+- La suite incluye una prueba backend con fallo externo simulado que comprueba los cinco puzzles locales de reserva.
+- No se hizo una petición de verificación al proveedor externo real; su disponibilidad queda fuera del resultado de la suite.

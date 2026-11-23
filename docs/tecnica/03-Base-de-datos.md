@@ -2,9 +2,9 @@
 
 ## 1. Qué estamos usando
 
-Guardamos los datos en un archivo SQLite llamado `todos.db`, en la raíz del repositorio de trabajo. Se crea automáticamente al arrancar la aplicación si no existe. Python se conecta mediante `sqlite3` desde `app.py`.
+Guardamos los datos en un archivo SQLite llamado `todos.db`, junto a `app.py`. Se crea automáticamente al importar la aplicación si no existe. Python se conecta mediante `sqlite3`.
 
-La función `initialize_database()` prepara las tablas y aplica dos pequeñas adaptaciones a bases antiguas: añadir `nombre` y `fecha_creacion` a usuarios, o `fecha_creacion` a To-Dos si faltan. No hay un sistema de migraciones independiente.
+`initialize_database()` crea las tablas e incorpora columnas que falten en instalaciones anteriores. `preparar_tabla_actividades()` migra el esquema antiguo de actividades para admitir también exámenes. No hay un sistema de migraciones independiente.
 
 ## 2. Tablas implementadas
 
@@ -28,9 +28,10 @@ No guardamos la contraseña original. El hash lo genera Werkzeug.
 | `usuario_id` | INTEGER NOT NULL | Propietario, referencia a `usuarios.id` |
 | `titulo` | TEXT NOT NULL | Texto de la tarea rápida |
 | `completada` | INTEGER NOT NULL DEFAULT 0 | 0 pendiente, 1 completada |
+| `prioridad` | TEXT NOT NULL DEFAULT 'media' | Prioridad baja, media o alta |
 | `fecha_creacion` | DATETIME DEFAULT CURRENT_TIMESTAMP | Momento de creación |
 
-La columna `completada` tiene una restricción `CHECK (completada IN (0, 1))`. La API devuelve este valor como booleano. En la versión revisada, al actualizarla con Python se utiliza la verdad/falsedad del valor recibido y todavía falta exigir que sea un booleano JSON real; aparece señalado en las pruebas.
+La columna `completada` tiene una restricción `CHECK (completada IN (0, 1))`. La API exige un booleano JSON real al actualizarla y devuelve el valor como booleano.
 
 ### asignaturas
 
@@ -41,7 +42,34 @@ La columna `completada` tiene una restricción `CHECK (completada IN (0, 1))`. L
 | `nombre` | TEXT NOT NULL | Nombre de la asignatura |
 | `dificultad` | TEXT NOT NULL DEFAULT 'media' | Dificultad ('baja', 'media', 'alta') |
 | `prioridad` | TEXT NOT NULL DEFAULT 'media' | Prioridad ('baja', 'media', 'alta') |
+| `minutos_semanales` | INTEGER NOT NULL DEFAULT 0 | Objetivo semanal de estudio |
 | `fecha_creacion` | DATETIME DEFAULT CURRENT_TIMESTAMP | Momento de creación |
+
+### temas (HU26)
+
+| Columna | Tipo | Para qué sirve |
+|---|---|---|
+| `id` | INTEGER PRIMARY KEY AUTOINCREMENT | Identificador del tema |
+| `usuario_id` | INTEGER NOT NULL | Propietario |
+| `asignatura_id` | INTEGER NOT NULL | Asignatura a la que pertenece |
+| `titulo` | TEXT NOT NULL | Nombre del tema |
+| `contenido` | TEXT NOT NULL DEFAULT '' | Apuntes asociados |
+| `estudiado` | INTEGER NOT NULL DEFAULT 0 | Estado del tema, restringido a 0 o 1 |
+
+### tareas_planificadas (HU04)
+
+| Columna | Tipo | Para qué sirve |
+|---|---|---|
+| `id` | INTEGER PRIMARY KEY AUTOINCREMENT | Identificador de la actividad |
+| `usuario_id` | INTEGER NOT NULL | Propietario |
+| `titulo` | TEXT NOT NULL | Nombre de tarea, entrega o examen |
+| `tipo` | TEXT NOT NULL | `tarea`, `entrega` o `examen` |
+| `fecha_limite` | TEXT NOT NULL | Fecha límite en formato ISO |
+| `minutos_estimados` | INTEGER NOT NULL | Trabajo estimado, debe ser positivo |
+| `minutos_semanales` | INTEGER NOT NULL DEFAULT 0 | Objetivo semanal; los exámenes usan el objetivo de su asignatura |
+| `asignatura_id` | INTEGER, opcional | Asignatura asociada, validada por la API |
+
+Los To-Dos rápidos se guardan en `todos`; no son las tareas/entregas/exámenes planificables de `tareas_planificadas`.
 
 ### horarios_clases (HU05)
 
@@ -67,19 +95,30 @@ La columna `completada` tiene una restricción `CHECK (completada IN (0, 1))`. L
 | `motivo` | TEXT NOT NULL DEFAULT 'Día libre' | Motivo o etiqueta (ej. Festivo, Vacaciones) |
 | `fecha_creacion` | DATETIME DEFAULT CURRENT_TIMESTAMP | Momento de registro |
 
+### preferencias_recordatorios (HU19)
+
+| Columna | Tipo | Para qué sirve |
+|---|---|---|
+| `usuario_id` | INTEGER PRIMARY KEY | Cuenta propietaria |
+| `dias_anticipacion` | INTEGER NOT NULL DEFAULT 7 | Antelación configurable entre 0 y 365 días |
+
+Los recordatorios se calculan a partir de las actividades próximas; no se guarda una fila por recordatorio.
+
 ## 3. Relaciones
 
 ```text
 usuarios (1)
    ├──────── (N) todos
    ├──────── (N) asignaturas
+   │                ├──────── (N) temas
    │                └──────── (N) horarios_clases
    ├──────── (N) horarios_clases
    ├──────── (N) periodos_libres
-   └──────── (N) tareas_planificadas
+   ├──────── (N) tareas_planificadas
+   └──────── (1) preferencias_recordatorios
 ```
 
-Cada To-Do, asignatura, clase de horario y período libre pertenece exactamente a un usuario. Las claves foráneas llevan `ON DELETE CASCADE`, por lo que si se elimina un usuario o una asignatura a nivel de base de datos también se eliminan sus registros relacionados. En las conexiones normales se activa `PRAGMA foreign_keys = ON`.
+Los To-Dos, asignaturas, temas, horarios, períodos libres, actividades y preferencias están asociados a una cuenta. Las referencias de usuario y las de tema/asignatura usan `ON DELETE CASCADE`; `tareas_planificadas.asignatura_id` se valida en la aplicación, pero no declara una clave foránea. En las conexiones se activa `PRAGMA foreign_keys = ON`.
 
 ## 4. Acceso a los datos
 
@@ -89,10 +128,10 @@ Los valores de las consultas SQL se envían como parámetros `?`, evitando conca
 
 ## 5. Datos de desarrollo y pruebas
 
-Las pruebas de backend utilizan una base temporal, según `tests/README.md`, para evitar modificar la base de uso normal. No conviene subir copias de `todos.db` con datos de usuarios reales al repositorio. Si se necesita compartir ejemplos, es mejor preparar datos ficticios.
+Las pruebas de `test_app.py` cambian `DATABASE` a una base temporal antes de ejecutar cada caso. Sin embargo, importar `app.py` llama a `initialize_database()` sobre la ruta predeterminada `todos.db`; por ello, iniciar las pruebas puede crear esa base o aplicar migraciones antes de que se configure la base temporal. No conviene ejecutar las pruebas con datos importantes en esa base ni subir copias con datos reales al repositorio.
 
-## 6. Cambios previstos
+## 6. Datos que no se persisten en SQLite
 
-Para HU02 y HU05 tendremos que estudiar nuevas tablas de disponibilidad y clases. Más adelante harán falta modelos de exámenes, entregas, sesiones de estudio y resultados. Sus campos, claves y restricciones deberán aprobarse con las respectivas HU antes de dar el diseño por definitivo.
+El plan semanal es una vista previa: sesiones, parámetros y bloqueos puntuales no se guardan en estas tablas. `static/plan.js` conserva el plan y los bloqueos en `localStorage` del navegador. Tampoco existe una tabla de progreso de estudio. El caché diario de ajedrez reside en memoria del servidor y no se guarda en la base de datos.
 
-El diseño de datos descrito aquí corresponde a lo que hace `initialize_database()` en el código actual, no al producto final.
+El esquema descrito corresponde a `initialize_database()` en el código actual y puede cambiar si se incorporan sesiones persistentes o un historial de estudio.

@@ -1,5 +1,7 @@
 # Arquitectura y diseño técnico
 
+> Descripción contrastada con el código el 23 de noviembre de 2026.
+
 ## 1. Idea general
 
 Elegimos una aplicación web sencilla, sin separar el servidor en varios servicios. El navegador muestra HTML y CSS; JavaScript recoge las acciones del usuario y llama a Flask; Flask comprueba la sesión y trabaja con SQLite.
@@ -14,8 +16,10 @@ Navegador
      Flask (app.py)
        ├── Rutas de páginas
        ├── Registro y login
-       ├── API de To-Dos
-       └── API de asignaturas
+       ├── API de cuentas, To-Dos, asignaturas, temas y actividades
+       ├── API de horarios, recordatorios y perfil
+       ├── API de vista previa semanal ── planificador.py
+       └── API de ajedrez ── proveedor externo / reserva local
           |
           v
      SQLite (todos.db)
@@ -28,10 +32,14 @@ No usamos React, Spring, Java ni un servidor de base de datos separado. La aplic
 | Archivo/carpeta | Responsabilidad |
 |---|---|
 | `app.py` | Crear Flask, conectar con SQLite, gestionar sesión, definir endpoints y validar entradas |
+| `planificador.py` | Generar la vista previa de un plan de siete días |
 | `templates/index.html` | Dashboard y secciones de To-Dos, asignaturas, horarios y planificador |
 | `templates/login.html` | Formulario y lógica de acceso |
 | `templates/registro.html` | Formulario y lógica de registro |
 | `static/app.js` | Interacciones del dashboard, peticiones a la API y actualización del contenido |
+| `static/horario.js`, `static/tareas.js` | Interfaz de horarios, disponibilidad, tareas, entregas y exámenes |
+| `static/plan.js` | Configuración, visualización y almacenamiento local del plan semanal y bloqueos |
+| `static/daily-chess.js`, `static/avatar-flags.js` | Reto de ajedrez y selector de escudos |
 | `static/style.css` | Diseño de las páginas |
 | `requirements.txt` | Dependencia Flask |
 | `package.json` | Comandos y dependencias de pruebas de JavaScript |
@@ -39,6 +47,16 @@ No usamos React, Spring, Java ni un servidor de base de datos separado. La aplic
 | `docs/` | Requisitos, decisiones y documentación del proyecto |
 
 ## 3. Qué pasa al usar una funcionalidad
+
+### Ejemplo: generar una semana
+
+1. El usuario elige la fecha inicial, la franja diaria, la duración de sesión y el descanso; los parámetros y bloqueos puntuales se guardan en `localStorage`.
+2. `static/plan.js` envía esos datos a `POST /api/plan/semana`.
+3. Flask obtiene las asignaturas, tareas planificadas, clases y días libres de la cuenta autenticada.
+4. `planificador.py` reparte sesiones en los huecos y devuelve siete días en JSON.
+5. El navegador presenta sesiones, bloqueos y descansos en orden horario, y conserva la vista previa en ese navegador.
+
+La respuesta declara `vista_previa: true`: las sesiones generadas no se guardan en SQLite y no existe todavía un flujo para completarlas o replanificarlas.
 
 ### Ejemplo: crear una asignatura
 
@@ -73,6 +91,8 @@ Para un despliegue real habría que sacar la clave de sesión del código, desac
 
 ## 6. Siguiente ampliación prevista
 
-En el Sprint 4 proponemos empezar por disponibilidad y horario de clases, calculando las franjas libres. Después el generador podrá decidir qué asignatura estudiar en cada intervalo. No documentamos todavía esas tablas ni APIs como si estuvieran implementadas.
+Las ampliaciones aún pendientes incluyen persistir sesiones y su estado, permitir editar sesiones individualmente, replanificar las no realizadas, importar horarios desde imágenes y calcular estadísticas a partir de sesiones completadas.
+
+El reto de ajedrez se sirve desde Flask. Se solicitan cinco problemas diarios al proveedor Chess Puzzle API; si el proveedor falla o devuelve datos incompletos, el servidor usa cinco problemas locales de reserva. Las soluciones permanecen en el servidor y la API diaria no las incluye en su respuesta.
 
 Para los detalles de las tablas actuales ver [Modelo de datos](03-Base-de-datos.md). Para el contrato HTTP ver [API](04-API.md).

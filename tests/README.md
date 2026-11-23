@@ -10,11 +10,15 @@ Desde la raíz del repositorio:
 
 ```bash
 pip install -r requirements.txt
-python -m unittest discover -s tests -p test_app.py -v
+python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-Se utiliza la biblioteca estándar `unittest` y el cliente de pruebas de Flask.
-Cada prueba trabaja con una base de datos SQLite temporal e independiente: **no modifica `todos.db`**.
+Para ejecutar solo las pruebas generales de Flask, se puede sustituir el patrón por `test_app.py`.
+La suite utiliza la biblioteca estándar `unittest` y el cliente de pruebas de Flask.
+`test_app.py` usa una base SQLite temporal para cada caso. Ten en cuenta que importar
+`app.py` ejecuta `initialize_database()` sobre la ruta predeterminada antes de que
+`test_app.py` cambie `DATABASE`; por tanto, el inicio de la suite puede crear o migrar
+`todos.db`. No ejecutes las pruebas con datos importantes en esa base.
 
 ## Ejecutar las pruebas del frontend
 
@@ -28,9 +32,11 @@ npm.cmd run test:frontend
 ```
 
 El primer comando instala las dependencias de desarrollo declaradas en `package.json`
-(Jest y jsdom). El segundo ejecuta `tests/app.test.js`, que comprueba el comportamiento
-de `static/app.js` con un DOM y respuestas HTTP simulados: no inicia Flask ni contacta
-con la API real. La opción de Node `--experimental-vm-modules` activa el soporte ESM que
+(Jest y jsdom). El segundo ejecuta ocho archivos: `app.test.js`, `theme.test.js`,
+`plan.test.js`, `objetivos.test.js`, `examenes-form.test.js`,
+`editar-asignaturas.test.js`, `avatar-flags.test.js` y `daily-chess.test.js`.
+Comprueban lógica JavaScript con un DOM y respuestas simuladas: no inician Flask ni
+contactan con proveedores externos. La opción de Node `--experimental-vm-modules` activa el soporte ESM que
 Jest necesita para los imports del proyecto; por eso puede aparecer una advertencia de
 Node sobre módulos VM experimentales.
 
@@ -61,15 +67,10 @@ con Jest.
 
 ## Cobertura provisional
 
-- Vistas HTML: página principal, inicio de sesión y registro.
-- Creación e inicialización de las tablas.
-- Conexión SQLite y conversión de tareas a diccionario.
-- Registro: normalización, validación, hash y duplicados.
-- Inicio/cierre de sesión, credenciales incorrectas, petición sin JSON y estado de autenticación.
-- Tareas: creación, validaciones, listado, orden, aislamiento por usuario, modificación de uno o varios campos y borrado.
-- Asignaturas: creación, listado, detalle individual, edición, borrado, validación de entradas, autenticación y aislamiento por usuario.
-- Temas y apuntes por asignatura: contrato TDD de creación, listado y filtro de pendientes, edición, estado estudiado, borrado, validación, aislamiento, autenticación y respuestas tardías en la interfaz.
-- Frontend: API HTTP simulada, navegación, feedback, listado/filtros/contadores de tareas, operaciones CRUD de tareas y asignaturas, diálogo accesible y carga inicial.
+- Backend: registro y sesiones; To-Dos; asignaturas y temas; tareas, entregas y exámenes; horarios y períodos libres; generación de planes, objetivos semanales y bloqueos; recordatorios; escudos y endpoints de ajedrez, incluido el fallback local.
+- Frontend: navegación y feedback; operaciones de tareas y asignaturas; temas; plan semanal, descansos y bloqueos; formularios de objetivos y exámenes; tema visual; banderas y ajedrez.
+- Para el listado exacto de módulos, consulta los patrones `tests/test_*.py` y `tests/*.test.js`, y los scripts de `package.json`.
+- No hay todavía un caso que compruebe el reparto de horas extra entre asignaturas y actividades sin objetivo semanal; se ha observado que una actividad puede quedarse sin tiempo en esa combinación.
 
 ## Pruebas de asignaturas
 
@@ -86,12 +87,12 @@ El contrato usado por las pruebas es:
 - Las rutas requieren sesión; asignaturas inexistentes o pertenecientes a otra cuenta responden `404`.
 - Las respuestas de detalle/creación incluyen `id`, `usuario_id` y `nombre`. El apartado individual devuelve solo la asignatura solicitada.
 
-La historia no define aún cómo se modelan otros datos dentro del apartado (por ejemplo, temas o exámenes); estas pruebas verifican la identidad y separación de las asignaturas, no funcionalidades de esas otras historias. Tampoco prueban la navegación visual del navegador.
+Las pruebas de asignaturas verifican la identidad y separación de esas entidades. Los temas y las actividades tienen pruebas y contratos propios; esta sección no sustituye esas pruebas ni comprueba la navegación visual en un navegador real.
 
 ## Alcance
 
-**Estado:** las pruebas de Python ejercitan el backend y las de `tests/app.test.js` ejercitan la lógica del frontend con un DOM simulado. No son pruebas visuales de navegador ni validan la integración con una API Flask en ejecución.
+**Estado:** las pruebas de Python ejercitan el backend con su cliente de pruebas; Jest ejercita ocho suites frontend con un DOM simulado. No son pruebas visuales en un navegador real ni validan en vivo las APIs externas de ajedrez y escudos.
 
 ## Metodología
 
-La suite comprueba comportamientos mediante `unittest`, pero su estructura por sí sola no demuestra que se haya seguido TDD. Para afirmar TDD habría que verificar el historial de trabajo y confirmar el ciclo prueba fallida, implementación y refactorización. El único caso `expectedFailure` documenta una validación pendiente, no una funcionalidad aprobada.
+La estructura de una suite no demuestra por sí sola que se haya seguido TDD; para afirmarlo habría que verificar el historial del ciclo prueba fallida, implementación y refactorización. El 23 de noviembre de 2026, `npm.cmd run test:all` terminó con 151 pruebas Jest y 171 pruebas Python superadas. Python emitió una advertencia no fatal de conexión SQLite abierta; la ejecución terminó con `OK`. La prueba frontend titulada «fallo de la API se muestra al usuario» todavía no contiene aserciones y no debe contarse como verificación efectiva de ese comportamiento.
