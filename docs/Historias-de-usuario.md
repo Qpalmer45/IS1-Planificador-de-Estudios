@@ -46,19 +46,13 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA04:** Cada usuario consulta y modifica únicamente su propia disponibilidad semanal.
 - **Evidencias:** En `main` existe actualmente una versión inicial simplificada mediante rango único diario (`Desde`/`Hasta`) en `templates/index.html` y `static/plan.js`. Pendiente implementar la disponibilidad granular por día en backend/frontend y sus pruebas automatizadas.
 
-## HU03 - Registro de exámenes
+## HU03 — Registro de exámenes
 
-[Issue #3](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/3)
-
-**Historia:** Como usuario, quiero registrar exámenes, indicando asignatura, fecha e importancia, para organizar mi preparación.
-
-**Valor:** Muy alto  
-**Estimación:** 1 día
-
-**Criterios de aceptación:**
-- Se puede seleccionar la asignatura.
-- Se puede indicar fecha e importancia.
-- Los exámenes se pueden modificar o eliminar.
+- **Issue:** [Issue #3](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/3)
+- **Estado:** Absorbida (Cerrada — funcionalidad consolidada en [HU04](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/4))
+- **Historia:** Como estudiante, quiero registrar exámenes asociados a una asignatura indicando su fecha para organizar mi preparación.
+- **Alcance:** Funcionalidad integrada íntegramente dentro de `HU04` (*Gestión de tareas, entregas y exámenes*). La antigua regla de «importancia» manual del examen se sustituyó en el modelo vigente por el objetivo semanal de la asignatura vinculada (`HU13`) y la proximidad de la fecha del examen en el generador (`HU06`). No se contabiliza estimación separada.
+- **Evidencias:** Consolidada en `HU04` (`#4`).
 
 ## HU04 - Gestión de tareas y entregas
 
