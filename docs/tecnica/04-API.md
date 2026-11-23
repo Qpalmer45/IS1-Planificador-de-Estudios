@@ -1,7 +1,5 @@
 # API del backend
 
-> Contratos contrastados con `app.py` el 23 de noviembre de 2026.
-
 ## 1. Cómo hablamos con el servidor
 
 La interfaz manda peticiones HTTP al servidor Flask. Para crear o modificar información envía objetos JSON con `Content-Type: application/json`. La respuesta suele ser otro JSON.

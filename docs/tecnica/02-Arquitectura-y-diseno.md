@@ -1,7 +1,5 @@
 # Arquitectura y diseño técnico
 
-> Descripción contrastada con el código el 23 de noviembre de 2026.
-
 ## 1. Idea general
 
 Elegimos una aplicación web sencilla, sin separar el servidor en varios servicios. El navegador muestra HTML y CSS; JavaScript recoge las acciones del usuario y llama a Flask; Flask comprueba la sesión y trabaja con SQLite.

@@ -1,7 +1,5 @@
 # Requisitos y alcance de la aplicación
 
-> Estado contrastado con el código el 23 de noviembre de 2026. «Implementado» describe lo disponible en el repositorio; no implica que cada criterio de aceptación de GitHub esté certificado.
-
 ## 1. Para qué estamos haciendo el proyecto
 
 En IS1 estamos desarrollando un planificador web de estudios. La idea es que un estudiante pueda introducir sus asignaturas, clases, exámenes, entregas y disponibilidad, y que la aplicación le ayude a repartir el tiempo sin tener que montar el horario desde cero.
@@ -57,4 +55,4 @@ La importación de horarios desde imágenes y las estadísticas basadas en un hi
 
 ## 6. Cómo se validarán los requisitos
 
-Cada requisito debe relacionarse con una HU y pruebas o demostración de aceptación. El 23 de noviembre de 2026 se ejecutó `npm.cmd run test:all`: pasaron 151 pruebas Jest y 171 pruebas Python. La integración externa de ajedrez y escudos no se prueba en vivo; la documentación de pruebas recoge otras limitaciones.
+Cada requisito debe relacionarse con una HU y pruebas o demostración de aceptación. El 23 de noviembre de 2026, tras integrar los cambios del dashboard, `npm.cmd run test:all` pasó con 153 pruebas Jest y 171 pruebas Python. La integración externa de ajedrez y escudos no se prueba en vivo; la documentación de pruebas recoge otras limitaciones.

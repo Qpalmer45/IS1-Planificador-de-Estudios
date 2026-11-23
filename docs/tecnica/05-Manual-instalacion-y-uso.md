@@ -1,7 +1,5 @@
 # Manual de instalación y uso
 
-> Instrucciones y funcionalidades contrastadas el 23 de noviembre de 2026.
-
 ## 1. Antes de empezar
 
 Este manual sirve para ejecutar la versión actual del Planificador de Estudios en un ordenador. La aplicación se desarrolla como proyecto de IS1 y, por ahora, la usamos en local. No hace falta instalar SQLite por separado.
@@ -93,7 +91,7 @@ Para lanzar las dos suites, después de instalar dependencias:
 npm.cmd run test:all
 ```
 
-En Linux/macOS el comando puede usarse como `npm` en lugar de `npm.cmd`. El 23 de noviembre de 2026 se ejecutó `npm.cmd run test:all`: pasaron las 151 pruebas de Jest (8 suites) y las 171 pruebas de Python. Python mostró una advertencia no fatal de conexión SQLite abierta durante la ejecución; no hubo fallos. Estos resultados no certifican la integración en vivo con servicios externos ni la revisión visual en todos los navegadores.
+En Linux/macOS el comando puede usarse como `npm` en lugar de `npm.cmd`. El 23 de noviembre de 2026, tras integrar los cambios del dashboard, `npm.cmd run test:all` pasó con 153 pruebas de Jest (8 suites) y 171 pruebas de Python. Python mostró una advertencia no fatal de conexión SQLite abierta durante la ejecución; no hubo fallos. Estos resultados no certifican la integración en vivo con servicios externos ni la revisión visual en todos los navegadores.
 
 Hay información más detallada en [tests/README.md](../../tests/README.md).
 

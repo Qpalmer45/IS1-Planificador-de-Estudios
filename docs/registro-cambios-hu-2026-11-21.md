@@ -1,7 +1,7 @@
 # Registro de cambios de historias de usuario — 21/11/2026
 
 > Documento de trabajo para incorporar al próximo documento de Sprint. **No es la Wiki ni el Sprint Doc definitivo.**
-> Rama: `main`. El estado de pruebas de cada entrada corresponde al momento en que se escribió. **Actualización 23/11/2026:** `npm.cmd run test:all` pasó con 151 pruebas Jest y 171 Python; la integración externa de ajedrez no se verificó en vivo.
+> Rama: `main`. El estado de pruebas de cada entrada corresponde al momento en que se escribió. **Actualización 23/11/2026:** tras integrar el resumen del plan en Inicio, `npm.cmd run test:all` pasó con 153 pruebas Jest y 171 Python; la integración externa de ajedrez no se verificó en vivo.
 
 ## Historias existentes afectadas
 

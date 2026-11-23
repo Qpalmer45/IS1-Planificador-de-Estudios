@@ -1,7 +1,5 @@
 # Guía de Revisión Técnica Formal (RTF) — IS1 Planificador de Estudios
 
-> Recorrido actualizado el 23 de noviembre de 2026. La disponibilidad del proveedor externo de ajedrez no se considera validada por esta guía.
-
 ## 1. Propósito del documento
 
 Esta guía tiene como objetivo facilitar la verificación funcional y técnica de la aplicación **IS1 - Planificador de Estudios** durante la Revisión Técnica Formal (RTF). Describe cómo poner en marcha el entorno local, las credenciales de prueba recomendadas, el recorrido de validación por las funcionalidades implementadas y los resultados esperados en cada paso.
