@@ -174,98 +174,109 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA03:** Se rechazan niveles fuera de la escala permitida y se impide modificar asignaturas de otros usuarios.
 - **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado en `tests/test_app.py`, `tests/editar-asignaturas.test.js` y `tests/test_reparto_horas.py`.
 
-## HU13 - Horas deseadas por asignatura
+## HU13 — Horas deseadas por asignatura
 
-[Issue #13](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/13)
+- **Issue:** [Issue #13](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/13)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Historia:** Como estudiante, quiero fijar y cambiar los minutos semanales deseados de cada asignatura para que el planificador reserve esa dedicación.
+- **Alcance:** Incluye el campo de objetivo semanal en minutos (`0` a `10080`) al crear o editar una asignatura en SQLite, donde `0` indica reparto automático según tiempo disponible y prioridad/dificultad. Los exámenes vinculados (`HU04`) toman su tiempo de este objetivo sin sumar horas duplicadas. La asignación de bloques corresponde a `HU06`.
+- **Valor y prioridad:** Muy alto. Permite garantizar una carga semanal concreta por materia; implementada en Sprint 4.
+- **Estimación:** 1 día (orientativa; campo en SQLite, validación de rango entero y consumo por `HU06`).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede establecer y editar el objetivo de minutos semanales al crear o modificar una asignatura.
+  - **CA02:** El sistema persiste el valor en SQLite por usuario y valida que sea un número entero entre `0` y `10080` (interpretando `0` como reparto automático).
+  - **CA03:** Se rechazan valores negativos, decimales o superiores a `10080`, así como modificaciones sobre asignaturas de otros usuarios.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_objetivos_semanales.py` y `tests/editar-asignaturas.test.js`.
 
-**Historia:** Como usuario, quiero establecer las horas que deseo dedicar a cada asignatura para personalizar mi planificación.
+## HU14 — Sesiones completadas y estado de seguimiento
 
-**Valor:** Alto  
-**Estimación:** 1 día
+- **Issue:** [Issue #14](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/14)
+- **Estado:** Propuesta (Abierta — requiere persistencia individual de sesiones en SQLite)
+- **Historia:** Como estudiante, quiero registrar el resultado de mis sesiones de estudio como completadas o no realizadas para llevar un seguimiento real de mi planificación.
+- **Alcance:** Incluye el cambio de estado de cada sesión individual persistida en SQLite entre `pendiente`, `completada` y `no_realizada` (así como la reversión de estado en caso de error), reflejándose visualmente en el calendario (`HU07`). Requiere incorporar la persistencia individual de sesiones en SQLite en este incremento.
+- **Valor y prioridad:** Medio. Habilita el seguimiento del progreso real y alimenta las estadísticas (`HU18`) y la replanificación (`HU15`); prioridad media tras consolidar el núcleo de planificación.
+- **Estimación:** 1,5 días (orientativa; incluye persistencia individual de sesiones en SQLite, endpoints de cambio de estado y actualización visual).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede marcar una sesión propia como `completada` o `no_realizada`, así como devolverla a `pendiente` si la marcó por error.
+  - **CA02:** El estado seleccionado persiste en SQLite asociado a la sesión y al usuario autenticado tras recargar o iniciar sesión en otro navegador, reflejándose visualmente en el calendario (`HU07`).
+  - **CA03:** Repetir la misma actualización de estado es idempotente y no duplica sesiones ni tiempos contabilizados; al regenerar planes futuros se conservan las sesiones ya marcadas.
+  - **CA04:** Un usuario no puede consultar ni modificar el estado de sesiones pertenecientes a otras cuentas.
+- **Evidencias:** Pendiente de implementación (actualmente las sesiones de `HU06`/`HU07` son vistas previas en `localStorage` sin tabla de sesiones en SQLite).
 
-**Criterios de aceptación:**
-- Se pueden establecer horas objetivo por asignatura.
-- El plan tiene en cuenta las horas configuradas.
+## HU15 — Replanificación de sesiones pendientes
 
-## HU14 - Sesiones completadas
+- **Issue:** [Issue #15](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/15)
+- **Estado:** Propuesta (Abierta)
+- **Historia:** Como estudiante, quiero replanificar mis sesiones vencidas no realizadas en futuras franjas disponibles para recuperar el estudio pendiente.
+- **Alcance:** Incluye la detección explícita de sesiones en estado `no_realizada` o vencidas en estado `pendiente` (excluyendo sesiones futuras aún no llegadas) y su recolocación automática en huecos disponibles futuros respetando clases (`HU05`), disponibilidad (`HU02`), descansos (`HU11`) y fechas límite (`HU04`).
+- **Valor y prioridad:** Medio. Permite recuperar estudio perdido sin rehacer manualmente todo el horario; prioridad media tras `HU14`.
+- **Estimación:** 2 días (orientativa; detección de sesiones elegibles, búsqueda de huecos sin solapamientos y protección frente a duplicados).
+- **Dependencias:** Requiere sesiones persistentes con estado registrado (`HU14`).
+- **Criterios de aceptación:**
+  - **CA01:** El sistema identifica únicamente las sesiones propias marcadas como `no_realizada` o vencidas en estado `pendiente`, sin alterar sesiones `completadas` ni sesiones futuras.
+  - **CA02:** Al ejecutar la replanificación, los minutos pendientes se recolocan en franjas disponibles futuras respetando clases, bloqueos, descansos y plazos de entrega.
+  - **CA03:** Si el tiempo libre disponible en el horizonte elegido no basta para absorber todas las sesiones pendientes, se informa claramente del déficit de minutos.
+  - **CA04:** Ejecutar la replanificación varias veces no duplica sesiones ya recolocadas y mantiene el aislamiento entre usuarios.
+- **Evidencias:** Pendiente de implementación.
 
-[Issue #14](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/14)
+## HU16 — Perfil y preferencias de aprendizaje
 
-**Historia:** Como usuario, quiero marcar sesiones como completadas para llevar un seguimiento de mi planificación.
+- **Issue:** [Issue #16](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/16)
+- **Estado:** Propuesta (Abierta)
+- **Historia:** Como estudiante, quiero configurar un perfil de aprendizaje con mis preferencias de estudio para personalizar la generación de mis sesiones.
+- **Alcance:** Incluye la configuración en SQLite por usuario de parámetros académicos de estudio: duración estándar preferida por bloque de estudio (en minutos) y franja horaria preferente de concentración (mañana, tarde o noche), sin duplicar la configuración de descansos (`HU11`) ni mezclarse con la personalización visual del avatar. Su aplicación efectiva en el reparto pertenece a `HU06`.
+- **Valor y prioridad:** Medio. Adapta el tamaño y ubicación de las sesiones a los hábitos del estudiante; prioridad media-baja.
+- **Estimación:** 2 días (orientativa; formulario de preferencias, persistencia en SQLite e integración con el generador `HU06`).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede configurar y modificar su duración preferida de sesión (validando un rango entero positivo) y su franja horaria preferente de concentración.
+  - **CA02:** Las preferencias se guardan en SQLite asociadas al usuario autenticado y se aplican como parámetros por defecto al generar nuevos planes (`HU06`).
+  - **CA03:** Si el usuario no ha configurado un perfil personalizado, el sistema aplica valores predeterminados válidos sin errores y aísla los datos entre cuentas.
+- **Evidencias:** Pendiente de implementación (la personalización visual del avatar en *Inicio* se gestiona como mejora independiente de interfaz).
 
-**Valor:** Medio  
-**Estimación:** 1 día
+## HU17 — Importación del horario mediante imagen
 
-**Criterios de aceptación:**
-- Una sesión puede marcarse como completada.
-- El estado queda reflejado en la planificación.
+- **Issue:** [Issue #17](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/17)
+- **Estado:** Propuesta (Abierta)
+- **Historia:** Como estudiante, quiero subir una imagen de mi horario académico para que la aplicación detecte mis clases y pueda confirmarlas sin introducirlas una a una.
+- **Alcance:** Incluye la subida de una imagen (PNG/JPG/WebP), la extracción asistida de propuestas de asignaturas, días y franjas horarias, y una pantalla de revisión manual antes de guardarlas en el horario de clases (`HU05`). No garantiza reconocimiento automático sin confirmación del usuario.
+- **Valor y prioridad:** Bajo. Comodidad opcional de incorporación inicial, dado que el horario puede registrarse manualmente en `HU05`; prioridad baja.
+- **Estimación:** 3 días (orientativa; sujeta a prueba técnica previa de librería OCR y reglas de revisión).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede subir una imagen en formato válido (`PNG`, `JPG`, `WebP`) dentro del límite de tamaño permitido, rechazándose archivos inválidos o dañados con mensajes claros.
+  - **CA02:** El sistema extrae propuestas estructuradas de días y franjas horarias y las presenta en un formulario editable antes de persistirlas.
+  - **CA03:** El usuario puede corregir, descartar o confirmar las clases detectadas, guardándose en SQLite bajo su cuenta y evitando duplicar franjas ya existentes.
+- **Evidencias:** Pendiente de implementación.
 
-## HU15 - Replanificación de sesiones pendientes
+## HU18 — Estadísticas y seguimiento del estudio
 
-[Issue #15](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/15)
+- **Issue:** [Issue #18](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18) · Historias absorbidas: [HU22 (#23)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/23), [HU24 (#25)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/25), [HU25 (#26)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/26)
+- **Estado:** Propuesta (Abierta)
+- **Historia:** Como estudiante, quiero consultar un resumen semanal de mi actividad de estudio para conocer el tiempo dedicado por asignatura y mi grado de cumplimiento.
+- **Alcance:** Incluye un panel semanal (de lunes a domingo según fecha local) con cuatro indicadores calculados a partir de las sesiones persistidas en SQLite: tiempo total planificado en sesiones `completadas`, desglose por asignatura (agrupando tareas sin materia bajo «Sin asignatura»), recuento de sesiones `completadas` frente a `no_realizada`, y número y nombres de asignaturas distintas estudiadas. No incluye cronómetro de tiempo real (`#55`), gráficos avanzados ni históricos multianuales. Absorbe `HU22`, `HU24` y `HU25`.
+- **Valor y prioridad:** Medio. Permite evaluar el cumplimiento semanal del plan; prioridad media tras disponer de sesiones con estado (`HU14`).
+- **Estimación:** 3 días (orientativa; consolidando en una única entrega los indicadores de `HU22`, `HU24` y `HU25`).
+- **Dependencias:** Requiere sesiones individuales persistidas en SQLite con estados `completada` y `no_realizada` (`HU14`).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario consulta los indicadores correspondientes a la semana en curso (lunes a domingo), calculando las horas estudiadas únicamente a partir de la duración planificada de las sesiones marcadas como `completada`.
+  - **CA02:** Se muestra el desglose de tiempo estudiado por asignatura (incluyendo la categoría «Sin asignatura» si existen sesiones de tareas no vinculadas a materia), cuya suma coincide con el total semanal.
+  - **CA03:** Se muestra el número de sesiones `completadas` y el número de sesiones marcadas explícitamente como `no_realizada` (excluyendo las sesiones `pendientes`), así como el número y nombre de las asignaturas distintas con al menos una sesión completada.
+  - **CA04:** Si no hay sesiones completadas en la semana, se muestran valores `0` sin errores; las métricas solo agregan datos del usuario autenticado y se actualizan al modificar o eliminar sesiones.
+- **Evidencias:** Pendiente de implementación (requiere tabla persistente de sesiones de `HU14`).
+  
+## HU19 — Recordatorios
 
-**Historia:** Como usuario, quiero que las sesiones no realizadas se replanifiquen para poder recuperar el estudio pendiente.
-
-**Valor:** Medio  
-**Estimación:** 2 días
-
-**Criterios de aceptación:**
-- Se detectan sesiones no completadas.
-- Se pueden recolocar en futuras franjas disponibles.
-
-## HU16 - Perfil y preferencias de aprendizaje
-
-[Issue #16](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/16)
-
-**Historia:** Como usuario, quiero configurar un perfil de aprendizaje indicando hábitos y preferencias para personalizar mis sesiones.
-
-**Valor:** Medio  
-**Estimación:** 2 días
-
-**Criterios de aceptación:**
-- Se pueden indicar preferencias de duración y concentración.
-- Las preferencias pueden modificarse.
-- La planificación puede utilizar estas preferencias.
-
-## HU17 - Importación del horario mediante imagen
-
-[Issue #17](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/17)
-
-**Historia:** Como usuario, quiero subir una foto de mi horario para que la aplicación detecte automáticamente mis clases y horas ocupadas.
-
-**Valor:** Bajo  
-**Estimación:** 3 días
-
-**Criterios de aceptación:**
-- Se puede subir una imagen del horario.
-- El sistema extrae propuestas de días y horas.
-- El usuario puede revisar/corregir los datos detectados antes de guardarlos.
-
-## HU18 - Estadísticas de estudio
-
-[Issue #18](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18)
-
-**Historia:** Como usuario, quiero consultar estadísticas de estudio para conocer mi progreso y las horas dedicadas a cada asignatura.
-
-**Valor:** Bajo  
-**Estimación:** 2 días
-
-**Criterios de aceptación:**
-- Se muestran las horas estudiadas.
-- Se pueden consultar datos por asignatura.
-
-## HU19 - Recordatorios
-
-[Issue #19](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/19)
-
-**Historia:** Como usuario, quiero recibir recordatorios de sesiones de estudios, exámenes y entregas para no olvidar eventos importantes.
-
-**Valor:** Bajo  
-**Estimación:** 2 días
-
-**Criterios de aceptación:**
-- Se generan recordatorios de eventos próximos.
-- El recordatorio identifica el evento correspondiente.
+- **Issue:** [Issue #19](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/19)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Historia:** Como estudiante, quiero recibir recordatorios dentro de la aplicación sobre mis próximos exámenes, tareas y entregas para no olvidar fechas importantes.
+- **Alcance:** Incluye la generación y visualización de avisos internos en el panel *Inicio* para tareas, entregas y exámenes (`HU04`) próximos según el margen de antelación configurado por el usuario en SQLite (selector rápido en interfaz de mismo día, `1`, `3`, `7`, `14`, `30` o `60` días; validación en API entre `0` y `365` días; valor por defecto `7` días). No incluye notificaciones push, correos electrónicos ni recordatorios de sesiones de estudio individuales.
+- **Valor y prioridad:** Bajo-medio. Facilita detectar entregas y exámenes cercanos desde el panel principal; implementada y ampliada en Sprint 4.
+- **Estimación:** 2 días (orientativa; detección de eventos próximos, filtro por ventana de antelación y configuración persistente por usuario).
+- **Criterios de aceptación:**
+  - **CA01:** El panel *Inicio* muestra los recordatorios de tareas, entregas y exámenes propios cuya fecha cae dentro de la ventana de antelación configurada por el usuario (por defecto `7` días).
+  - **CA02:** Cada recordatorio identifica claramente el título del evento, su tipo, la fecha y la asignatura asociada (si la tiene).
+  - **CA03:** El usuario puede modificar los días de antelación desde *Inicio* sin recargar la página, validándose en el servidor el rango entero `0–365` días y persistiendo la preferencia en SQLite por usuario.
+  - **CA04:** Los recordatorios y su configuración están aislados por cuenta autenticada y no muestran eventos de otros usuarios.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_configuracion_recordatorios.py`, `tests/test_app.py` y `tests/examenes-form.test.js`.
 
 ## HU20 - Registro
 
