@@ -18,7 +18,7 @@ function setup(response) {
     <input id="plan-hasta" value="21:00"><input id="plan-duracion" value="60">
     <input id="plan-descanso" value="15"><button type="submit">Generar</button>
     </form><div id="plan-block-calendar"></div><form id="plan-block-form"><select id="plan-block-date"></select><input id="plan-block-start" value="17:00"><input id="plan-block-end" value="19:00"><input id="plan-block-reason"></form><div id="plan-block-feedback"></div><div id="plan-feedback"></div><div id="plan-summary"></div>
-    <div id="plan-week"></div><span id="user-email-display">test@example.com</span>`, { url: "http://localhost/" });
+    <div id="plan-week"></div><p id="home-study-plan-summary"></p><div id="home-study-plan-content"></div><span id="user-email-display">test@example.com</span>`, { url: "http://localhost/" });
   const w = dom.window;
   w.fetch = jest.fn().mockResolvedValue(response);
   vm.runInContext(source, vm.createContext(w));
@@ -261,4 +261,23 @@ test("el motivo se muestra como texto y no como HTML", () => {
   w.document.getElementById("plan-block-form").dispatchEvent(new w.Event("submit", { cancelable: true }));
   expect(w.document.querySelector(".plan-block-item img")).toBeNull();
   expect(w.document.querySelector(".plan-block-item").textContent).toContain("<img");
+});
+
+test("Inicio muestra estado vacío si todavía no hay plan generado", () => {
+  const w = setup({ok:true,json:async()=>({})});
+  expect(w.document.getElementById("home-study-plan-content").textContent).toContain("Aún no has generado tu plan de estudio");
+  expect(w.document.querySelectorAll(".home-study-plan-day")).toHaveLength(0);
+});
+
+test("Inicio refleja el plan generado y lo restaura sin otra petición", async () => {
+  const dias=Array.from({length:7},(_,i)=>({dia:"Día "+(i+1),fecha:"2026-11-"+String(23+i),libre:false,sesiones:i===0?[{inicio:"16:00",fin:"17:30",asignatura:"Probabilidad"}]:[]}));
+  const w=setup({ok:true,json:async()=>({dias,total_sesiones:1})});
+  w.document.getElementById("plan-form").dispatchEvent(new w.Event("submit",{cancelable:true}));
+  await new Promise(resolve=>setImmediate(resolve));
+  expect(w.document.querySelectorAll(".home-study-plan-day")).toHaveLength(7);
+  expect(w.document.getElementById("home-study-plan-summary").textContent).toContain("1,5 horas");
+  expect(w.document.getElementById("home-study-plan-content").textContent).toContain("Probabilidad");
+  vm.runInContext(source,vm.createContext(w));
+  expect(w.document.querySelectorAll(".home-study-plan-day")).toHaveLength(7);
+  expect(w.fetch).toHaveBeenCalledTimes(1);
 });
