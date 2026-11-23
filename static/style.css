@@ -2386,6 +2386,87 @@ html[data-theme="dark"] :is(.primary-btn,.tab-btn.active) { background-color:#4f
 html[data-theme="dark"] .auth-brand, html[data-theme="dark"] .auth-footer { color:var(--text-body); }
 html[data-theme="dark"] a { color:#a5b4fc; }
 
+html[data-theme="dark"] .btn-logout {
+  background-color:#202e45;
+  color:#f1f5f9;
+  border-color:#42516a;
+}
+html[data-theme="dark"] .btn-logout:hover {
+  background-color:#42252c;
+  color:#fca5a5;
+  border-color:#82414b;
+}
+html[data-theme="dark"] .user-avatar:not(.has-flag) {
+  background:#4f46e5;
+  color:#ffffff;
+}
+html[data-theme="dark"] .badge-count,
+html[data-theme="dark"] .tab-btn.active .badge-count {
+  background:#4f46e5;
+  color:#ffffff;
+}
+html[data-theme="dark"] .tab-badge {
+  background:#44351b;
+  color:#fde68a;
+  border-color:#80632c;
+}
+html[data-theme="dark"] .tab-badge.muted {
+  background:#263651;
+  color:#cbd5e1;
+}
+html[data-theme="dark"] .primary-btn:hover {
+  background:#4338ca;
+}
+html[data-theme="dark"] .danger-btn:hover {
+  background:#7f1d1d;
+  color:#ffffff;
+  border-color:#fca5a5;
+}
+html[data-theme="dark"] .subject-dialog-header,
+html[data-theme="dark"] .subject-detail,
+html[data-theme="dark"] .schedule-modal-content {
+  background-color:#172235 !important;
+  color:#cbd5e1;
+}
+html[data-theme="dark"] .subject-dialog-header h2,
+html[data-theme="dark"] .schedule-modal-content label {
+  color:#f1f5f9;
+}
+html[data-theme="dark"] .subject-dialog-close {
+  background-color:#202e45;
+  color:#f1f5f9;
+  border-color:#42516a;
+}
+html[data-theme="dark"] .topic-filter-btn {
+  background-color:#202e45;
+  color:#f1f5f9;
+  border-color:#42516a;
+}
+html[data-theme="dark"] .topic-filter-btn[aria-pressed="true"],
+html[data-theme="dark"] .filter-btn.active {
+  background-color:#4f46e5;
+  color:#ffffff;
+  border-color:#4f46e5;
+}
+html[data-theme="dark"] .filter-btn:not(.active) {
+  background-color:#202e45;
+  color:#f1f5f9;
+  border-color:#42516a;
+}
+html[data-theme="dark"] .topic-create-form input:focus {
+  background-color:#202e45;
+  color:#f1f5f9;
+  border-color:#7183a3;
+}
+html[data-theme="dark"] .schedule-modal-content select,
+html[data-theme="dark"] .schedule-modal-content input {
+  background-color:#202e45;
+  color:#f1f5f9;
+  border-color:#42516a;
+}
+html[data-theme="dark"] .schedule-modal-content .field-hint {
+  color:#a7b4c8;
+}
 
 /* Ajustes de contraste: las tarjetas destacadas tenían un degradado claro fijo. */
 html[data-theme="dark"] .module-card.card-active {
