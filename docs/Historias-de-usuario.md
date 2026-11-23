@@ -581,42 +581,132 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Evidencias:** Pendiente de implementación.
 
-## HU30 — Navegación mediante teclado
+## HU30 — Navegación completa mediante teclado
 
-[Issue #38](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/38)
+- **Issue:** [Issue #38](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/38)
 
-**Alcance y criterios principales:** Navegación, activación y foco visibles sin ratón.
+- **Estado:** Preparada (Abierta)
 
-## HU31 — Etiquetas accesibles
+- **Historia:** Como estudiante que utiliza el teclado, quiero acceder y manejar las funciones principales sin ratón para poder usar el planificador con autonomía.
 
-[Issue #39](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/39)
+- **Alcance:** Incluye el recorrido lógico mediante teclado y foco visible en las pantallas principales: menú lateral, autenticación (`HU20`, `HU21`), gestión de asignaturas (`HU01`), actividades (`HU04`), lista de To-Dos (`HU27`) y calendario semanal (`HU07`).
 
-**Alcance y criterios principales:** Etiquetas, regiones y mensajes para lectores de pantalla.
+- **Valor y prioridad:** Alto. Elimina una barrera crítica de acceso para usuarios que operan sin ratón; prioridad alta de accesibilidad.
+
+- **Estimación:** 2 días (orientativa; revisión de orden de tabulación, gestión de foco en modales y pruebas manuales sin ratón).
+
+- **Criterios de aceptación:**
+  - **CA01:** Todos los controles interactivos de las vistas principales pueden recorrerse en orden lógico mediante `Tab` y `Mayús+Tab` y activarse con `Intro` o `Espacio`.
+  - **CA02:** El indicador de foco es claramente visible en todo momento y no queda atrapado en menús, diálogos ni controles personalizados (devolviendo el foco al cerrar modales).
+  - **CA03:** El usuario puede completar sin ratón los flujos principales de crear una tarea/asignatura y consultar el calendario semanal.
+
+- **Evidencias:** Pendiente de implementación y verificación manual mediante navegación exclusiva por teclado.
+
+## HU31 — Etiquetas accesibles para lectores de pantalla
+
+- **Issue:** [Issue #39](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/39)
+
+- **Estado:** Preparada (Abierta)
+
+- **Historia:** Como estudiante que utiliza un lector de pantalla, quiero que los controles y mensajes tengan nombres y estructura semántica comprensibles para utilizar el planificador.
+
+- **Alcance:** Incluye la incorporación de etiquetas asociadas, jerarquía de encabezados, regiones ARIA de navegación y anuncios de estado en las vistas principales (acceso, asignaturas, tareas, To-Dos y calendario), sin alterar la lógica de negocio.
+
+- **Valor y prioridad:** Alto. Permite comprender y operar la interfaz a personas que dependen de tecnología asistiva; prioridad alta de accesibilidad.
+
+- **Estimación:** 2 días (orientativa; auditoría semántica HTML/ARIA y comprobación con lector de pantalla).
+
+- **Criterios de aceptación:**
+  - **CA01:** Todos los campos de formulario (registro, inicio de sesión, asignaturas, actividades y To-Dos) cuentan con etiquetas accesibles inequívocas asociadas (`label` o `aria-label`).
+  - **CA02:** Las vistas presentan encabezados jerarquizados (`h1`–`h3`), regiones de navegación identificables y nombres descriptivos en los botones compuestos únicamente por iconos.
+  - **CA03:** Los cambios relevantes de estado o confirmación se comunican de forma perceptible al lector de pantalla (`aria-live` o equivalente).
+
+- **Evidencias:** Pendiente de implementación y comprobación con lector de pantalla.
 
 ## HU32 — Modo de alto contraste
 
-[Issue #40](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/40)
+- **Issue:** [Issue #40](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/40)
 
-**Alcance y criterios principales:** Preferencia persistente y contraste legible.
+- **Estado:** Preparada (Abierta)
 
-## HU33 — Texto ampliado
+- **Historia:** Como estudiante con dificultades de visión, quiero activar un modo de alto contraste para distinguir claramente textos, bordes y controles.
 
-[Issue #41](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/41)
+- **Alcance:** Incluye un selector accesible de modo de alto contraste aplicado a las vistas principales, formularios y calendario, conservando la preferencia en el navegador (`localStorage`) y coexistiendo con los temas claro y oscuro de `HU40`.
 
-**Alcance y criterios principales:** Interfaz utilizable con zoom al 200 %.
+- **Valor y prioridad:** Medio. Mejora la legibilidad para baja visión sin modificar la lógica del planificador; prioridad media.
 
-## HU34 — Movimiento reducido
+- **Estimación:** 1 día (orientativa; paleta de alto contraste, selector persistente y comprobación de ratios WCAG AA).
 
-[Issue #42](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/42)
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede activar y desactivar el modo de alto contraste desde la interfaz sin recargar la página, conservándose la elección en el navegador entre sesiones.
+  - **CA02:** Textos, bordes de tarjetas, iconos informativos y controles interactivos cumplen como mínimo el contraste exigido por WCAG AA frente a su fondo.
+  - **CA03:** Ninguna información o estado se comunica exclusivamente mediante color (se acompaña de texto, iconos o bordes diferenciados) y el modo coexiste sin conflictos con `HU40`.
 
-**Alcance y criterios principales:** Respetar preferencias del sistema y evitar animaciones innecesarias.
+- **Evidencias:** Pendiente de implementación y revisión visual de contraste.
 
-## HU35 — Errores de formularios accesibles
+## HU33 — Adaptación a texto ampliado
 
-[Issue #43](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/43)
+- **Issue:** [Issue #41](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/41)
 
-**Alcance y criterios principales:** Mensajes asociados a campos, comprensibles y sin pérdida de datos.
+- **Estado:** Preparada (Abierta)
 
+- **Historia:** Como estudiante con baja visión, quiero ampliar el texto o el zoom del navegador sin perder información ni funciones para leer cómodamente el horario y las tareas.
+
+- **Alcance:** Incluye el ajuste responsivo de contenedores, formularios, listas y calendario semanal (`HU07`) para soportar ampliación hasta el 200 % sin recortes ni solapamientos.
+
+- **Valor y prioridad:** Medio. Evita pérdida de contenido o controles inaccesibles al aumentar el tamaño de fuente; prioridad media.
+
+- **Estimación:** 2 días (orientativa; ajustes CSS adaptables y pruebas manuales al 200 % de zoom).
+
+- **Criterios de aceptación:**
+  - **CA01:** Con el zoom del navegador al 200 %, todos los textos, etiquetas y botones principales siguen siendo legibles y operables.
+  - **CA02:** No se recortan nombres de asignaturas, horas ni acciones esenciales sin ofrecer visibilidad completa o alternativa accesible.
+  - **CA03:** Formularios, tarjetas y calendario semanal se redistribuyen sin superposiciones ni desplazamiento horizontal bloqueante en anchuras reducidas.
+
+- **Evidencias:** Pendiente de implementación y verificación manual al 200 % de zoom.
+
+## HU34 — Preferencia de movimiento reducido
+
+- **Issue:** [Issue #42](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/42)
+
+- **Estado:** Preparada (Abierta)
+
+- **Historia:** Como estudiante sensible a las animaciones, quiero que la interfaz reduzca los movimientos y transiciones para utilizarla sin distracciones ni molestias.
+
+- **Alcance:** Incluye la detección de la preferencia del sistema operativo (`prefers-reduced-motion: reduce`) en las hojas de estilo de la aplicación para desactivar animaciones decorativas y transiciones no esenciales.
+
+- **Valor y prioridad:** Medio. Reduce barreras visuales para usuarios sensibles al movimiento con un cambio acotado en estilos; prioridad media.
+
+- **Estimación:** 1 día (orientativa; reglas CSS de movimiento reducido y comprobación en navegación).
+
+- **Criterios de aceptación:**
+  - **CA01:** Cuando el sistema operativo tiene activada la preferencia de movimiento reducido, las animaciones decorativas y transiciones no esenciales se desactivan o reducen al mínimo.
+  - **CA02:** Si el usuario cambia la preferencia en su sistema, la interfaz actualiza su comportamiento sin requerir cambios en sus datos.
+  - **CA03:** Todas las vistas, modales y acciones siguen funcionando completamente sin depender de animaciones.
+
+- **Evidencias:** Pendiente de implementación.
+
+## HU35 — Errores de formularios comprensibles y accesibles
+
+- **Issue:** [Issue #43](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/43)
+
+- **Estado:** Preparada (Abierta)
+
+- **Historia:** Como estudiante, quiero recibir mensajes claros y accesibles cuando introduzco datos incorrectos en un formulario para saber cómo corregirlos sin perder lo escrito.
+
+- **Alcance:** Incluye la validación comprensible y vinculación accesible de mensajes de error en los formularios principales (registro, inicio de sesión, asignaturas, horarios, tareas/exámenes y To-Dos).
+
+- **Valor y prioridad:** Alto. Evita bloqueos ante fallos de entrada de datos y mejora la usabilidad general y con tecnologías asistivas; prioridad alta.
+
+- **Estimación:** 2 días (orientativa; mensajes asociados por campo, conservación de datos válidos y pruebas de validación).
+
+- **Criterios de aceptación:**
+  - **CA01:** Cada campo con datos inválidos muestra un mensaje claro junto al campo indicando el motivo del error y cómo corregirlo, sin depender únicamente del color.
+  - **CA02:** El mensaje de error está programáticamente asociado al campo correspondiente (`aria-describedby` / `aria-invalid`) para su lectura por tecnologías asistivas.
+  - **CA03:** Tras un error de validación en cliente o servidor, se conservan los datos válidos ya introducidos en el formulario para no obligar a reescribirlos.
+
+- **Evidencias:** Pendiente de implementación.
+  
 ## HU36 — Exportación ICS
 
 [Issue #44](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/44)
