@@ -1397,10 +1397,10 @@ async function cargarRecordatorios() {
         // Caso 1: Sin entregas ni exámenes próximos
         if (listaRecordatorios.length === 0) {
             contenedor.innerHTML = `
-                <div style="text-align: center; padding: 1.25rem; background: #f0fdf4; border-radius: 12px; color: #166534; border: 1px solid #bbf7d0;">
+                <div class="recordatorio-vacio">
                     <span style="font-size: 1.2rem; display: block; margin-bottom: 4px;">✅</span>
-                    <p style="margin: 0; font-weight: 600; font-size: 0.95rem;">¡Todo al día!</p>
-                    <p style="margin: 2px 0 0 0; font-size: 0.85rem; color: #15803d;">No tienes entregas ni exámenes en el periodo configurado.</p>
+                    <p class="recordatorio-vacio-titulo">¡Todo al día!</p>
+                    <p class="recordatorio-vacio-detalle">No tienes entregas ni exámenes en el periodo configurado.</p>
                 </div>
             `;
             return;
@@ -1408,31 +1408,18 @@ async function cargarRecordatorios() {
 
         // Caso 2: Listado de recordatorios activos
         contenedor.innerHTML = listaRecordatorios.map(item => {
-            let badgeBg = '#eff6ff';
-            let badgeColor = '#1d4ed8';
-            let borderLeftColor = '#3b82f6';
-
-            if (item.urgencia === 'alta') {
-                badgeBg = '#fef2f2';
-                badgeColor = '#dc2626';
-                borderLeftColor = '#ef4444';
-            } else if (item.urgencia === 'media') {
-                badgeBg = '#fffbeb';
-                badgeColor = '#d97706';
-                borderLeftColor = '#f59e0b';
-            }
-
             const tiempoTexto = item.dias_restantes === 0 ? '¡Hoy!' : `${item.dias_restantes} d`;
+            const urgencia = item.urgencia === 'alta' ? 'alta' : item.urgencia === 'media' ? 'media' : 'normal';
 
             return `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; margin-bottom: 8px; background: #ffffff; border-radius: 10px; border: 1px solid #e2e8f0; border-left: 5px solid ${borderLeftColor};">
+                <div class="recordatorio-item recordatorio-item--${urgencia}">
                     <div>
-                        <span style="background: ${badgeBg}; color: ${badgeColor}; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-transform: uppercase;">${item.tipo}</span>
-                        <h4 style="margin: 4px 0 2px 0; font-size: 0.95rem; font-weight: 600; color: #0f172a;">${escaparHTML(item.titulo)}</h4>
-                        <small style="color: #64748b; font-size: 0.825rem;">${item.mensaje} — Fecha: ${item.fecha}</small>
+                        <span class="recordatorio-tipo recordatorio-tipo--${urgencia}">${item.tipo}</span>
+                        <h4 class="recordatorio-titulo">${escaparHTML(item.titulo)}</h4>
+                        <small class="recordatorio-detalle">${item.mensaje} — Fecha: ${item.fecha}</small>
                     </div>
                     <div>
-                        <span style="background: #f1f5f9; color: #334155; font-size: 0.85rem; font-weight: 700; padding: 6px 12px; border-radius: 8px; border: 1px solid #cbd5e1;">${tiempoTexto}</span>
+                        <span class="recordatorio-plazo">${tiempoTexto}</span>
                     </div>
                 </div>
             `;
@@ -1441,7 +1428,7 @@ async function cargarRecordatorios() {
     } catch (error) {
         console.error('Error en HU19:', error);
         contenedor.innerHTML = `
-            <div style="text-align: center; padding: 1rem; background: #fef2f2; border-radius: 10px; color: #991b1b; font-size: 0.875rem;">
+            <div class="recordatorio-error">
                 ⚠️ No se pudieron cargar los recordatorios.
             </div>
         `;

@@ -91,7 +91,7 @@ Para lanzar las dos suites, después de instalar dependencias:
 npm.cmd run test:all
 ```
 
-En Linux/macOS el comando puede usarse como `npm` en lugar de `npm.cmd`. El 23 de noviembre de 2026, tras corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 156 pruebas de Jest (8 suites) y 178 pruebas de Python. Python mostró una advertencia no fatal de conexión SQLite abierta durante la ejecución; no hubo fallos. Estos resultados no certifican la integración en vivo con servicios externos ni la revisión visual en todos los navegadores.
+En Linux/macOS el comando puede usarse como `npm` en lugar de `npm.cmd`. El 23 de noviembre de 2026, tras corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 157 pruebas de Jest (8 suites) y 178 pruebas de Python. Python mostró una advertencia no fatal de conexión SQLite abierta durante la ejecución; no hubo fallos. Estos resultados no certifican la integración en vivo con servicios externos ni la revisión visual en todos los navegadores.
 
 Hay información más detallada en [tests/README.md](../../tests/README.md).
 

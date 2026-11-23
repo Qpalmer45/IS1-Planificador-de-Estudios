@@ -55,4 +55,4 @@ La importación de horarios desde imágenes y las estadísticas basadas en un hi
 
 ## 6. Cómo se validarán los requisitos
 
-Cada requisito debe relacionarse con una HU y pruebas o demostración de aceptación. El 23 de noviembre de 2026, tras corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 156 pruebas Jest y 178 pruebas Python. La integración externa de ajedrez y escudos no se prueba en vivo; la documentación de pruebas recoge otras limitaciones.
+Cada requisito debe relacionarse con una HU y pruebas o demostración de aceptación. El 23 de noviembre de 2026, tras corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 157 pruebas Jest y 178 pruebas Python. La integración externa de ajedrez y escudos no se prueba en vivo; la documentación de pruebas recoge otras limitaciones.

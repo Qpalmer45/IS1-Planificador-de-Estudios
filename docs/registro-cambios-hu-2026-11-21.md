@@ -1,7 +1,7 @@
 # Registro de cambios de historias de usuario — 21/11/2026
 
 > Documento de trabajo para incorporar al próximo documento de Sprint. **No es la Wiki ni el Sprint Doc definitivo.**
-> Rama: `main`. El estado de pruebas de cada entrada corresponde al momento en que se escribió. **Actualización 23/11/2026:** tras integrar el resumen del plan en Inicio y corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 156 pruebas Jest y 178 Python; la integración externa de ajedrez no se verificó en vivo.
+> Rama: `main`. El estado de pruebas de cada entrada corresponde al momento en que se escribió. **Actualización 23/11/2026:** tras integrar el resumen del plan en Inicio y corregir los flujos de reparto y tareas/entregas, `npm.cmd run test:all` pasó con 157 pruebas Jest y 178 Python; la integración externa de ajedrez no se verificó en vivo.
 
 ## Historias existentes afectadas
 
@@ -22,7 +22,7 @@
 - Se añade aviso contextual visible solo al seleccionar «Examen»: para modificar las horas, acudir a «Mis asignaturas».
 - El backend valida la asociación, permite quitarla de una tarea o entrega y rechaza asignaturas ajenas o la eliminación de la asignatura de un examen.
 - **Pruebas añadidas/modificadas:** `tests/test_reparto_horas.py`, `tests/examenes-form.test.js`, pruebas previas del planificador.
-- **Verificación 23/11/2026:** pruebas de creación, edición, desvinculación y asignación de horas a tareas; suite completa con 156 pruebas Jest y 178 Python.
+- **Verificación 23/11/2026:** pruebas de creación, edición, desvinculación y asignación de horas a tareas; suite completa con 157 pruebas Jest y 178 Python.
 
 ### HU06 — Generación automática del plan de estudio · Issue #6
 **Tipo:** modificación de la lógica de reparto.

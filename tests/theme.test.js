@@ -147,3 +147,53 @@ test("mantiene contraste legible en asignaturas y horario con el tema oscuro", (
   expectReadable(color(".schedule-modal-content label", "color"), color(".schedule-modal-content", "backgroundColor"));
   expectReadable(color(".schedule-modal-content select", "color"), color(".schedule-modal-content select", "backgroundColor"));
 });
+
+test("mantiene contraste legible en los recordatorios con el tema oscuro", () => {
+  dom = new JSDOM(`<!doctype html><html data-theme="dark"><head>
+    <style>${stylesheet}</style>
+  </head><body>
+    <section class="recordatorios-card">
+      <div class="recordatorios-icon">🔔</div>
+      <div class="recordatorio-item recordatorio-item--alta">
+        <div>
+          <span class="recordatorio-tipo recordatorio-tipo--alta">Entrega</span>
+          <h4 class="recordatorio-titulo">Proyecto</h4>
+          <small class="recordatorio-detalle">Vence pronto</small>
+        </div>
+        <span class="recordatorio-plazo">2 d</span>
+      </div>
+      <span class="recordatorio-tipo recordatorio-tipo--media">Tarea</span>
+      <span class="recordatorio-tipo recordatorio-tipo--normal">Examen</span>
+      <div class="recordatorio-vacio">
+        <p class="recordatorio-vacio-titulo">¡Todo al día!</p>
+        <p class="recordatorio-vacio-detalle">No hay entregas próximas.</p>
+      </div>
+      <div class="recordatorio-error">No se pudieron cargar.</div>
+    </section>
+  </body></html>`);
+  const { window } = dom;
+  const color = (selector, property) => window.getComputedStyle(window.document.querySelector(selector))[property];
+  const luminance = (value) => {
+    const [red, green, blue] = value.match(/\d+/g).slice(0, 3).map(Number).map((channel) => {
+      const normalized = channel / 255;
+      return normalized <= 0.04045 ? normalized / 12.92 : ((normalized + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+  };
+  const expectReadable = (foreground, background) => {
+    const levels = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+    expect((levels[0] + 0.05) / (levels[1] + 0.05)).toBeGreaterThanOrEqual(4.5);
+  };
+
+  expect(color(".recordatorios-card", "borderTopColor")).toBe("rgb(53, 68, 91)");
+  expect(color(".recordatorios-icon", "backgroundColor")).toBe("rgb(37, 59, 97)");
+  expectReadable(color(".recordatorio-titulo", "color"), color(".recordatorio-item", "backgroundColor"));
+  expectReadable(color(".recordatorio-detalle", "color"), color(".recordatorio-item", "backgroundColor"));
+  expectReadable(color(".recordatorio-plazo", "color"), color(".recordatorio-plazo", "backgroundColor"));
+  for (const selector of [".recordatorio-tipo--alta", ".recordatorio-tipo--media", ".recordatorio-tipo--normal"]) {
+    expectReadable(color(selector, "color"), color(selector, "backgroundColor"));
+  }
+  expectReadable(color(".recordatorio-vacio-titulo", "color"), color(".recordatorio-vacio", "backgroundColor"));
+  expectReadable(color(".recordatorio-vacio-detalle", "color"), color(".recordatorio-vacio", "backgroundColor"));
+  expectReadable(color(".recordatorio-error", "color"), color(".recordatorio-error", "backgroundColor"));
+});

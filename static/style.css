@@ -2489,18 +2489,9 @@ html[data-theme="dark"] .callout-card { background: #17372e !important; border-c
 html[data-theme="dark"] .callout-card :is(strong,span) { color: #d1fae5 !important; }
 html[data-theme="dark"] .welcome-card { background: linear-gradient(120deg,#243e86,#334dc2) !important; }
 html[data-theme="dark"] .welcome-card :is(h2,p,span) { color: #fff !important; }
-/* Los recordatorios usan estilos en línea: sustituimos también esos colores. */
+/* Contraste de las tarjetas de recordatorios generadas por el dashboard. */
 html[data-theme="dark"] .recordatorios-card :is(h3,strong) { color: #f1f5f9 !important; }
 html[data-theme="dark"] .recordatorios-card p { color: #aebdd2 !important; }
-html[data-theme="dark"] .recordatorios-card [style*="background: #f0fdf4"],
-html[data-theme="dark"] .recordatorios-card [style*="background-color: #f0fdf4"] { background: #123c32 !important; border-color: #2d705b !important; }
-html[data-theme="dark"] .recordatorios-card [style*="background: #eff6ff"] { background: #253b61 !important; }
-html[data-theme="dark"] .recordatorios-card [style*="color: #1e293b"] { color: #f1f5f9 !important; }
-html[data-theme="dark"] .recordatorios-card [style*="color: #64748b"],
-html[data-theme="dark"] .recordatorios-card [style*="color: #94a3b8"] { color: #b6c5d9 !important; }
-html[data-theme="dark"] .recordatorios-card [style*="color: #065f46"],
-html[data-theme="dark"] .recordatorios-card [style*="color: #059669"] { color: #86efac !important; }
-html[data-theme="dark"] .recordatorios-card [style*="color: #10b981"] { color: #6ee7b7 !important; }
 
 
 /* Navegación lateral en escritorio. En móvil mantenemos la barra adaptable. */
@@ -2678,6 +2669,39 @@ html[data-theme="dark"] #subject-form input,html[data-theme="dark"] #subject-for
 .reminder-settings-form #recordatorios-config-estado { flex-basis:100%; margin:0; }
 html[data-theme="dark"] .reminder-settings-form { background:#172235; border-color:#35445b; color:#f1f5f9; }
 html[data-theme="dark"] .reminder-settings-form select { background:#202e45; border-color:#42516a; color:#f1f5f9; }
+
+.recordatorio-item { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; margin-bottom:8px; background:#fff; border:1px solid #e2e8f0; border-left:5px solid #3b82f6; border-radius:10px; }
+.recordatorio-item--alta { border-left-color:#ef4444; }
+.recordatorio-item--media { border-left-color:#f59e0b; }
+.recordatorio-tipo { display:inline-block; padding:2px 8px; border-radius:6px; font-size:.75rem; font-weight:700; text-transform:uppercase; }
+.recordatorio-tipo--alta { background:#fef2f2; color:#dc2626; }
+.recordatorio-tipo--media { background:#fffbeb; color:#d97706; }
+.recordatorio-tipo--normal { background:#eff6ff; color:#1d4ed8; }
+.recordatorio-titulo { margin:4px 0 2px; font-size:.95rem; font-weight:600; color:#0f172a; }
+.recordatorio-detalle { color:#64748b; font-size:.825rem; }
+.recordatorio-plazo { display:inline-block; padding:6px 12px; border:1px solid #cbd5e1; border-radius:8px; background:#f1f5f9; color:#334155; font-size:.85rem; font-weight:700; }
+.recordatorio-vacio { padding:1.25rem; border:1px solid #bbf7d0; border-radius:12px; background:#f0fdf4; color:#166534; text-align:center; }
+.recordatorio-vacio-titulo { margin:0; font-size:.95rem; font-weight:600; }
+.recordatorio-vacio-detalle { margin:2px 0 0; color:#15803d; font-size:.85rem; }
+.recordatorio-error { padding:1rem; border-radius:10px; background:#fef2f2; color:#991b1b; font-size:.875rem; text-align:center; }
+.recordatorios-card { background:#fff; border:1px solid #e2e8f0; }
+.recordatorios-icon { background:#eff6ff; }
+html[data-theme="dark"] .recordatorio-item { background:#202e45; border-color:#42516a; color:#f1f5f9; }
+html[data-theme="dark"] .recordatorio-item--alta { border-left-color:#f87171; }
+html[data-theme="dark"] .recordatorio-item--media { border-left-color:#fbbf24; }
+html[data-theme="dark"] .recordatorio-item--normal { border-left-color:#60a5fa; }
+html[data-theme="dark"] .recordatorio-tipo--alta { background:#4c242b; color:#fecaca; }
+html[data-theme="dark"] .recordatorio-tipo--media { background:#44351b; color:#fde68a; }
+html[data-theme="dark"] .recordatorio-tipo--normal { background:#253b61; color:#bfdbfe; }
+html[data-theme="dark"] .recordatorio-titulo { color:#f1f5f9; }
+html[data-theme="dark"] .recordatorio-detalle { color:#d1d9e5; }
+html[data-theme="dark"] .recordatorio-plazo { background:#263651; border-color:#42516a; color:#e2e8f0; }
+html[data-theme="dark"] .recordatorio-vacio { background:#123c32; border-color:#2d705b; color:#d1fae5; }
+html[data-theme="dark"] .recordatorios-card .recordatorio-vacio-titulo { color:#d1fae5 !important; }
+html[data-theme="dark"] .recordatorios-card .recordatorio-vacio-detalle { color:#a7f3d0 !important; }
+html[data-theme="dark"] .recordatorio-error { background:#42252c; color:#fecaca; }
+html[data-theme="dark"] .recordatorios-card { background:#172235 !important; border-color:#35445b !important; }
+html[data-theme="dark"] .recordatorios-icon { background:#253b61 !important; }
 
 /* Disponibilidad puntual de los siete días previos al plan. */
 .plan-block-editor { margin:18px 0; padding:18px; border:1px solid var(--border-card,#cbd5e1); border-radius:12px; background:var(--bg-card,#fff); color:var(--text-main,#334155); }
