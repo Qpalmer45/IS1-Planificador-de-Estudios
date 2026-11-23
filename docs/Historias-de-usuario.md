@@ -115,19 +115,13 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA04:** La consulta del calendario no modifica el plan y muestra únicamente los datos de la cuenta autenticada.
 - **Evidencias:** Implementado en `main` (`templates/index.html`, `static/plan.js`, `static/style.css`) y verificado mediante `tests/plan.test.js`.
 
-## HU08 - Priorización automática
+## HU08 — Priorización automática
 
-[Issue #8](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/8)
-
-**Historia:** Como usuario, quiero que el plan priorice exámenes próximos, entregas y asignaturas importantes para distribuir mejor mi tiempo.
-
-**Valor:** Muy alto  
-**Estimación:** 2 días
-
-**Criterios de aceptación:**
-- Tiene en cuenta la proximidad de fechas límite.
-- Tiene en cuenta la importancia configurada.
-- La prioridad influye en la distribución del estudio.
+- **Issue:** [Issue #8](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/8)
+- **Estado:** Absorbida (Cerrada como duplicada de [HU06](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6))
+- **Historia:** Como estudiante, quiero que el planificador priorice automáticamente según proximidad de exámenes, plazos y dificultad/prioridad para optimizar mi estudio.
+- **Alcance:** Regla interna de ordenación y reparto consolidada íntegramente dentro del motor de `HU06`. No se contabiliza estimación separada.
+- **Evidencias:** Consolidada en `HU06` (`#6`).
 
 ## HU09 - Horas de inicio y fin de las sesiones
 
