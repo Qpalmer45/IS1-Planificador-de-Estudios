@@ -4,6 +4,17 @@ Recopilación del Product Backlog a partir de las [issues de GitHub](https://git
 
 Estado histórico del documento original (HU01–HU27). Las HU posteriores se incorporan a continuación; consultar cada issue para conocer su estado actual.
 
+Para garantizar la coherencia funcional y el cumplimiento de los criterios **INVEST** (*Independent, Negotiable, Valuable, Estimable, Small, Testable*) a lo largo de todas las historias de usuario (`HU01`–`HU44`), se establecen las siguientes definiciones base del sistema:
+
+* **Sesión de estudio:** Unidad básica de planificación temporal dentro de StudyPlan. Representa un bloque continuo de tiempo asignado a una **asignatura** (o a una tarea/entrega vinculada a una asignatura), definido por una fecha, hora de inicio, hora de fin y duración en minutos.
+  * *Evolución técnica:* En la fase inicial de generación y visualización (`HU06`, `HU07`, `HU09`), las sesiones se calculan dinámicamente a partir de las restricciones del usuario. Para soportar edición manual (`HU10`), registro de cumplimiento (`HU14`), replanificación (`HU15`) y estadísticas (`HU18`), cada sesión requiere persistencia individual en SQLite con tres estados explícitos: `pendiente`, `completada` y `no_realizada`.
+* **Disponibilidad semanal neta:** Tiempo útil real disponible para estudiar en una semana concreta. Se obtiene restando a la disponibilidad bruta recurrente del usuario (`HU02`) tanto su horario fijo de clases (`HU05`) como sus compromisos puntuales bloqueados para esa semana (`HU06`).
+* **Hitos académicos vs. Objetivos de estudio:**
+  * Las **asignaturas** (`HU01`) tienen un objetivo semanal de minutos deseados (`HU13`), dificultad y prioridad (`HU12`).
+  * Las **tareas y entregas** (`HU04`) tienen fecha límite y minutos estimados propios.
+  * Los **exámenes** (`HU03`, `HU04`) actúan como hitos temporales vinculados a una asignatura: no añaden minutos propios al cálculo, sino que incrementan la urgencia de estudiar su asignatura asociada conforme se acerca su fecha.
+* **Independencia y trazabilidad (INVEST):** Aunque las funcionalidades siguen un flujo lógico de datos (gestión de cuenta $\rightarrow$ asignaturas y restricciones $\rightarrow$ motor de planificación $\rightarrow$ visualización y seguimiento), cada historia se especifica y verifica de forma autocontenida mediante datos de prueba aislados, evitando mezclar criterios de aceptación entre historias distintas.
+
 ## HU01 - Gestión de asignaturas
 
 [Issue #1](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/1)
