@@ -624,3 +624,16 @@ Se identificó una **SyntaxError** en `static/daily-chess.js`: la edición anter
 **Pruebas escritas:** cinco casos frontend (sintaxis, Sudoku, 2048 tablero, movimiento, Simon) y siete backend (generación determinista, reglas de Sudoku, contrato, validación, pistas, solución, configuración). **Pendiente ejecutar las baterías y revisión visual**; no se afirma que estén pasando.
 
 **Criterios de aceptación:** acceso desde Juegos mentales; ajedrez preservado; Sudoku estable en el mismo día con validación del servidor; 2048 fusiona correctamente y conserva puntuación; Simon reproduce y comprueba secuencias; interfaz adaptable a móvil; estado conservado por usuario.
+
+
+## HU55 — Ranking privado de horas de estudio con amigos (pendiente)
+
+**Como** estudiante registrado, **quiero** añadir amigos y consultar un ranking de las horas reales que hemos estudiado, **para** comparar nuestro progreso y motivarnos.
+
+**GitHub:** https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/55
+
+**Resumen:** solicitudes de amistad, registro de sesiones reales con pausas, clasificación privada semanal/mensual/acumulada, consentimiento para compartir estadísticas, estados vacíos y diseño responsive. El servidor debe calcular los minutos efectivos y verificar la autorización de cada consulta; las horas planificadas no cuentan como estudiadas.
+
+**Aceptación:** autenticación; amistad aceptada; sesiones finalizadas y sin pausas; cálculo correcto por periodo; empates; privacidad; retirada de consentimiento; pruebas unitarias backend y frontend.
+
+**Estado:** pendiente de desarrollo. No se ha modificado la aplicación.
