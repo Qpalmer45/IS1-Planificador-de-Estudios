@@ -54,20 +54,21 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 - **Alcance:** Funcionalidad integrada íntegramente dentro de `HU04` (*Gestión de tareas, entregas y exámenes*). La antigua regla de «importancia» manual del examen se sustituyó en el modelo vigente por el objetivo semanal de la asignatura vinculada (`HU13`) y la proximidad de la fecha del examen en el generador (`HU06`). No se contabiliza estimación separada.
 - **Evidencias:** Consolidada en `HU04` (`#4`).
 
-## HU04 - Gestión de tareas y entregas
+## HU04 — Gestión de tareas, entregas y exámenes
 
-[Issue #4](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/4)
-
-**Historia:** Como usuario, quiero registrar tareas y entregas, indicando fecha límite y tiempo estimado, para incluirlas en mi planificación.
-
-**Valor:** Muy alto  
-**Estimación:** 1 día
-
-**Criterios de aceptación:**
-- Se puede crear una tarea o entrega.
-- Se puede indicar fecha límite y tiempo estimado.
-- Se puede modificar o eliminar.
-
+- **Issue:** [Issue #4](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/4) · Incidencia vinculada: [Bug #48](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/48)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Historia:** Como estudiante, quiero registrar, editar y eliminar tareas, entregas y exámenes para integrarlos en mi planificación.
+- **Alcance:** Incluye el CRUD completo de actividades académicas en SQLite por usuario: tareas y entregas (con o sin asignatura asociada, fecha límite, minutos estimados totales y objetivo semanal editable) y exámenes (vinculados obligatoriamente a una asignatura propia y con fecha de examen, sin objetivo de minutos independiente). No incluye prioridad manual por actividad (la urgencia se determina por fecha límite/proximidad) ni la lista rápida de To-Dos (`HU27`).
+- **Valor y prioridad:** Muy alto. Alimenta directamente el motor de planificación semanal y los avisos de próximos eventos; prioridad alta (Sprint 2 / Sprint 4).
+- **Estimación:** 2 días (orientativa; abarca formularios, endpoints, validaciones de fechas/pertenencia y pruebas).
+- **Criterios de aceptación:**
+  - **CA01:** El usuario puede crear, editar y eliminar tareas y entregas indicando título, fecha límite, minutos estimados totales y objetivo semanal editable (pudiendo vincularlas o no a una asignatura propia).
+  - **CA02:** El usuario puede crear, editar y eliminar exámenes asociados obligatoriamente a una asignatura propia indicando su fecha, sin minutos semanales propios (su dedicación proviene del objetivo semanal de la asignatura sin duplicarse).
+  - **CA03:** Al crear o modificar la fecha de una tarea, entrega o examen, el sistema admite la fecha local actual o futura y rechaza fechas anteriores al día actual (permitiendo editar otros campos de actividades ya vencidas sin obligar a cambiar su fecha, según `#48`).
+  - **CA04:** Todas las operaciones validan la propiedad en el servidor (SQLite) y rechazan asociaciones o modificaciones sobre asignaturas o actividades de otros usuarios.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado en la ejecución de pruebas (`157` Jest / `178` Python), incluyendo `tests/test_app.py`, `tests/test_objetivos_semanales.py` y `tests/examenes-form.test.js`.
+  
 ## HU05 - Horario de clases
 
 [Issue #5](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/5)
