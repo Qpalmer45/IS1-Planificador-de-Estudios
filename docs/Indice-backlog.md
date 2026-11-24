@@ -12,12 +12,12 @@ Primera versión. Tabla de correspondencia entre identificador de HU, número de
 |---|---|---|---|---|---|---|---|---|
 | HU01 | [#1](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/1) | Gestión de asignaturas | Cerrada (completed) | Terminada | Muy alto | 1 día | — |  |
 | HU02 | [#2](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/2) | Disponibilidad semanal | Cerrada (completed) | Preparada | Muy alto | 1 día | HU05, HU06 (integración) | Docs dicen preparada pero la issue está cerrada |
-| HU03 | [#3](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/3) | Registro de exámenes | Cerrada (duplicada) | Absorbida | — | — | Absorbida por HU04 |  |
+| HU03 | [#3](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/3) | Registro de exámenes | Cerrada (duplicada) | Absorbida | — | — | Absorbida por [HU04 (#4)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/4) |  |
 | HU04 | [#4](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/4) | Gestión de tareas, entregas y exámenes | Cerrada (completed) | Terminada | Muy alto | 2 días | HU01 (exámenes) |  |
 | HU05 | [#5](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/5) | Horario de clases | Cerrada (completed) | Terminada | Muy alto | 1 día | HU01 |  |
 | HU06 | [#6](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6) | Generación automática del plan de estudio | Cerrada (completed) | Terminada | Muy alto | 3 días | HU01, HU02, HU04, HU05, HU11, HU12, HU13 |  |
 | HU07 | [#7](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7) | Calendario semanal | Cerrada (completed) | Terminada | Muy alto | 2 días | HU06 (sesiones) |  |
-| HU08 | [#8](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/8) | Priorización automática | Cerrada (duplicada) | Absorbida | — | — | Absorbida por HU06 |  |
+| HU08 | [#8](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/8) | Priorización automática | Cerrada (duplicada) | Absorbida | — | — | Absorbida por [HU06 (#6)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6) |  |
 | HU09 | [#9](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/9) | Horas de inicio y fin de las sesiones | Abierta | Absorbida | — | — | Absorbida por HU07 | Docs dicen absorbida pero la issue está abierta |
 | HU10 | [#10](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/10) | Edición manual de sesiones | Abierta | Propuesta | Alto | 2 días | SP, HU06, HU07 |  |
 | HU11 | [#11](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/11) | Descansos entre sesiones | Abierta | Terminada | Alto | 1 día | HU06 (consumo) | Docs dicen terminada pero la issue está abierta |
@@ -31,10 +31,10 @@ Primera versión. Tabla de correspondencia entre identificador de HU, número de
 | HU19 | [#19](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/19) | Recordatorios | Cerrada (completed) | Terminada | Bajo-medio | 2 días | HU04; SP y HU06 si avisa de sesiones |  |
 | HU20 | [#20](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/20) | Registro de usuario | Cerrada (completed) | Terminada | Alto (base transversal) | 2 días | — |  |
 | HU21 | [#22](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/22) | Inicio de sesión | Cerrada (completed) | Terminada | Alto (base transversal) | 1 día | HU20 |  |
-| HU22 | [#23](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/23) | Horas estudiadas semanalmente | Cerrada (duplicada) | Absorbida | — | — | Absorbida por HU18 |  |
+| HU22 | [#23](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/23) | Horas estudiadas semanalmente | Cerrada (duplicada) | Absorbida | — | — | Absorbida por [HU18 (#18)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18) |  |
 | HU23 | [#24](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/24) | Apartado individual por asignatura | Cerrada (completed) | Terminada | Alto | 1 día | HU01 |  |
-| HU24 | [#25](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/25) | Seguimiento de sesiones de estudio | Cerrada (duplicada) | Absorbida | — | — | Absorbida por HU18 |  |
-| HU25 | [#26](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/26) | Asignaturas estudiadas semanalmente | Cerrada (duplicada) | Absorbida | — | — | Absorbida por HU18 |  |
+| HU24 | [#25](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/25) | Seguimiento de sesiones de estudio | Cerrada (duplicada) | Absorbida | — | — | Absorbida por [HU18 (#18)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18) |  |
+| HU25 | [#26](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/26) | Asignaturas estudiadas semanalmente | Cerrada (duplicada) | Absorbida | — | — | Absorbida por [HU18 (#18)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/18) |  |
 | HU26 | [#27](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/27) | Gestión del temario por asignatura | Cerrada (completed) | Terminada | Alto | 1 día | HU01, HU23 |  |
 | HU27 | [#29](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/29) | Lista de To-Dos | Cerrada (completed) | Terminada | Medio | 1 día | — |  |
 | HU28 | [#36](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/36) | Filtrar To-Dos por estado | Cerrada (completed) | Terminada | Medio | 1 día | HU27 |  |
@@ -51,7 +51,7 @@ Primera versión. Tabla de correspondencia entre identificador de HU, número de
 | HU39 | [#47](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/47) | Confirmación antes de descartar cambios | Abierta | Preparada | Medio | 1 día | HU01, HU04 |  |
 | HU40 | [#50](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/50) | Elegir entre modo claro y oscuro | Cerrada (completed) | Terminada | Medio | 1 día | — |  |
 | HU41 | [#51](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/51) | Aprovechar el ancho disponible del panel principal | Abierta | En revisión | Medio-alto | 0,5 días | HU40 |  |
-| HU42 | [#52](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/52) | Generar y visualizar el horario semanal de estudio automático | Cerrada (duplicada) | Absorbida | — | — | Absorbida por HU06, HU07, HU09, HU11 |  |
+| HU42 | [#52](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/52) | Generar y visualizar el horario semanal de estudio automático | Cerrada (duplicada) | Absorbida | — | — | Absorbida por [HU06 (#6)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/6), [HU07 (#7)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/7), [HU09 (#9)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/9), [HU11 (#11)](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/11) |  |
 | HU43 | [#53](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/53) | Recuperación segura de contraseña | Abierta | Preparada | Alto | 3 días | HU20, HU21 |  |
 | HU44 | [#54](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/54) | Resolver retos diarios de ajedrez para activar la mente | Cerrada (completed) | Terminada | Bajo-medio | 2 días | Cuenta (progreso por usuario) |  |
 | HU45 | — | Resolver reto diario de Sudoku | Sin issue | Terminada | Bajo | 1,5 días | Por definir |  |
