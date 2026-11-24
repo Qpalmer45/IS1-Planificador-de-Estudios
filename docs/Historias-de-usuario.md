@@ -2,7 +2,7 @@
 
 Recopilación del Product Backlog a partir de las [issues de GitHub](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues). Se conservan el valor, la estimación y los criterios de aceptación publicados en cada issue. En GitHub, el valor se expresa como nivel (por ejemplo, «Muy alto»); no se sustituye por una prioridad distinta.
 
-Para garantizar la coherencia funcional y el cumplimiento de los criterios **INVEST** (*Independent, Negotiable, Valuable, Estimable, Small, Testable*) a lo largo de todas las historias de usuario (`HU01`–`HU44`), se establecen las siguientes definiciones base del sistema:
+Para garantizar la coherencia funcional y el cumplimiento de los criterios **INVEST** (*Independent, Negotiable, Valuable, Estimable, Small, Testable*) a lo largo de todas las historias de usuario (`HU01`–`HU48`), se establecen las siguientes definiciones base del sistema:
 
 * **Sesión de estudio:** Unidad básica de planificación temporal dentro de StudyPlan. Representa un bloque continuo de tiempo asignado a una **asignatura** (o a una tarea/entrega vinculada a una asignatura), definido por una fecha, hora de inicio, hora de fin y duración en minutos.
   
