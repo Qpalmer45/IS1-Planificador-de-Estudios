@@ -319,7 +319,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Issue:** [Issue #16](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/16)
   
-- **Estado:** Propuesta (Abierta)
+- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada).
   
 - **Historia:** Como usuario, quiero configurar un perfil de aprendizaje con mis preferencias de estudio para personalizar la generación de mis sesiones.
   
@@ -334,7 +334,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA02:** Las preferencias se guardan en SQLite asociadas al usuario autenticado y se aplican como parámetros por defecto al generar nuevos planes (`HU06`).
   - **CA03:** Si el usuario no ha configurado un perfil personalizado, el sistema aplica valores predeterminados válidos sin errores y aísla los datos entre cuentas.
     
-- **Evidencias:** Pendiente de implementación (la personalización visual del avatar en *Inicio* se gestiona como mejora independiente de interfaz).
+- **Evidencias:** - **Evidencias:** Implementado en `main` (`app.py`, `planificador.py`, `templates/index.html`, `static/plan.js`, `static/style.css`) y verificado mediante `tests/test_preferencias_estudio.py` y `tests/preferencias-estudio.test.js` (suite completa `npm run test:all` ejecutada con éxito).
 
 ## HU17 — Importación del horario mediante imagen
 
