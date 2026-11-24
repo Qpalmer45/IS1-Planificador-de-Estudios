@@ -20,7 +20,8 @@ def formato(valor):
 
 
 def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
-                   hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15, bloqueos=None):
+                   hora_inicio="16:00", hora_fin="21:00", duracion=60, descanso=15,
+                   bloqueos=None, franja_concentracion="sin_preferencia"):
     if isinstance(inicio, str):
         inicio = date.fromisoformat(inicio)
     if not isinstance(inicio, date):
@@ -28,6 +29,12 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
     desde, hasta = minutos(hora_inicio), minutos(hora_fin)
     if type(duracion) is not int or type(descanso) is not int or not 25 <= duracion <= 180 or not 0 <= descanso <= 60 or desde >= hasta:
         raise ValueError("Franja, duración o descanso inválidos.")
+    FRANJAS = {
+        "manana": (8 * 60, 14 * 60),
+        "tarde": (14 * 60, 20 * 60),
+        "noche": (20 * 60, 23 * 60 + 59),
+    }
+    franja_rango = FRANJAS.get(franja_concentracion)
     bloqueos = [] if bloqueos is None else bloqueos
     if not isinstance(bloqueos, list) or len(bloqueos) > 100:
         raise ValueError("Demasiados bloqueos.")
@@ -91,6 +98,29 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
                              "bloqueos": [dict(b) for b in normalizados if b["fecha"] == fecha],
                              "_franjas": franjas})
 
+    def franjas_para_fase(franjas_list, fase):
+        """Devuelve las franjas ordenadas según la fase y la preferencia horaria."""
+        if not franja_rango:
+            return franjas_list
+        pref_start, pref_end = franja_rango
+        preferidas = []
+        resto = []
+        for a, b in franjas_list:
+            if a < pref_end and b > pref_start:
+                inter_start = max(a, pref_start)
+                inter_end = min(b, pref_end)
+                if a < inter_start:
+                    resto.append((a, inter_start))
+                if inter_start < inter_end:
+                    preferidas.append((inter_start, inter_end))
+                if inter_end < b:
+                    resto.append((inter_end, b))
+            else:
+                resto.append((a, b))
+        if fase == "extras":
+            return preferidas
+        return preferidas + resto
+
     def peso(m):
         return PESO.get(m.get("prioridad"), 2) * PESO.get(m.get("dificultad"), 2)
 
@@ -109,7 +139,7 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
         for dia in sesiones_dia:
             fecha = date.fromisoformat(dia["fecha"])
             nuevas = []
-            for comienzo, final_franja in dia["_franjas"]:
+            for comienzo, final_franja in franjas_para_fase(dia["_franjas"], fase):
                 cursor = comienzo
                 while cursor < final_franja:
                     candidatos = []
@@ -167,8 +197,9 @@ def generar_semana(inicio, asignaturas, actividades, clases, periodos, *,
                                    "asignatura": materia["nombre"] if materia else "Actividad pendiente",
                                    "actividad": actividad, "tipo": tipo_actividad})
                     cursor = fin + descanso
+            nuevas.sort(key=lambda s: s["inicio"])
             if fase == "objetivos":
-                dia["sesiones"] = nuevas
+                dia["sesiones"] = list(nuevas)
                 # En fase extras se recalculan los huecos después de reservar
                 # sesiones de objetivos.
                 franjas = []
