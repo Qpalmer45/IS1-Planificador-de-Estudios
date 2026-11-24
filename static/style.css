@@ -2886,3 +2886,76 @@ html[data-theme="dark"] .daily-chess-card { background:#172235; border-color:#35
 .simon-board button[data-simon="3"] {background:#3b82f6;}
 .simon-board button.lit,.simon-board button:focus-visible {filter:brightness(1.4);transform:scale(1.035);outline:3px solid var(--text-main);}
 @media(prefers-reduced-motion:reduce){.simon-board button{transition:none;}}
+
+/* HU16: Perfil y preferencias de aprendizaje */
+.plan-preferences-card {
+  margin-bottom: 1.5rem;
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  box-shadow: var(--shadow-sm);
+}
+.plan-preferences-card h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+.plan-preferences-card > p {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+.plan-preferences-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+.pref-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 200px;
+  min-width: 180px;
+}
+.pref-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-body);
+}
+.pref-field input,
+.pref-field select {
+  padding: 9px 12px;
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  color: var(--text-main);
+  background: var(--bg-page);
+  transition: var(--transition);
+}
+.pref-field input:focus,
+.pref-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.plan-preferences-form .primary-btn {
+  align-self: flex-end;
+  height: 42px;
+}
+#pref-estudio-estado {
+  width: 100%;
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--success);
+  min-height: 1.2em;
+}
+#pref-estudio-estado:not(:empty) {
+  margin-top: 0.25rem;
+}
+#pref-estudio-estado.error {
+  color: var(--danger);
+}
