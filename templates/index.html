@@ -86,7 +86,6 @@
         <button type="button" class="tab-btn" data-tab="planificador">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
           <span>Plan de Estudio</span>
-          <span class="tab-badge muted">Próximamente</span>
         </button>
         <button type="button" class="tab-btn" data-tab="ajedrez">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2.5"></circle><path d="M9.5 8.5c0 1.5.9 2.5 1.5 3.5-1.6 1.2-2.7 2.6-2.7 4h7.4c0-1.4-1.1-2.8-2.7-4 .6-1 1.5-2 1.5-3.5"></path><path d="M7 18h10l1 3H6l1-3Z"></path></svg>
@@ -749,6 +748,28 @@
         <h2>Mi plan de estudio</h2>
         <p>Organiza automáticamente tus sesiones de la semana sin solaparlas con las clases.</p>
       </div></div>
+      <!-- HU16: Perfil y preferencias de aprendizaje -->
+      <section class="plan-preferences-card card" aria-labelledby="pref-heading">
+        <h3 id="pref-heading">Perfil y preferencias de aprendizaje</h3>
+        <p>Personaliza la duración y la franja horaria preferida de tus sesiones de estudio.</p>
+        <form id="preferencias-estudio-form" class="plan-preferences-form">
+          <div class="pref-field">
+            <label for="pref-duracion-sesion">Duración preferida de sesión (min)</label>
+            <input id="pref-duracion-sesion" type="number" min="15" max="240" step="5" value="60" required>
+          </div>
+          <div class="pref-field">
+            <label for="pref-franja-concentracion">Franja preferente de concentración</label>
+            <select id="pref-franja-concentracion" required>
+              <option value="sin_preferencia">Sin preferencia</option>
+              <option value="manana">Mañana (08:00 – 14:00)</option>
+              <option value="tarde">Tarde (14:00 – 20:00)</option>
+              <option value="noche">Noche (20:00 – 23:59)</option>
+            </select>
+          </div>
+          <button type="submit" class="primary-btn">Guardar preferencias</button>
+          <p id="pref-estudio-estado" role="status" aria-live="polite"></p>
+        </form>
+      </section>
       <section class="plan-block-editor" aria-labelledby="plan-block-heading">
         <h3 id="plan-block-heading">Disponibilidad de los próximos 7 días</h3>
         <p>Marca los tramos en los que no puedes o no quieres estudiar. Por ejemplo, un partido de fútbol. Se respetarán al generar el horario.</p>
