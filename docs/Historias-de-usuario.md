@@ -890,7 +890,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 ## HU45 — Resolver reto diario de Sudoku
 
-- **Issue:** Pendiente de vincular en GitHub (implementado en `main` el 23/11/2026)
+- **Issue:** [Issue #56](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/56) (implementado en `main` el 23/11/2026)
 
 - **Estado:** Terminada (Implementada en `main`; pendiente verificar integración en `npm run test:frontend`)
 
@@ -911,7 +911,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 ## HU46 — Jugar partida de 2048 en descansos
 
-- **Issue:** Pendiente de vincular en GitHub (implementado en `main` el 23/11/2026)
+- **Issue:** [Issue #57](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/57) (implementado en `main` el 23/11/2026)
 
 - **Estado:** Terminada (Implementada en `main`; pendiente verificar integración en `npm run test:frontend`)
 
@@ -932,7 +932,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 ## HU47 — Jugar reto de memoria secuencial (Simon)
 
-- **Issue:** Pendiente de vincular en GitHub (implementado en `main` el 23/11/2026)
+- **Issue:** [Issue #58](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/58) (implementado en `main` el 23/11/2026)
 
 - **Estado:** Terminada (Implementada en `main`; pendiente verificar integración en `npm run test:frontend`)
 
