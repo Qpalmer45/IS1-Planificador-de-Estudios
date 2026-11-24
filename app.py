@@ -162,6 +162,18 @@ def initialize_database():
                 )
             """)
 
+            # HU16: preferencias de aprendizaje por usuario.
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS preferencias_estudio (
+                    usuario_id INTEGER PRIMARY KEY
+                        REFERENCES usuarios(id) ON DELETE CASCADE,
+                    duracion_sesion_preferida INTEGER NOT NULL DEFAULT 60,
+                    franja_concentracion TEXT NOT NULL DEFAULT 'sin_preferencia'
+                        CHECK (franja_concentracion IN
+                               ('sin_preferencia','manana','tarde','noche'))
+                )
+            """)
+
             preparar_tabla_actividades(conn)
 
             # Cada asignatura pertenece a un usuario y puede consultarse de forma
@@ -1119,6 +1131,73 @@ def eliminar_tarea(tarea_id):
     return "", 204
 
 
+# --- HU16: PERFIL Y PREFERENCIAS DE APRENDIZAJE ---
+
+FRANJAS_CONCENTRACION_VALIDAS = ('sin_preferencia', 'manana', 'tarde', 'noche')
+
+
+@app.get("/api/preferencias-estudio")
+@login_required
+def obtener_preferencias_estudio():
+    """Devuelve las preferencias de aprendizaje del usuario autenticado (HU16)."""
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    fila = db.execute(
+        "SELECT duracion_sesion_preferida, franja_concentracion "
+        "FROM preferencias_estudio WHERE usuario_id = ?",
+        (usuario_id,),
+    ).fetchone()
+    if fila is None:
+        return jsonify({
+            "duracion_sesion_preferida": 60,
+            "franja_concentracion": "sin_preferencia",
+        }), 200
+    return jsonify({
+        "duracion_sesion_preferida": fila["duracion_sesion_preferida"],
+        "franja_concentracion": fila["franja_concentracion"],
+    }), 200
+
+
+@app.put("/api/preferencias-estudio")
+@login_required
+def guardar_preferencias_estudio():
+    """Guarda las preferencias de aprendizaje del usuario autenticado (HU16)."""
+    datos = request.get_json(silent=True)
+    if not isinstance(datos, dict):
+        return jsonify({"error": "Se requiere un objeto JSON."}), 400
+
+    duracion = datos.get("duracion_sesion_preferida")
+    if duracion is None:
+        return jsonify({"error": "Debes indicar la duración preferida de sesión."}), 400
+    if isinstance(duracion, bool) or not isinstance(duracion, int):
+        return jsonify({"error": "La duración preferida debe ser un número entero entre 15 y 240 minutos."}), 400
+    if not (15 <= duracion <= 240):
+        return jsonify({"error": "La duración preferida debe ser un número entero entre 15 y 240 minutos."}), 400
+
+    franja = datos.get("franja_concentracion")
+    if franja is None:
+        return jsonify({"error": "Debes indicar la franja preferente de concentración."}), 400
+    if not isinstance(franja, str) or franja not in FRANJAS_CONCENTRACION_VALIDAS:
+        return jsonify({"error": "La franja de concentración debe ser una de: sin_preferencia, manana, tarde, noche."}), 400
+
+    usuario_id = session["usuario_id"]
+    db = get_db()
+    with db:
+        db.execute(
+            """INSERT INTO preferencias_estudio
+               (usuario_id, duracion_sesion_preferida, franja_concentracion)
+               VALUES (?, ?, ?)
+               ON CONFLICT(usuario_id)
+               DO UPDATE SET duracion_sesion_preferida = excluded.duracion_sesion_preferida,
+                             franja_concentracion = excluded.franja_concentracion""",
+            (usuario_id, duracion, franja),
+        )
+    return jsonify({
+        "duracion_sesion_preferida": duracion,
+        "franja_concentracion": franja,
+    }), 200
+
+
 # --- MODELO / API PARA GENERADOR DE PLANES DE ESTUDIO (HU12, HU06) ---
 
 def obtener_datos_planificacion(usuario_id):
@@ -1187,12 +1266,22 @@ def api_plan_semana():
         periodos = [dict(row) for row in db.execute(
             """SELECT fecha_inicio, fecha_fin FROM periodos_libres
                WHERE usuario_id = ? AND fecha_fin >= ?""", (usuario_id, inicio)).fetchall()]
+        # HU16: leer franja de concentración preferida
+        franja_concentracion = parametros.get("franja_concentracion")
+        if not franja_concentracion or franja_concentracion not in ('sin_preferencia', 'manana', 'tarde', 'noche'):
+            pref_row = db.execute(
+                "SELECT franja_concentracion FROM preferencias_estudio WHERE usuario_id = ?",
+                (usuario_id,),
+            ).fetchone()
+            franja_concentracion = pref_row["franja_concentracion"] if pref_row else "sin_preferencia"
+
         plan = generar_semana(
             fecha_inicio, materias, actividades, clases, periodos,
             hora_inicio=parametros.get("desde", "16:00"),
             hora_fin=parametros.get("hasta", "21:00"),
             duracion=duracion, descanso=descanso,
-            bloqueos=parametros.get("bloqueos", []))
+            bloqueos=parametros.get("bloqueos", []),
+            franja_concentracion=franja_concentracion)
     except (ValueError, TypeError, OverflowError) as exc:
         return jsonify(error=str(exc)), 400
     return jsonify(plan), 200
