@@ -160,6 +160,89 @@
   });
   renderBlocks();
 
+  // =====================================================
+  // HU16: Perfil y preferencias de aprendizaje
+  // =====================================================
+  const prefForm = document.getElementById("preferencias-estudio-form");
+  const prefDuracion = document.getElementById("pref-duracion-sesion");
+  const prefFranja = document.getElementById("pref-franja-concentracion");
+  const prefEstado = document.getElementById("pref-estudio-estado");
+  let duracionGeneradorModificada = false;
+
+  const planDuracionInput = document.getElementById("plan-duracion");
+  if (planDuracionInput) {
+    planDuracionInput.addEventListener("input", () => {
+      duracionGeneradorModificada = true;
+    });
+  }
+
+  async function cargarPreferenciasEstudio() {
+    try {
+      const res = await fetch("/api/preferencias-estudio", { credentials: "same-origin" });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (prefDuracion) prefDuracion.value = data.duracion_sesion_preferida;
+      if (prefFranja) prefFranja.value = data.franja_concentracion;
+      if (planDuracionInput && !duracionGeneradorModificada) {
+        planDuracionInput.value = data.duracion_sesion_preferida;
+      }
+    } catch (_) {
+      // Si falla la petición no bloqueamos la interfaz
+    }
+  }
+
+  if (prefForm) {
+    cargarPreferenciasEstudio();
+
+    prefForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      if (prefEstado) {
+        prefEstado.textContent = "";
+        prefEstado.className = "";
+      }
+      const dur = Number(prefDuracion?.value);
+      if (!Number.isInteger(dur) || dur < 15 || dur > 240) {
+        if (prefEstado) {
+          prefEstado.textContent = "La duración debe ser un entero entre 15 y 240 minutos.";
+          prefEstado.className = "error";
+        }
+        return;
+      }
+      const franja = prefFranja?.value;
+      try {
+        const res = await fetch("/api/preferencias-estudio", {
+          method: "PUT",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            duracion_sesion_preferida: dur,
+            franja_concentracion: franja
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (prefEstado) {
+            prefEstado.textContent = data.error || "Error al guardar las preferencias.";
+            prefEstado.className = "error";
+          }
+          return;
+        }
+        if (prefEstado) {
+          prefEstado.textContent = "Preferencias guardadas correctamente.";
+          prefEstado.className = "";
+        }
+        if (planDuracionInput) {
+          planDuracionInput.value = data.duracion_sesion_preferida;
+        }
+      } catch (_) {
+        if (prefEstado) {
+          prefEstado.textContent = "No se pudo conectar con el servidor.";
+          prefEstado.className = "error";
+        }
+      }
+    });
+  }
+
   // El dashboard es una vista del MISMO plan persistido, no una segunda copia.
   const homeContent = document.getElementById("home-study-plan-content");
   const homeSummary = document.getElementById("home-study-plan-summary");
@@ -312,7 +395,8 @@
       hasta: document.getElementById("plan-hasta").value,
       duracion: document.getElementById("plan-duracion").value,
       descanso: document.getElementById("plan-descanso").value,
-      bloqueos: blocks.filter(b => weekDates().some(d => d.date === b.fecha)).map(({ fecha, inicio, fin, motivo }) => ({ fecha, inicio, fin, motivo }))
+      bloqueos: blocks.filter(b => weekDates().some(d => d.date === b.fecha)).map(({ fecha, inicio, fin, motivo }) => ({ fecha, inicio, fin, motivo })),
+      franja_concentracion: document.getElementById("pref-franja-concentracion")?.value || "sin_preferencia"
     };
     const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
