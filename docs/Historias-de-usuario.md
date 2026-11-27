@@ -138,7 +138,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA02:** Los exámenes vinculados (`HU04`) no añaden minutos propios, pero su proximidad adelanta la preparación de su asignatura; el tiempo libre sobrante se reparte alternando materias y actividades según prioridad/dificultad de asignatura (`HU12`) y urgencia de fecha límite.
   - **CA03:** Antes de generar, el usuario puede añadir o eliminar franjas ocupadas puntuales (con fecha dentro de los 7 días, inicio, fin y motivo), conservándose en `localStorage` por usuario y mostrándose identificadas en el horario resultante.
   - **CA04:** Se respetan la duración de sesión y el descanso entre bloques (`HU11`), mostrando un aviso de déficit de minutos cuando los objetivos superan el tiempo disponible.
-  - **CA05:** El último plan generado y sus parámetros se conservan en `localStorage` separados por correo del usuario, aislando los datos entre cuentas en el backend.
+  - **CA05:** Al volver a abrir la aplicación en el mismo navegador con la misma cuenta, el usuario recupera su último plan generado y los parámetros con los que lo generó. Al cambiar de cuenta, la aplicación muestra únicamente el plan guardado en ese navegador para la cuenta activa, si lo hay.
     
 - **Evidencias:** Implementado en `main` (`app.py`, `planificador.py`, `static/plan.js`, `templates/index.html`) y verificado en `tests/test_planificador.py`, `tests/test_reparto_horas.py`, `tests/test_objetivos_semanales.py` y `tests/plan.test.js`.
 
@@ -334,7 +334,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA02:** Las preferencias se guardan en SQLite asociadas al usuario autenticado y se aplican como parámetros por defecto al generar nuevos planes (`HU06`).
   - **CA03:** Si el usuario no ha configurado un perfil personalizado, el sistema aplica valores predeterminados válidos sin errores y aísla los datos entre cuentas.
     
-- **Evidencias:** - **Evidencias:** Implementado en `main` (`app.py`, `planificador.py`, `templates/index.html`, `static/plan.js`, `static/style.css`) y verificado mediante `tests/test_preferencias_estudio.py` y `tests/preferencias-estudio.test.js` (suite completa `npm run test:all` ejecutada con éxito).
+- **Evidencias:** Implementado en `main` (`app.py`, `planificador.py`, `templates/index.html`, `static/plan.js`, `static/style.css`) y verificado mediante `tests/test_preferencias_estudio.py` y `tests/preferencias-estudio.test.js` (suite completa `npm run test:all` ejecutada con éxito).
 
 ## HU17 — Importación del horario mediante imagen
 
@@ -375,7 +375,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA01:** El usuario consulta los indicadores correspondientes a la semana en curso (lunes a domingo), calculando las horas estudiadas únicamente a partir de la duración planificada de las sesiones marcadas como `completada`.
   - **CA02:** Se muestra el desglose de tiempo estudiado por asignatura (incluyendo la categoría «Sin asignatura» si existen sesiones de tareas no vinculadas a materia), cuya suma coincide con el total semanal.
   - **CA03:** Se muestra el número de sesiones `completadas` y el número de sesiones marcadas explícitamente como `no_realizada` (excluyendo las sesiones `pendientes`), así como el número y nombre de las asignaturas distintas con al menos una sesión completada.
-  - **CA04:** Si no hay sesiones completadas en la semana, se muestran valores `0` sin errores; las métricas solo agregan datos del usuario autenticado y se actualizan al modificar o eliminar sesiones.
+  - **CA04:** Si no hay sesiones completadas en la semana, el tiempo estudiado y el número de asignaturas estudiadas son cero. El contador de sesiones no realizadas muestra cuántas sesiones se marcaron como `no_realizada` en esa semana. Si no hay sesiones de ningún tipo, todos los contadores muestran cero. Las métricas solo incluyen datos del usuario autenticado y se actualizan al modificar o eliminar sus sesiones.
 - **Evidencias:** Pendiente de implementación (requiere tabla persistente de sesiones de `HU14`).
   
 ## HU19 — Recordatorios
@@ -419,7 +419,7 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
   - **CA02:** El sistema rechaza correos ya registrados o campos vacíos/inválidos mostrando mensajes comprensibles sin crear duplicados.
   - **CA03:** Las credenciales se almacenan de forma segura (hash de contraseña, nunca en texto plano) y todos los registros posteriores quedan vinculados exclusivamente a esa cuenta.
 
-- **Evidencias:** Implementado en `main` (`app.py`, `templates/login.html` / `templates/register.html`) y verificado mediante `tests/test_app.py`.
+- **Evidencias:** Implementado en `main` (`app.py`, `templates/login.html` / `templates/registro.html`) y verificado mediante `tests/test_app.py`.
 
 ## HU21 — Inicio de sesión
 
