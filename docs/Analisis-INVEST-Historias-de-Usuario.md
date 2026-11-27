@@ -566,11 +566,11 @@ Acordar el contrato de sesiones persistentes que propone HU14 y su relación con
 
 ### 4.2. Incertidumbre de estimación
 
-En HU17, comprobar el reconocimiento de imágenes con horarios representativos antes de cerrar la estimación. En HU43, verificar la disponibilidad del correo de prueba y el recorrido del enlace. Registrar el resultado, las limitaciones y la estimación revisada.
+En HU17, comprobar el reconocimiento de imágenes con horarios representativos antes de cerrar la estimación. En HU43, verificar la disponibilidad del correo de prueba y el recorrido del enlace. El plan prevé una exploración de 4 horas para cada historia. Registrar el resultado, las limitaciones y la estimación revisada.
 
 ### 4.3. Desglose del ranking privado
 
-Para HU48, proponer tres entregas con sus criterios y estimación. La primera gestiona amistades y consentimiento. La segunda registra tiempo real con pausas. La tercera presenta el ranking con los datos de las dos anteriores. El equipo debe confirmar el alcance y las estimaciones independientes antes de comprometerlas.
+Para HU48, proponer tres entregas con sus criterios y estimación. La primera gestiona amistades y consentimiento. La segunda registra tiempo real con pausas. La tercera presenta el ranking con los datos de las dos anteriores. El plan conserva como punto de partida 1,5 días para amistades y consentimiento, 2 días para el cronómetro y 1,5 días para el ranking. El equipo debe confirmar el alcance y esas estimaciones antes de comprometer las entregas.
 
 ### 4.4. Acciones y comprobaciones de cierre
 
@@ -612,5 +612,6 @@ Para HU48, proponer tres entregas con sus criterios y estimación. La primera ge
 ## 5. Conclusiones del refinamiento
 
 - La matriz incluye HU01–HU48. Las 39 historias vigentes tienen una justificación para cada letra y las nueve absorbidas identifican sus criterios de destino.
+- La configuración de disponibilidad, clases, descansos, dificultad, objetivos y preferencias se especifica por separado del cálculo del plan que realiza HU06. HU45, HU46 y HU47 tienen fichas propias y su verificación de integración sigue indicada en sus estados.
 - HU27 incluye la gestión, el filtro por estado y la búsqueda por título, con una estimación total de tres días. Se conserva el supuesto de capacidad del sprint. El filtro ya está implementado y la búsqueda sigue pendiente.
 - La siguiente revisión debe contrastar especialmente el contenido visible de HU23, las condiciones de entrega de sesiones persistentes y las reglas de aceptación identificadas en el plan.
