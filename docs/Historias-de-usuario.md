@@ -524,64 +524,39 @@ Para garantizar la coherencia funcional y el cumplimiento de los criterios **INV
 
 - **Issue:** [Issue #29](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/29)
 
-- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
+- **Estado:** Gestión de To-Dos y filtro por estado implementados. Búsqueda por título y combinación con el filtro de estado pendientes tras incorporar HU29.
 
-- **Historia:** Como usuario, quiero disponer de una lista rápida de To-Dos para anotar y gestionar tareas pendientes sueltas sin fecha límite obligatoria.
+- **Historia:** Como usuario, quiero anotar y gestionar mis tareas rápidas sin fecha límite obligatoria y localizarlas por estado o por título para encontrar la que necesito cuando la lista crece.
 
-- **Alcance:** Incluye el alta, edición, borrado y cambio de estado (`pendiente` / `completada`, reversible) de notas rápidas persistidas en SQLite por usuario en la vista *To-Dos Rápidos*. No incluye fechas límite ni planificación automática en el calendario (cubiertas por `HU04` y `HU06`).
+- **Alcance:** Incluye crear, editar, borrar y cambiar de forma reversible el estado de los To-Dos del usuario autenticado, guardados en SQLite. En la vista *To-Dos Rápidos*, el usuario puede filtrar por estado y buscar por título, por separado o a la vez. El filtro procede de `HU28` y la búsqueda de `HU29`. Las actividades académicas con fecha límite se gestionan en `HU04` y la planificación automática en `HU06`.
 
 - **Valor y prioridad:** Medio. Facilita anotar recordatorios o tareas rápidas del día a día sin sobrecargar el planificador académico.
 
-- **Estimación:** 1 día (orientativa; operaciones CRUD de To-Dos, cambio de estado y persistencia por usuario).
+- **Estimación:** 3 días de trabajo para el alcance completo de HU27, incluida la gestión de To-Dos, el filtro por estado, la búsqueda parcial por título y sus comprobaciones. La gestión y el filtro ya están implementados. Quedan pendientes la búsqueda y su verificación en combinación con el filtro.
 
 - **Criterios de aceptación:**
   - **CA01:** El usuario puede crear un nuevo To-Do con título válido, editar su texto y eliminarlo.
   - **CA02:** El usuario puede marcar un To-Do como completado o desmarcarlo a pendiente, diferenciándose visualmente ambos estados.
   - **CA03:** La API valida las entradas (rechazando títulos vacíos o valores no booleanos en el estado, y devolviendo `404` si el elemento no existe o pertenece a otra cuenta) y persiste los datos en SQLite por usuario.
+  - **CA04:** El usuario puede alternar entre «Todas», «Pendientes» y «Completadas». «Todas» muestra los To-Dos de ambos estados. Cada uno de los otros dos filtros muestra únicamente los To-Dos del estado elegido.
+  - **CA05:** Al escribir parte de un título, se muestran los To-Dos cuyo título contiene ese texto, sin distinguir mayúsculas de minúsculas. Al borrar el texto de búsqueda, vuelven a mostrarse todos los To-Dos que permite el filtro de estado activo.
+  - **CA06:** Si hay una búsqueda por título y un filtro de estado activos, solo se muestran los To-Dos que cumplen ambas condiciones.
+  - **CA07:** Si el filtro, la búsqueda o su combinación no encuentran coincidencias, la vista muestra un mensaje de lista vacía.
+  - **CA08:** Aplicar, cambiar o limpiar un filtro o una búsqueda conserva los registros guardados en SQLite. La lista solo muestra To-Dos del usuario autenticado.
 
-- **Evidencias:** Implementado en `main` (`app.py`, `templates/index.html`, `static/app.js`) y verificado mediante `tests/test_app.py` (incluidas las validaciones de `#34` y `#35`).
+- **Evidencias:** La gestión de To-Dos está implementada en `app.py`, `templates/index.html` y `static/app.js`, con pruebas de API en `tests/test_app.py`. El filtro por estado y la vista vacía tienen pruebas de interfaz en `tests/app.test.js`. Quedan pendientes la implementación y la verificación de la búsqueda por título y de su combinación con el filtro de estado.
 
 ## HU28 — Filtrar To-Dos por estado
 
 - **Issue:** [Issue #36](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/36)
-
-- **Estado:** Terminada (Cerrada en GitHub como `completed` y verificada)
-
-- **Historia:** Como usuario, quiero filtrar mi lista de To-Dos entre todas, pendientes y completadas para centrarme en las tareas que requieren atención.
-
-- **Alcance:** Incluye el filtrado visual en la vista *To-Dos Rápidos* (`HU27`) para mostrar todas las tareas, solo las pendientes o solo las completadas del usuario activo, sin alterar los registros almacenados en SQLite.
-
-- **Valor y prioridad:** Medio. Mejora la claridad cuando la lista rápida acumula varias tareas.
-
-- **Estimación:** 1 día (orientativa; lógica de filtrado por estado, manejo de lista vacía y aislamiento por usuario).
-
-- **Criterios de aceptación:**
-  - **CA01:** El usuario puede alternar entre visualizar todas las tareas rápidas, únicamente las pendientes o únicamente las completadas.
-  - **CA02:** Aplicar o cambiar el filtro es una operación de consulta que no modifica ni elimina los datos persistidos en SQLite.
-  - **CA03:** Cuando no existen tareas que coincidan con el filtro seleccionado, se muestra un estado vacío sin errores y respetando el aislamiento entre usuarios.
-
-- **Evidencias:** Implementado en `main` (`templates/index.html`, `static/app.js`) y verificado en `tests/test_app.py`.
+- **Estado:** Absorbida por `HU27`. El filtro por estado está implementado.
+- **Trazabilidad:** El filtro por estado se recoge en `HU27-CA04`. El resultado vacío y la conservación y el aislamiento de los datos se recogen en `HU27-CA07` y `HU27-CA08`. La estimación se registra en `HU27`.
 
 ## HU29 — Buscar To-Dos por título
 
 - **Issue:** [Issue #37](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/37)
-
-- **Estado:** Preparada (Abierta)
-
-- **Historia:** Como usuario, quiero buscar tareas de mi lista de To-Dos por palabras de su título para localizar rápidamente una anotación cuando tenga muchas.
-
-- **Alcance:** Incluye un campo de búsqueda por texto sobre los títulos de la lista *To-Dos Rápidos* (`HU27`). No busca sobre las actividades académicas de `HU04`.
-
-- **Valor y prioridad:** Medio. Agiliza localizar notas rápidas en listas extensas sin bloquear el uso básico de `HU27`; prioridad media-baja.
-
-- **Estimación:** 1 día (orientativa; filtrado por coincidencia parcial de texto y pruebas con filtro combinado).
-
-- **Criterios de aceptación:**
-  - **CA01:** El usuario puede filtrar sus To-Dos escribiendo texto parcial contenido en el título, sin distinguir entre mayúsculas y minúsculas.
-  - **CA02:** La búsqueda puede combinarse con el filtro de estado (`HU28`) y muestra un resultado vacío sin errores cuando no hay coincidencias.
-  - **CA03:** La consulta no modifica los datos almacenados y opera exclusivamente sobre los To-Dos del usuario autenticado.
-
-- **Evidencias:** Pendiente de implementación.
+- **Estado:** Absorbida por `HU27`. La búsqueda por título sigue pendiente de implementación y verificación.
+- **Trazabilidad:** La búsqueda parcial y su combinación con el filtro de estado se recogen en `HU27-CA05` y `HU27-CA06`. El resultado vacío y la conservación y el aislamiento de los datos se recogen en `HU27-CA07` y `HU27-CA08`. El trabajo pendiente se estima y se sigue en `HU27`.
 
 ## HU30 — Navegación completa mediante teclado
 

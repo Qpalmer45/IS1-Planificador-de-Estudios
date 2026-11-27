@@ -14,7 +14,7 @@
 - **S – Small (pequeña):** se puede completar en un sprint; dividir cuando agrupe demasiado trabajo.
 - **T – Testable:** los criterios de aceptación permiten diseñar verificaciones reproducibles.
 
-**Convención:** ✅ evidencia suficiente en la redacción; △ cumplimiento condicionado a aclaración/refinamiento. Un criterio marcado △ **no debe presentarse como ya cumplido**. Todas las HU pueden refinarse hasta cumplir INVEST; ello no significa que ahora sean independientes ni que su código esté probado.
+**Convención:** ✅ evidencia suficiente en la redacción; △ cumplimiento condicionado a aclaración/refinamiento. Un criterio marcado △ **no debe presentarse como ya cumplido**. Todas las HU pueden refinarse hasta cumplir INVEST; ello no significa que ahora sean independientes ni que su código esté probado. El símbolo — indica que la historia está absorbida. Su alcance se evalúa en la historia que incorpora sus criterios de aceptación.
 
 ## 2. Revisión individual
 
@@ -46,8 +46,17 @@
 | [HU24 Sesiones completadas/saltadas](../issues/25) | △ | ✅ | ✅ | ✅ | ✅ | △ | Métrica de HU18; definir «saltada», sesiones futuras y cambio de estado. |
 | [HU25 Asignaturas estudiadas](../issues/26) | △ | ✅ | ✅ | ✅ | ✅ | △ | Métrica de HU18; añadir deduplicación, calendario semanal y sesiones eliminadas. |
 | [HU26 Temario por asignatura](../issues/27) | △ | ✅ | ✅ | ✅ | ✅ | △ | Depende de HU01; definir progreso por tema y operaciones sobre asignatura eliminada. |
-| [HU27 Lista de To-Dos](../issues/29) | ✅ | ✅ | ✅ | ✅ | △ | △ | Contiene alta/edición/borrado/estado en una HU; cabe solo si el equipo confirma esfuerzo; añadir aislamiento por usuario y errores, distinto de HU04. |
-| [HU28 Filtrar To-Dos](../issues/36) | △ | ✅ | ✅ | ✅ | ✅ | ✅ | Requiere HU27 y autenticación; criterios adecuados, fijar si filtra backend o frontend. Propuesta, no implementada. |
-| [HU29 Buscar To-Dos](../issues/37) | △ | ✅ | ✅ | ✅ | ✅ | ✅ | Requiere HU27 y autenticación; criterios adecuados, definir coincidencia parcial y espacios. Propuesta, no implementada. |
+| [HU27 Lista de To-Dos](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/29) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Parcialmente implementada. Estimación total de 3 días. La gestión y el filtro por estado están implementados. Quedan pendientes la búsqueda por título y su verificación en combinación con el filtro. |
+| [HU28 Filtrar To-Dos](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/36) | — | — | — | — | — | — | Absorbida por HU27. El filtro por estado está implementado. Sus criterios se recogen en HU27-CA04, CA07 y CA08. |
+| [HU29 Buscar To-Dos](https://github.com/Qpalmer45/IS1-Planificador-de-Estudios/issues/37) | — | — | — | — | — | — | Absorbida por HU27. La búsqueda por título y su combinación con el filtro siguen pendientes. Sus criterios se recogen en HU27-CA05 a CA08. |
+
+### Justificación INVEST de HU27
+
+- **I — Independiente:** La lista rápida es una funcionalidad propia. Su gestión, filtrado y búsqueda pueden entregarse juntos sin depender del calendario ni de las actividades académicas de HU04. La sesión iniciada permite acceder a los datos propios.
+- **N — Negociable:** Los criterios fijan qué tareas aparecen al buscar o filtrar. El equipo puede decidir dónde colocar el campo de búsqueda y cómo obtener los resultados.
+- **V — Valiosa:** El estudiante puede anotar tareas rápidas y encontrar una concreta por estado o por parte de su título.
+- **E — Estimable:** El alcance identifica las operaciones de gestión, las opciones del filtro, la búsqueda parcial y los casos de comprobación. El conjunto se estima en 3 días.
+- **S — Pequeña:** Las operaciones se concentran en una sola vista. Se considera que 3 días de trabajo caben en un sprint, con esa capacidad disponible en el equipo.
+- **T — Comprobable:** CA01–CA08 permiten verificar la gestión básica, los filtros, las coincidencias parciales, la combinación, la lista vacía y el aislamiento por cuenta. Si hay dos tareas con «Examen» en el título y solo una está pendiente, buscar `exam` con el filtro **Pendientes** debe devolver únicamente esa tarea.
 
 
